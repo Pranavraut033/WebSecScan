@@ -1,36 +1,84 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# WebSecScan
+
+An Automated Security Scanner for Web Application Vulnerabilities
+
+## Problem Statement
+
+As web applications proliferate, they increasingly become targets for cyberattacks that exploit vulnerabilities such as SQL injection, Cross-Site Scripting (XSS), insecure authentication, and outdated libraries. While large organizations can afford dedicated security resources, small to mid-sized development teams often lack the expertise or tools to conduct comprehensive security evaluations. This gap results in widespread exposure of web applications to preventable attacks, posing risks to both users and businesses.
+
+## Proposed Solution
+
+The project will develop WebSecScan, an automated, lightweight security scanner tailored to identify common web application vulnerabilities. By leveraging both static code analysis (examining source files like HTML and JavaScript) and dynamic behavioral analysis of web applications, WebSecScan will systematically detect issues using recognized vulnerability databases (such as the OWASP Top 10). The tool will feature an intuitive interface to facilitate adoption and integration within typical development workflows, empowering teams to incorporate security checks early and often.
+
+## Expected Outcome
+
+WebSecScan will yield practical, actionable vulnerability reports that developers can use to enhance the security of their applications before deployment. By lowering technical barriers and automating security analysis, the tool is expected to promote secure coding practices, reduce the prevalence of common vulnerabilities across web projects, and contribute to a more secure web ecosystem, especially benefiting teams with limited cybersecurity resources.
 
 ## Getting Started
 
-First, run the development server:
+First, install dependencies:
+
+```bash
+npm install
+```
+
+Then, run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000 to view the UI.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## API & Server Actions
+- POST `/api/scan/start` — start a new scan (server-side only).
+- GET  `/api/scan/:id/status` — poll scan status.
+- GET  `/api/scan/:id/results` — fetch results.
 
-## Learn More
+Server Actions used for trusted operations: createScan(), runStaticAnalysis(), runDynamicAnalysis(), generateReport().
 
-To learn more about Next.js, take a look at the following resources:
+> All scanning logic runs on the server. The client UI must only request scans; it must not execute scanning code.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Security & Ethical Constraints
+- Only scan assets you own or have explicit permission to test.
+- Dynamic checks are safe and non-destructive: no brute force, no DoS, no credential stuffing, and no chained exploit payloads.
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Contributing
+- Follow the checklist in `.github/copilot-instructions.md`.
+- Ensure all new checks include tests and documentation.
+- CI must pass type-checks, linters, and tests.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## Acceptance Criteria
+- Detects vulnerabilities in intentionally insecure fixtures
+- Results stored and retrievable from Prisma
+- Clear UI presentation and remediation advice
+- Deterministic output for the same input
+
+---
+
+For detailed architecture, see `project-specifications.md`. 
+
+## Docker Setup
+
+To run with Docker:
+
+```bash
+docker build -t websecscan .
+docker run -p 3000:3000 websecscan
+```
+
+## Agents
+
+See [agents.md](agents.md) for details on the scanning agents.
+
+## Tasks
+
+See [tasks.md](tasks.md) for agent task definitions.
