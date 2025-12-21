@@ -20,6 +20,13 @@ WebSecScan is an automated, lightweight security scanner that identifies common 
 
 ## Key Features
 
+### 🔐 Enterprise-Grade Security
+- **CSRF Protection**: Same-origin validation on all API endpoints
+- **Security Headers**: X-Frame-Options, CSP, X-XSS-Protection, and more
+- **Origin Validation**: Global middleware preventing cross-origin attacks
+- **Defense in Depth**: Multiple security layers (middleware + route validation)
+- See [CSRF Implementation](./CSRF-IMPLEMENTATION.md) and [Security Flow](./SECURITY-FLOW.md) for details
+
 ### 🏆 Security Scoring System
 - Letter grades from **A+** (135+ points) to **F** (0-49 points)
 - Based on Mozilla Observatory methodology
