@@ -1,0 +1,87 @@
+site_name: WebSecScan Documentation
+site_description: Automated Web Application Security Scanner - Comprehensive Documentation
+site_author: WebSecScan Team
+site_url: https://pranavraut.github.io/WebSecScan/
+
+repo_name: WebSecScan
+repo_url: https://github.com/pranavraut/WebSecScan
+
+theme:
+  name: material
+  palette:
+    # Light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.tracking
+    - navigation.indexes
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+  icon:
+    repo: fontawesome/brands/github
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Features: features.md
+  - What We Test: testing-coverage.md
+  - Architecture: architecture.md
+  - Scanning Agents: agents.md
+  - Development:
+      - Setup & Guide: development.md
+      - Testing: testing.md
+  - API Reference: api.md
+  - Deployment: deployment.md
+  - Security & Ethics: security-ethics.md
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - admonition
+  - tables
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+
+plugins:
+  - search
+  - minify:
+      minify_html: true
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/pranavraut/WebSecScan
+  analytics:
+    provider: google
+    property: !ENV GOOGLE_ANALYTICS_KEY
