@@ -10,7 +10,10 @@ export async function GET(
 
     const scan = await prisma.scan.findUnique({
       where: { id: scanId },
-      include: { results: true },
+      include: {
+        results: true,
+        securityTests: true,
+      },
     })
 
     if (!scan) {
@@ -26,7 +29,7 @@ export async function GET(
     }
 
     return NextResponse.json({
-      scanId: scan.id,
+      scan,
       summary,
       vulnerabilities: scan.results,
     })

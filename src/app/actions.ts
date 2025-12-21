@@ -11,6 +11,38 @@ import { analyzeDependenciesFromUrl } from '@/security/static/dependencyAnalyzer
 import { crawlWebsite } from '@/security/dynamic/crawler'
 import { testXss, testFormXss } from '@/security/dynamic/xssTester'
 import { performAuthChecks, checkAuthWeaknesses } from '@/security/dynamic/authChecks'
+import { analyzeHeaders, type HeaderTestResult } from '@/security/dynamic/headerAnalyzer'
+import { analyzeCookies } from '@/security/dynamic/cookieAnalyzer'
+import { analyzeCSP } from '@/security/dynamic/cspAnalyzer'
+import { calculateScore } from '@/lib/scoring'
+import type { NormalizeUrlResult } from '@/lib/urlNormalizer'
+
+/**
+ * Deduplicate vulnerabilities by grouping same ruleId/type together
+ * and merging their locations into a single finding
+ */
+function deduplicateVulnerabilities(vulnerabilities: any[]): any[] {
+  const grouped = new Map<string, any>()
+
+  for (const vuln of vulnerabilities) {
+    // Use ruleId as primary key, fallback to type
+    const key = vuln.ruleId || vuln.type
+
+    if (grouped.has(key)) {
+      const existing = grouped.get(key)!
+      // Append location with newline separator
+      existing.location = `${existing.location}
+
+${vuln.location}`
+      // Increment occurrence count if not already tracked
+      existing.occurrences = (existing.occurrences || 1) + 1
+    } else {
+      grouped.set(key, { ...vuln, occurrences: 1 })
+    }
+  }
+
+  return Array.from(grouped.values())
+}
 
 // Server Actions as per specs
 
@@ -43,12 +75,73 @@ export async function getRecentScans() {
       take: 10,
       include: {
         results: true,
+        securityTests: true,
       },
     })
     return scans
   } catch (error) {
     console.error('Error fetching recent scans:', error)
     throw new Error('Failed to fetch recent scans')
+  }
+}
+
+export async function getScanHistory(hostname: string) {
+  try {
+    const scans = await prisma.scan.findMany({
+      where: { hostname },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+      include: {
+        results: {
+          select: {
+            id: true,
+            severity: true,
+          },
+        },
+        _count: {
+          select: {
+            results: true,
+            securityTests: true,
+          },
+        },
+      },
+    })
+    return scans
+  } catch (error) {
+    console.error('Error fetching scan history:', error)
+    throw new Error('Failed to fetch scan history')
+  }
+}
+
+export async function recordProtocolVulnerability(
+  scanId: string,
+  threat: NormalizeUrlResult['securityThreats'][0]
+): Promise<void> {
+  try {
+    // Map to OWASP category
+    let owaspCategory = 'A05:2021-Security Misconfiguration'
+    let owaspId = 'A05:2021'
+    if (threat.type === 'INSECURE_PROTOCOL') {
+      owaspCategory = 'A02:2021-Cryptographic Failures'
+      owaspId = 'A02:2021'
+    }
+
+    await prisma.vulnerability.create({
+      data: {
+        scanId,
+        type: 'Insecure HTTP Protocol',
+        description: threat.message,
+        severity: threat.severity,
+        owaspCategory,
+        owaspId,
+        confidence: 'HIGH',
+        location: 'Protocol: HTTP (plaintext)',
+        remediation: 'Enable HTTPS by obtaining an SSL/TLS certificate from a trusted Certificate Authority. Configure your web server to redirect all HTTP traffic to HTTPS. Use HSTS (HTTP Strict Transport Security) headers to enforce HTTPS.',
+        ruleId: 'WSS-PROTOCOL-001',
+      },
+    })
+  } catch (error) {
+    console.error('Error recording protocol vulnerability:', error)
   }
 }
 
@@ -116,8 +209,11 @@ export async function runStaticAnalysis(scanId: string): Promise<void> {
     const depAnalysis = await analyzeDependenciesFromUrl(scan.targetUrl)
     allVulnerabilities.push(...depAnalysis.vulnerabilities)
 
+    // Deduplicate vulnerabilities: merge same type/ruleId with multiple locations
+    const deduplicatedVulns = deduplicateVulnerabilities(allVulnerabilities)
+
     // Create vulnerability records in database
-    for (const vuln of allVulnerabilities) {
+    for (const vuln of deduplicatedVulns) {
       await prisma.vulnerability.create({
         data: {
           type: vuln.type,
@@ -126,6 +222,9 @@ export async function runStaticAnalysis(scanId: string): Promise<void> {
           description: vuln.description,
           location: vuln.location,
           remediation: vuln.remediation,
+          owaspCategory: vuln.owaspCategory || null,
+          owaspId: vuln.owaspId || null,
+          ruleId: vuln.ruleId || null,
           scanId,
         },
       })
@@ -163,6 +262,37 @@ export async function runDynamicAnalysis(scanId: string): Promise<void> {
 
     // Use any[] to allow flexibility with vulnerability object structure
     const allVulnerabilities: any[] = []
+    const securityTests: HeaderTestResult[] = []
+
+    // 0. Fetch and analyze HTTP headers first
+    console.log(`Fetching headers from ${scan.targetUrl}...`)
+    const response = await fetch(scan.targetUrl, {
+      headers: { 'User-Agent': 'WebSecScan/1.0 (Educational Security Scanner)' },
+      redirect: 'manual' // Don't follow redirects to see original headers
+    })
+
+    const headers: Record<string, string> = {}
+    response.headers.forEach((value, key) => {
+      headers[key] = value
+    })
+
+    // Analyze security headers
+    const headerTests = await analyzeHeaders(scan.targetUrl, headers)
+    securityTests.push(...headerTests)
+
+    // Analyze CSP separately for detailed checks
+    const cspHeader = headers['content-security-policy']
+    const cspTest = analyzeCSP(cspHeader)
+    securityTests.push(cspTest)
+
+    // Analyze cookies
+    const setCookieHeader = response.headers.get('set-cookie')
+    const setCookieHeaders = setCookieHeader ? [setCookieHeader] : []
+    const cookieTest = analyzeCookies(scan.targetUrl, setCookieHeaders)
+    securityTests.push(cookieTest)
+
+    // Calculate overall score
+    const scoringResult = calculateScore(securityTests)
 
     // 1. Crawl the website to discover endpoints and forms
     console.log(`Starting crawl of ${scan.targetUrl}...`)
@@ -196,9 +326,12 @@ export async function runDynamicAnalysis(scanId: string): Promise<void> {
       allVulnerabilities.push(...formXssResult.vulnerabilities)
     }
 
+    // Deduplicate vulnerabilities: merge same type/ruleId with multiple locations
+    const deduplicatedVulns = deduplicateVulnerabilities(allVulnerabilities)
+
     // Create vulnerability records in database
-    console.log(`Found ${allVulnerabilities.length} vulnerabilities, saving to database...`)
-    for (const vuln of allVulnerabilities) {
+    console.log(`Found ${allVulnerabilities.length} vulnerabilities (${deduplicatedVulns.length} after deduplication), saving to database...`)
+    for (const vuln of deduplicatedVulns) {
       await prisma.vulnerability.create({
         data: {
           type: vuln.type,
@@ -207,15 +340,49 @@ export async function runDynamicAnalysis(scanId: string): Promise<void> {
           description: vuln.description,
           location: vuln.location,
           remediation: vuln.remediation,
+          owaspCategory: vuln.owaspCategory || null,
+          owaspId: vuln.owaspId || null,
+          ruleId: vuln.ruleId || null,
           scanId,
         },
       })
     }
 
-    // Update scan status to COMPLETED
+    // Save security test results
+    console.log(`Saving ${securityTests.length} security test results...`)
+    for (const test of securityTests) {
+      await prisma.securityTest.create({
+        data: {
+          scanId,
+          testName: test.testName,
+          passed: test.passed,
+          score: test.score,
+          result: test.result,
+          reason: test.reason,
+          recommendation: test.recommendation || null,
+          details: test.details ? (test.details as any) : undefined,
+        },
+      })
+    }
+
+    // Update scan status to COMPLETED with score and grade
     await prisma.scan.update({
       where: { id: scanId },
-      data: { status: ScanStatus.COMPLETED },
+      data: {
+        status: ScanStatus.COMPLETED,
+        score: scoringResult.score,
+        grade: scoringResult.grade,
+        completedAt: new Date(),
+        scanSummary: {
+          totalTests: securityTests.length,
+          passedTests: securityTests.filter(t => t.passed).length,
+          failedTests: securityTests.filter(t => !t.passed).length,
+          vulnerabilityCount: allVulnerabilities.length,
+          rawHeaders: headers,
+          setCookieHeaders,
+          csp: cspHeader || null,
+        }
+      },
     })
 
     revalidatePath('/')

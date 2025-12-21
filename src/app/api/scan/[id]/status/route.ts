@@ -10,7 +10,14 @@ export async function GET(
 
     const scan = await prisma.scan.findUnique({
       where: { id: scanId },
-      select: { id: true, status: true, createdAt: true },
+      select: { 
+        id: true, 
+        status: true, 
+        createdAt: true,
+        targetUrl: true,
+        hostname: true,
+        mode: true
+      },
     })
 
     if (!scan) {
@@ -21,6 +28,9 @@ export async function GET(
       scanId: scan.id,
       status: scan.status,
       createdAt: scan.createdAt,
+      targetUrl: scan.targetUrl,
+      hostname: scan.hostname,
+      mode: scan.mode
     })
   } catch (error) {
     console.error('Error fetching scan status:', error)

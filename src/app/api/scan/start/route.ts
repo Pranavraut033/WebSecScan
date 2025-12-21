@@ -1,58 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createScan, runStaticAnalysis, runDynamicAnalysis } from '@/app/actions'
+import { createScan, runStaticAnalysis, runDynamicAnalysis, recordProtocolVulnerability } from '@/app/actions'
 import { ScanMode } from '@prisma/client'
-
-/**
- * Validate and sanitize target URL
- */
-function validateTargetUrl(url: string): { valid: boolean; error?: string; sanitized?: string } {
-  // Check for empty or whitespace-only
-  if (!url || url.trim().length === 0) {
-    return { valid: false, error: 'URL cannot be empty' }
-  }
-
-  const trimmed = url.trim()
-
-  // Check URL format
-  let urlObj: URL
-  try {
-    urlObj = new URL(trimmed)
-  } catch {
-    return { valid: false, error: 'Invalid URL format' }
-  }
-
-  // Only allow HTTP(S) protocols
-  if (!['http:', 'https:'].includes(urlObj.protocol)) {
-    return { valid: false, error: 'Only HTTP and HTTPS protocols are allowed' }
-  }
-
-  // Security: Prevent scanning of local/private IPs in production
-  const hostname = urlObj.hostname.toLowerCase()
-
-  // Allow localhost and 127.0.0.1 for development/testing
-  const isLocalhost = hostname === 'localhost' ||
-    hostname === '127.0.0.1' ||
-    hostname.startsWith('192.168.') ||
-    hostname.startsWith('10.') ||
-    hostname.startsWith('172.16.') ||
-    hostname.endsWith('.local')
-
-  // In production, you might want to restrict localhost scanning
-  // For educational purposes, we allow it
-  if (!isLocalhost && hostname.includes('169.254.')) {
-    return { valid: false, error: 'Link-local addresses are not allowed' }
-  }
-
-  // Check for suspicious patterns
-  if (urlObj.username || urlObj.password) {
-    return { valid: false, error: 'URLs with embedded credentials are not allowed' }
-  }
-
-  // Sanitize: Remove fragment
-  urlObj.hash = ''
-
-  return { valid: true, sanitized: urlObj.toString() }
-}
+import { normalizeUrl, validateUrlFormat } from '@/lib/urlNormalizer'
 
 export async function POST(request: NextRequest) {
   try {
@@ -75,16 +24,50 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Validate and sanitize URL
-    const urlValidation = validateTargetUrl(targetUrl)
-    if (!urlValidation.valid) {
+    // Quick format validation
+    const formatValidation = validateUrlFormat(targetUrl)
+    if (!formatValidation.valid) {
       return NextResponse.json(
-        { error: urlValidation.error },
+        { error: formatValidation.error },
         { status: 400 }
       )
     }
 
-    const sanitizedUrl = urlValidation.sanitized!
+    // Normalize URL: try HTTPS first, detect redirects, identify HTTP threats
+    let normalizeResult
+    try {
+      normalizeResult = await normalizeUrl(targetUrl, {
+        preferHttps: true,
+        checkRedirects: true,
+        timeout: 10000,
+      })
+    } catch (error) {
+      return NextResponse.json(
+        { error: error instanceof Error ? error.message : 'Failed to connect to target URL' },
+        { status: 400 }
+      )
+    }
+
+    const sanitizedUrl = normalizeResult.normalizedUrl
+
+    // Security checks on normalized URL
+    const urlObj = new URL(sanitizedUrl)
+    const hostname = urlObj.hostname.toLowerCase()
+
+    // Prevent scanning link-local addresses
+    const isLocalhost = hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      hostname.startsWith('192.168.') ||
+      hostname.startsWith('10.') ||
+      hostname.startsWith('172.16.') ||
+      hostname.endsWith('.local')
+
+    if (!isLocalhost && hostname.includes('169.254.')) {
+      return NextResponse.json(
+        { error: 'Link-local addresses are not allowed' },
+        { status: 400 }
+      )
+    }
 
     // Create scan record
     const { scanId } = await createScan(sanitizedUrl, mode as ScanMode)
@@ -93,6 +76,13 @@ export async function POST(request: NextRequest) {
     // This ensures the work continues even after response is sent
     const analysisPromise = (async () => {
       try {
+        // Record HTTP protocol vulnerability if detected
+        if (normalizeResult.securityThreats.length > 0) {
+          for (const threat of normalizeResult.securityThreats) {
+            await recordProtocolVulnerability(scanId, threat)
+          }
+        }
+
         if (mode === ScanMode.STATIC || mode === ScanMode.BOTH) {
           await runStaticAnalysis(scanId)
         }
@@ -121,7 +111,15 @@ export async function POST(request: NextRequest) {
       scanId,
       status: 'RUNNING',
       targetUrl: sanitizedUrl,
-      mode
+      mode,
+      urlInfo: {
+        protocol: normalizeResult.protocol,
+        redirected: normalizeResult.redirected,
+        redirectedTo: normalizeResult.redirectedTo,
+        isWwwRedirect: normalizeResult.isWwwRedirect,
+        warnings: normalizeResult.warnings,
+        securityThreats: normalizeResult.securityThreats.map(t => t.type),
+      }
     })
   } catch (error) {
     console.error('Error starting scan:', error)
