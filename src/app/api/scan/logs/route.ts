@@ -5,8 +5,15 @@
 
 import { NextRequest } from 'next/server'
 import { registerSSEConnection, unregisterSSEConnection } from '@/lib/scanLogger'
+import { validateApiRequest } from '@/lib/csrf'
 
 export async function GET(request: NextRequest) {
+  // Validate same-origin for SSE connections
+  const validation = await validateApiRequest(request)
+  if (!validation.valid) {
+    return new Response(validation.error || 'Invalid request origin', { status: 403 })
+  }
+
   const { searchParams } = new URL(request.url)
   const scanId = searchParams.get('scanId')
 

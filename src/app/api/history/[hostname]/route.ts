@@ -1,11 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { validateApiRequest } from '@/lib/csrf'
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ hostname: string }> }
 ) {
   try {
+    // Validate same-origin
+    const validation = await validateApiRequest(request)
+    if (!validation.valid) {
+      return NextResponse.json(
+        { error: validation.error || 'Invalid request origin' },
+        { status: 403 }
+      )
+    }
+
     const { hostname } = await params
 
     const scans = await prisma.scan.findMany({

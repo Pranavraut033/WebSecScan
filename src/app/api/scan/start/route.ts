@@ -2,9 +2,19 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createScan, runStaticAnalysis, runDynamicAnalysis, recordProtocolVulnerability } from '@/app/actions'
 import { ScanMode } from '@prisma/client'
 import { normalizeUrl, validateUrlFormat } from '@/lib/urlNormalizer'
+import { validateApiRequest } from '@/lib/csrf'
 
 export async function POST(request: NextRequest) {
   try {
+    // Validate CSRF and same-origin
+    const validation = await validateApiRequest(request)
+    if (!validation.valid) {
+      return NextResponse.json(
+        { error: validation.error || 'Invalid request origin' },
+        { status: 403 }
+      )
+    }
+
     const body = await request.json()
     const { targetUrl, mode }: { targetUrl: string; mode: string } = body
 
