@@ -10,9 +10,9 @@ export async function GET(
 
     const scan = await prisma.scan.findUnique({
       where: { id: scanId },
-      select: { 
-        id: true, 
-        status: true, 
+      select: {
+        id: true,
+        status: true,
         createdAt: true,
         targetUrl: true,
         hostname: true,
