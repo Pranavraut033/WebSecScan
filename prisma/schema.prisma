@@ -2,7 +2,7 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider   = "prisma-client-js"
   engineType = "library"
 }
 
@@ -10,27 +10,71 @@ datasource db {
   provider = "sqlite"
 }
 
-model ScanResult {
-  id          String   @id @default(cuid())
-  url         String
-  host        String
-  timestamp   DateTime @default(now())
-  status      String   // 'safe', 'vulnerable', 'error'
-  vulnerabilities Json? // array of vulnerability objects
-  scanDuration Int?    // in milliseconds
+model Scan {
+  id            String          @id @default(cuid())
+  targetUrl     String
+  hostname      String
+  mode          ScanMode
+  status        ScanStatus
+  score         Int? // Overall security score (0-100)
+  grade         String? // Grade: A+, A, B, C, D, F
+  createdAt     DateTime        @default(now())
+  completedAt   DateTime?
+  results       Vulnerability[]
+  securityTests SecurityTest[]
+  scanSummary   Json? // Store overall scan metadata
 }
 
-model TrendingSite {
-  id    String @id @default(cuid())
-  url   String @unique
-  name  String
-  rank  Int
+model Vulnerability {
+  id            String     @id @default(cuid())
+  scanId        String
+  type          String
+  severity      Severity
+  confidence    Confidence
+  description   String
+  location      String
+  remediation   String
+  owaspCategory String?
+  owaspId       String?
+  ruleId        String?
+  scan          Scan       @relation(fields: [scanId], references: [id])
 }
 
-model UrlCache {
-  id        String   @id @default(cuid())
-  host      String   @unique
-  lastScan  DateTime?
-  cachedResult Json?
-  expiresAt DateTime?
+model SecurityTest {
+  id             String  @id @default(cuid())
+  scanId         String
+  testName       String // e.g., "Content Security Policy", "Cookies", "HSTS"
+  passed         Boolean
+  score          Int // Score contribution (can be negative)
+  result         String // "Passed", "Failed", "Info", "N/A"
+  reason         String? // Why it passed/failed
+  recommendation String? // How to fix
+  details        Json? // Additional structured data (e.g., CSP directives)
+  scan           Scan    @relation(fields: [scanId], references: [id])
+}
+
+enum ScanMode {
+  STATIC
+  DYNAMIC
+  BOTH
+}
+
+enum ScanStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum Severity {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum Confidence {
+  HIGH
+  MEDIUM
+  LOW
 }

@@ -23,6 +23,7 @@ This file is a project-specific checklist for contributors (including Copilot au
 - ✅ Verify this file exists and is up-to-date before starting work.
 
 ## Mandatory Project Rules
+
 - **Do NOT generate placeholder logic** that returns fake vulnerabilities; implement deterministic rule checks and unit tests.
 - **Do NOT skip validation.** All inputs (target URLs, request payloads, CLI args) must be validated and sanitized server-side.
 - Use **TypeScript (strict mode)** everywhere. Avoid `any` unless justified and documented.
@@ -30,13 +31,16 @@ This file is a project-specific checklist for contributors (including Copilot au
 - Follow **OWASP terminology** exactly for categories and severity mapping.
 - Separate scanning logic into small modules; avoid large monolithic files.
 - Add **clear comments** explaining why a finding is risky and how remediation reduces risk.
+- Use Prisma types by importing from '@prisma/client', e.g., `import { Prisma, ScanResult, TrendingSite } from '@prisma/client'`
 
 ## Tests & CI
+
 - Each agent rule must include unit tests with deterministic inputs and expected outputs.
 - Add integration tests that run a small static scan against an intentionally insecure fixture app in `test-fixtures/`.
 - CI must run type-checks, linters, and tests before merging.
 
 ## PR Checklist
+
 - Type-checked (tsc --noEmit)
 - Linted (eslint)
 - Tests added & passing
@@ -44,11 +48,13 @@ This file is a project-specific checklist for contributors (including Copilot au
 - No hardcoded secrets or credentials
 
 ## Ethical & Safety Notes
+
 - Only scan systems you own or have explicit permission to test.
 - Dynamic checks must be safe and non-destructive (no brute force, no DoS, no credential stuffing).
 
 ## Communication
+
 - Keep messages concise and focused.
 - When significant changes are made (new rules, major refactors), update this checklist and notify maintainers.
 
-*Adherence to these instructions is required for contributions to the academic project.*
+_Adherence to these instructions is required for contributions to the academic project._

@@ -1,320 +1,279 @@
 'use server'
 
 import { prisma } from '@/lib/db'
-import { Prisma, ScanResult, TrendingSite } from '@prisma/client'
+import { ScanMode, ScanStatus, Vulnerability } from '@prisma/client'
 import { revalidatePath } from 'next/cache'
 
-export async function getRecentScans(): Promise<ScanResult[]> {
+// Import modular security analyzers
+import { analyzeJavaScript } from '@/security/static/jsAnalyzer'
+import { analyzeHTML } from '@/security/static/htmlAnalyzer'
+import { analyzeDependenciesFromUrl } from '@/security/static/dependencyAnalyzer'
+import { crawlWebsite } from '@/security/dynamic/crawler'
+import { testXss, testFormXss } from '@/security/dynamic/xssTester'
+import { performAuthChecks, checkAuthWeaknesses } from '@/security/dynamic/authChecks'
+
+// Server Actions as per specs
+
+export async function createScan(targetUrl: string, mode: ScanMode): Promise<{ scanId: string }> {
   try {
-    const recentScans = await prisma.scanResult.findMany({
-      orderBy: { timestamp: 'desc' },
-      take: 10,
+    // Extract hostname from URL
+    const url = new URL(targetUrl)
+    const hostname = url.hostname
+
+    const scan = await prisma.scan.create({
+      data: {
+        targetUrl,
+        hostname,
+        mode,
+        status: ScanStatus.PENDING,
+      },
     })
-    return recentScans
+    revalidatePath('/')
+    return { scanId: scan.id }
+  } catch (error) {
+    console.error('Error creating scan:', error)
+    throw new Error('Failed to create scan')
+  }
+}
+
+export async function getRecentScans() {
+  try {
+    const scans = await prisma.scan.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+      include: {
+        results: true,
+      },
+    })
+    return scans
   } catch (error) {
     console.error('Error fetching recent scans:', error)
     throw new Error('Failed to fetch recent scans')
   }
 }
 
-export async function getTrendingSites(): Promise<TrendingSite[]> {
+export async function runStaticAnalysis(scanId: string): Promise<void> {
   try {
-    let trendingSites = await prisma.trendingSite.findMany({
-      orderBy: { rank: 'asc' },
-      take: 10,
+    // Update scan status to RUNNING
+    await prisma.scan.update({
+      where: { id: scanId },
+      data: { status: ScanStatus.RUNNING },
     })
 
-    // If no trending sites, add some defaults
-    if (trendingSites.length === 0) {
-      await prisma.trendingSite.createMany({
-        data: [
-          { url: 'https://google.com', name: 'Google', rank: 1 },
-          { url: 'https://github.com', name: 'GitHub', rank: 2 },
-          { url: 'https://stackoverflow.com', name: 'Stack Overflow', rank: 3 },
-          { url: 'https://youtube.com', name: 'YouTube', rank: 4 },
-          { url: 'https://facebook.com', name: 'Facebook', rank: 5 },
-        ],
-      })
-      trendingSites = await prisma.trendingSite.findMany({
-        orderBy: { rank: 'asc' },
-        take: 10,
-      })
-    }
-
-    return trendingSites
-  } catch (error) {
-    console.error('Error fetching trending sites:', error)
-    throw new Error('Failed to fetch trending sites')
-  }
-}
-
-interface CacheResult {
-  cached: boolean
-  result?: Prisma.JsonValue
-  lastScan?: Date
-}
-
-export async function checkCache(host: string): Promise<CacheResult> {
-  try {
-    const cached = await prisma.urlCache.findUnique({
-      where: { host },
+    const scan = await prisma.scan.findUnique({
+      where: { id: scanId },
     })
+    if (!scan) throw new Error('Scan not found')
 
-    if (cached && cached.expiresAt && cached.expiresAt > new Date()) {
-      return {
-        cached: true,
-        result: cached.cachedResult,
-        lastScan: cached.lastScan || undefined,
+    // Fetch the page HTML and inline scripts
+    const response = await fetch(scan.targetUrl, {
+      headers: { 'User-Agent': 'WebSecScan/1.0 (Educational Security Scanner)' }
+    })
+    const html = await response.text()
+
+    // Use any[] to allow flexibility with vulnerability object structure
+    const allVulnerabilities: any[] = []
+
+    // 1. Analyze HTML for security issues
+    const htmlAnalysis = await analyzeHTML(html, scan.targetUrl)
+    allVulnerabilities.push(...htmlAnalysis.vulnerabilities)
+
+    // 2. Analyze JavaScript code from inline scripts and script tags
+    // Extract inline scripts
+    const scriptMatches = html.matchAll(/<script(?![^>]*src=)[^>]*>([\s\S]*?)<\/script>/gi)
+    for (const match of scriptMatches) {
+      const scriptContent = match[1]
+      if (scriptContent.trim()) {
+        const jsAnalysis = await analyzeJavaScript(scriptContent, `${scan.targetUrl} (inline script)`)
+        allVulnerabilities.push(...jsAnalysis.vulnerabilities)
       }
     }
 
-    return { cached: false }
-  } catch (error) {
-    console.error('Error checking cache:', error)
-    throw new Error('Failed to check cache')
-  }
-}
+    // Extract external script URLs and fetch them for analysis
+    const externalScriptMatches = html.matchAll(/<script[^>]+src=["']([^"']+)["']/gi)
+    const scriptUrls = Array.from(externalScriptMatches).map(m => m[1])
 
-export async function setCache(host: string, result: Prisma.InputJsonValue): Promise<{ success: boolean }> {
-  try {
-    // Cache for 24 hours
-    const expiresAt = new Date()
-    expiresAt.setHours(expiresAt.getHours() + 24)
-
-    await prisma.urlCache.upsert({
-      where: { host },
-      update: {
-        cachedResult: result,
-        lastScan: new Date(),
-        expiresAt,
-      },
-      create: {
-        host,
-        cachedResult: result,
-        lastScan: new Date(),
-        expiresAt,
-      },
-    })
-
-    return { success: true }
-  } catch (error) {
-    console.error('Error caching result:', error)
-    throw new Error('Failed to cache result')
-  }
-}
-
-export async function createScanResult(data: Prisma.ScanResultCreateInput): Promise<ScanResult> {
-  try {
-    const scanResult = await prisma.scanResult.create({
-      data: data,
-    })
-    revalidatePath('/')
-    return scanResult
-  } catch (error) {
-    console.error('Error creating scan result:', error)
-    throw new Error('Failed to create scan result')
-  }
-}
-
-// Mock vulnerability database
-const VULNERABILITIES = [
-  // OWASP Top 10
-  {
-    id: 'broken-access-control',
-    name: 'Broken Access Control',
-    severity: 'high' as const,
-    description: 'The application fails to properly enforce access controls, allowing users to access resources they should not have access to.',
-    owaspTop10: true,
-    owaspCategory: 'A01:2021 - Broken Access Control',
-    owaspLink: 'https://owasp.org/Top10/A01_2021-Broken_Access_Control/',
-  },
-  {
-    id: 'cryptographic-failures',
-    name: 'Cryptographic Failures',
-    severity: 'high' as const,
-    description: 'The application uses weak or improper cryptographic functions, potentially exposing sensitive data.',
-    owaspTop10: true,
-    owaspCategory: 'A02:2021 - Cryptographic Failures',
-    owaspLink: 'https://owasp.org/Top10/A02_2021-Cryptographic_Failures/',
-  },
-  {
-    id: 'injection',
-    name: 'Injection',
-    severity: 'critical' as const,
-    description: 'The application is vulnerable to injection attacks such as SQL injection, NoSQL injection, or command injection.',
-    owaspTop10: true,
-    owaspCategory: 'A03:2021 - Injection',
-    owaspLink: 'https://owasp.org/Top10/A03_2021-Injection/',
-  },
-  {
-    id: 'insecure-design',
-    name: 'Insecure Design',
-    severity: 'medium' as const,
-    description: 'The application has design flaws that can lead to security vulnerabilities.',
-    owaspTop10: true,
-    owaspCategory: 'A04:2021 - Insecure Design',
-    owaspLink: 'https://owasp.org/Top10/A04_2021-Insecure_Design/',
-  },
-  {
-    id: 'security-misconfiguration',
-    name: 'Security Misconfiguration',
-    severity: 'medium' as const,
-    description: 'The application or its infrastructure has insecure default configurations.',
-    owaspTop10: true,
-    owaspCategory: 'A05:2021 - Security Misconfiguration',
-    owaspLink: 'https://owasp.org/Top10/A05_2021-Security_Misconfiguration/',
-  },
-  {
-    id: 'vulnerable-components',
-    name: 'Vulnerable and Outdated Components',
-    severity: 'medium' as const,
-    description: 'The application uses components with known vulnerabilities.',
-    owaspTop10: true,
-    owaspCategory: 'A06:2021 - Vulnerable and Outdated Components',
-    owaspLink: 'https://owasp.org/Top10/A06_2021-Vulnerable_and_Outdated_Components/',
-  },
-  {
-    id: 'identification-authentication-failures',
-    name: 'Identification and Authentication Failures',
-    severity: 'medium' as const,
-    description: 'Authentication mechanisms are improperly implemented.',
-    owaspTop10: true,
-    owaspCategory: 'A07:2021 - Identification and Authentication Failures',
-    owaspLink: 'https://owasp.org/Top10/A07_2021-Identification_and_Authentication_Failures/',
-  },
-  {
-    id: 'software-data-integrity-failures',
-    name: 'Software and Data Integrity Failures',
-    severity: 'high' as const,
-    description: 'The application does not verify the integrity of software or data.',
-    owaspTop10: true,
-    owaspCategory: 'A08:2021 - Software and Data Integrity Failures',
-    owaspLink: 'https://owasp.org/Top10/A08_2021-Software_and_Data_Integrity_Failures/',
-  },
-  {
-    id: 'security-logging-monitoring-failures',
-    name: 'Security Logging and Monitoring Failures',
-    severity: 'low' as const,
-    description: 'The application does not properly log security events or monitor for suspicious activity.',
-    owaspTop10: true,
-    owaspCategory: 'A09:2021 - Security Logging and Monitoring Failures',
-    owaspLink: 'https://owasp.org/Top10/A09_2021-Security_Logging_and_Monitoring_Failures/',
-  },
-  {
-    id: 'ssrf',
-    name: 'Server-Side Request Forgery (SSRF)',
-    severity: 'high' as const,
-    description: 'The application can be tricked into making requests to internal resources.',
-    owaspTop10: true,
-    owaspCategory: 'A10:2021 - Server-Side Request Forgery',
-    owaspLink: 'https://owasp.org/Top10/A10_2021-Server-Side_Request_Forgery_(SSRF)/',
-  },
-  // Other common vulnerabilities
-  {
-    id: 'xss',
-    name: 'Cross-Site Scripting (XSS)',
-    severity: 'high' as const,
-    description: 'The application does not properly sanitize user input, allowing malicious scripts to be executed.',
-    owaspTop10: false,
-  },
-  {
-    id: 'csrf',
-    name: 'Cross-Site Request Forgery (CSRF)',
-    severity: 'medium' as const,
-    description: 'The application does not protect against CSRF attacks.',
-    owaspTop10: false,
-  },
-  {
-    id: 'clickjacking',
-    name: 'Clickjacking',
-    severity: 'medium' as const,
-    description: 'The application is vulnerable to clickjacking attacks due to missing X-Frame-Options header.',
-    owaspTop10: false,
-  },
-  {
-    id: 'insecure-cookies',
-    name: 'Insecure Cookies',
-    severity: 'medium' as const,
-    description: 'Cookies are not properly secured with appropriate flags.',
-    owaspTop10: false,
-  },
-  {
-    id: 'missing-https',
-    name: 'Missing HTTPS',
-    severity: 'high' as const,
-    description: 'The application does not enforce HTTPS connections.',
-    owaspTop10: false,
-  },
-  {
-    id: 'exposed-sensitive-info',
-    name: 'Information Disclosure',
-    severity: 'medium' as const,
-    description: 'Sensitive information is exposed in error messages or responses.',
-    owaspTop10: false,
-  },
-]
-
-export async function scanWebsite(url: string): Promise<Prisma.ScanResultCreateInput> {
-  const startTime = Date.now()
-
-  try {
-    // Validate URL
-    const urlObj = new URL(url)
-    const host = urlObj.host
-
-    // Check cache first
-    const cacheResult = await checkCache(host)
-    if (cacheResult.cached) {
-      return cacheResult.result as Prisma.ScanResultCreateInput
-    }
-
-    // Simulate scanning delay
-    await new Promise(resolve => setTimeout(resolve, 2000))
-
-    // Mock scanning logic - randomly select some vulnerabilities
-    const foundVulnerabilities: typeof VULNERABILITIES = []
-    const numVulnerabilities = Math.floor(Math.random() * 5) + 1 // 1-5 vulnerabilities
-
-    for (let i = 0; i < numVulnerabilities; i++) {
-      const randomIndex = Math.floor(Math.random() * VULNERABILITIES.length)
-      const vuln = VULNERABILITIES[randomIndex]
-      if (!foundVulnerabilities.find(v => v.id === vuln.id)) {
-        foundVulnerabilities.push({
-          ...vuln,
-          id: `${vuln.id}-${Date.now()}-${i}`, // Make IDs unique
+    for (const scriptUrl of scriptUrls.slice(0, 5)) { // Limit to 5 scripts to avoid excessive requests
+      try {
+        const absoluteUrl = new URL(scriptUrl, scan.targetUrl).toString()
+        const scriptResponse = await fetch(absoluteUrl, {
+          headers: { 'User-Agent': 'WebSecScan/1.0' },
+          signal: AbortSignal.timeout(5000)
         })
+
+        if (scriptResponse.ok) {
+          const scriptCode = await scriptResponse.text()
+          const jsAnalysis = await analyzeJavaScript(scriptCode, absoluteUrl)
+          allVulnerabilities.push(...jsAnalysis.vulnerabilities)
+        }
+      } catch {
+        // Skip failed script fetches
+        continue
       }
     }
 
-    const scanDuration = Date.now() - startTime
-    const status = foundVulnerabilities.length > 0 ? 'vulnerable' : 'safe'
+    // 3. Analyze dependencies (check for package.json)
+    const depAnalysis = await analyzeDependenciesFromUrl(scan.targetUrl)
+    allVulnerabilities.push(...depAnalysis.vulnerabilities)
 
-    const result: Prisma.ScanResultCreateInput = {
-      url,
-      host,
-      status,
-      vulnerabilities: foundVulnerabilities,
-      scanDuration,
+    // Create vulnerability records in database
+    for (const vuln of allVulnerabilities) {
+      await prisma.vulnerability.create({
+        data: {
+          type: vuln.type,
+          severity: vuln.severity as any, // Cast from string to enum
+          confidence: vuln.confidence as any, // Cast from string to enum
+          description: vuln.description,
+          location: vuln.location,
+          remediation: vuln.remediation,
+          scanId,
+        },
+      })
     }
 
-    // Cache the result
-    await setCache(host, result as Prisma.InputJsonValue)
+    // Update scan status to COMPLETED
+    await prisma.scan.update({
+      where: { id: scanId },
+      data: { status: ScanStatus.COMPLETED },
+    })
 
-    // Save to database
-    await createScanResult(result)
-
-    return result
+    revalidatePath('/')
   } catch (error) {
-    console.error('Error scanning website:', error)
-    const scanDuration = Date.now() - startTime
-    const result: Prisma.ScanResultCreateInput = {
-      url,
-      host: 'unknown',
-      status: 'error',
-      vulnerabilities: [],
-      scanDuration,
+    console.error('Error in static analysis:', error)
+    await prisma.scan.update({
+      where: { id: scanId },
+      data: { status: ScanStatus.FAILED },
+    })
+    throw error
+  }
+}
+
+export async function runDynamicAnalysis(scanId: string): Promise<void> {
+  try {
+    // Update scan status to RUNNING
+    await prisma.scan.update({
+      where: { id: scanId },
+      data: { status: ScanStatus.RUNNING },
+    })
+
+    const scan = await prisma.scan.findUnique({
+      where: { id: scanId },
+    })
+    if (!scan) throw new Error('Scan not found')
+
+    // Use any[] to allow flexibility with vulnerability object structure
+    const allVulnerabilities: any[] = []
+
+    // 1. Crawl the website to discover endpoints and forms
+    console.log(`Starting crawl of ${scan.targetUrl}...`)
+    const crawlResult = await crawlWebsite(scan.targetUrl, {
+      maxDepth: 2,
+      maxPages: 20,
+      rateLimit: 1000,
+      respectRobotsTxt: true
+    })
+
+    console.log(`Crawl completed. Found ${crawlResult.urls.length} URLs, ${crawlResult.endpoints.length} endpoints, ${crawlResult.forms.length} forms`)
+
+    // 2. Perform authentication and security header checks
+    console.log('Performing auth and security header checks...')
+    const authCheckResult = await performAuthChecks(scan.targetUrl)
+    allVulnerabilities.push(...authCheckResult.vulnerabilities)
+
+    // 3. Check for authentication weaknesses
+    const authWeaknesses = await checkAuthWeaknesses(scan.targetUrl)
+    allVulnerabilities.push(...authWeaknesses)
+
+    // 4. Test for XSS vulnerabilities on discovered endpoints
+    console.log('Testing for XSS vulnerabilities...')
+    const xssResult = await testXss(scan.targetUrl, crawlResult.endpoints)
+    allVulnerabilities.push(...xssResult.vulnerabilities)
+
+    // 5. Test forms for XSS
+    if (crawlResult.forms.length > 0) {
+      console.log(`Testing ${crawlResult.forms.length} forms for XSS...`)
+      const formXssResult = await testFormXss(crawlResult.forms)
+      allVulnerabilities.push(...formXssResult.vulnerabilities)
     }
-    await createScanResult(result)
-    throw new Error('Failed to scan website')
+
+    // Create vulnerability records in database
+    console.log(`Found ${allVulnerabilities.length} vulnerabilities, saving to database...`)
+    for (const vuln of allVulnerabilities) {
+      await prisma.vulnerability.create({
+        data: {
+          type: vuln.type,
+          severity: vuln.severity as any, // Cast from string to enum
+          confidence: vuln.confidence as any, // Cast from string to enum
+          description: vuln.description,
+          location: vuln.location,
+          remediation: vuln.remediation,
+          scanId,
+        },
+      })
+    }
+
+    // Update scan status to COMPLETED
+    await prisma.scan.update({
+      where: { id: scanId },
+      data: { status: ScanStatus.COMPLETED },
+    })
+
+    revalidatePath('/')
+  } catch (error) {
+    console.error('Error in dynamic analysis:', error)
+    await prisma.scan.update({
+      where: { id: scanId },
+      data: { status: ScanStatus.FAILED },
+    })
+    throw error
+  }
+}
+
+export async function generateReport(scanId: string): Promise<{ report: string }> {
+  try {
+    const scan = await prisma.scan.findUnique({
+      where: { id: scanId },
+      include: { results: true },
+    })
+
+    if (!scan) throw new Error('Scan not found')
+
+    // Generate a simple text report
+    let report = `Security Scan Report\n`
+    report += `==================\n\n`
+    report += `Scan ID: ${scan.id}\n`
+    report += `Target URL: ${scan.targetUrl}\n`
+    report += `Mode: ${scan.mode}\n`
+    report += `Status: ${scan.status}\n`
+    report += `Created At: ${scan.createdAt.toISOString()}\n\n`
+
+    report += `Summary:\n`
+    const critical = scan.results.filter(v => v.severity === 'CRITICAL').length
+    const high = scan.results.filter(v => v.severity === 'HIGH').length
+    const medium = scan.results.filter(v => v.severity === 'MEDIUM').length
+    const low = scan.results.filter(v => v.severity === 'LOW').length
+    report += `- Critical: ${critical}\n`
+    report += `- High: ${high}\n`
+    report += `- Medium: ${medium}\n`
+    report += `- Low: ${low}\n\n`
+
+    if (scan.results.length > 0) {
+      report += `Vulnerabilities:\n`
+      scan.results.forEach((vuln, index) => {
+        report += `${index + 1}. ${vuln.type}\n`
+        report += `   Severity: ${vuln.severity}\n`
+        report += `   Confidence: ${vuln.confidence}\n`
+        report += `   Description: ${vuln.description}\n`
+        report += `   Location: ${vuln.location}\n`
+        report += `   Remediation: ${vuln.remediation}\n\n`
+      })
+    } else {
+      report += `No vulnerabilities found.\n`
+    }
+
+    return { report }
+  } catch (error) {
+    console.error('Error generating report:', error)
+    throw new Error('Failed to generate report')
   }
 }

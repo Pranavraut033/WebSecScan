@@ -2,33 +2,13 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import type { Prisma } from '@prisma/client'
+import type { Scan, Vulnerability } from '@prisma/client'
 import { getRecentScans } from '../actions'
 
-interface ScanResult {
-  id: string
-  url: string
-  host: string
-  timestamp: Date
-  status: string
-  vulnerabilities?: Vulnerability[] | Prisma.JsonValue | null
-  scanDuration?: number | null
-}
-
-interface Vulnerability {
-  id: string
-  name: string
-  severity: 'low' | 'medium' | 'high' | 'critical'
-  description: string
-  owaspTop10?: boolean
-  owaspCategory?: string
-  owaspLink?: string
-}
-
 export default function ResultsPage() {
-  const [scanResults, setScanResults] = useState<ScanResult[]>([])
+  const [scanResults, setScanResults] = useState<(Scan & { results: Vulnerability[] })[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedScan, setSelectedScan] = useState<ScanResult | null>(null)
+  const [selectedScan, setSelectedScan] = useState<(Scan & { results: Vulnerability[] }) | null>(null)
 
   useEffect(() => {
     loadResults()
@@ -46,7 +26,8 @@ export default function ResultsPage() {
   }
 
   const getSeverityColor = (severity: string) => {
-    switch (severity) {
+
+    switch (severity.toLowerCase()) {
       case 'critical': return 'text-red-600 bg-red-100'
       case 'high': return 'text-orange-600 bg-orange-100'
       case 'medium': return 'text-yellow-600 bg-yellow-100'
@@ -56,10 +37,20 @@ export default function ResultsPage() {
   }
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'safe': return 'text-green-600 bg-green-100'
-      case 'vulnerable': return 'text-red-600 bg-red-100'
-      case 'error': return 'text-gray-600 bg-gray-100'
+    switch (status.toLowerCase()) {
+      case 'completed': return 'text-green-600 bg-green-100'
+      case 'running': return 'text-blue-600 bg-blue-100'
+      case 'pending': return 'text-gray-600 bg-gray-100'
+      case 'failed': return 'text-red-600 bg-red-100'
+      default: return 'text-gray-600 bg-gray-100'
+    }
+  }
+
+  const getConfidenceColor = (confidence: string) => {
+    switch (confidence.toLowerCase()) {
+      case 'high': return 'text-green-600 bg-green-100'
+      case 'medium': return 'text-yellow-600 bg-yellow-100'
+      case 'low': return 'text-red-600 bg-red-100'
       default: return 'text-gray-600 bg-gray-100'
     }
   }
@@ -103,8 +94,8 @@ export default function ResultsPage() {
                     <div
                       key={scan.id}
                       className={`p-4 border rounded cursor-pointer transition-colors ${selectedScan?.id === scan.id
-                          ? 'border-agent bg-agent/10'
-                          : 'border-agent/20 bg-agent/5 hover:bg-agent/10'
+                        ? 'border-agent bg-agent/10'
+                        : 'border-agent/20 bg-agent/5 hover:bg-agent/10'
                         }`}
                       onClick={() => setSelectedScan(scan)}
                     >
@@ -113,18 +104,14 @@ export default function ResultsPage() {
                           {scan.status.toUpperCase()}
                         </span>
                         <span className="text-xs text-foreground/50">
-                          {new Date(scan.timestamp).toLocaleDateString()}
+                          {new Date(scan.createdAt).toLocaleDateString()}
                         </span>
                       </div>
-                      <p className="font-medium text-sm truncate">{scan.url}</p>
+                      <p className="font-medium text-sm truncate">{scan.targetUrl}</p>
                       <p className="text-xs text-foreground/70">
-                        {Array.isArray(scan.vulnerabilities) ? scan.vulnerabilities.length : 0} vulnerabilities found
+                        {scan.results.length} vulnerabilities found
                       </p>
-                      {scan.scanDuration && (
-                        <p className="text-xs text-foreground/50">
-                          Duration: {scan.scanDuration}ms
-                        </p>
-                      )}
+                      <p className="text-xs text-foreground/50">{scan.mode}</p>
                     </div>
                   ))}
                 </div>
@@ -137,60 +124,52 @@ export default function ResultsPage() {
                     <h2 className="text-xl font-semibold mb-4">Scan Details</h2>
                     <div className="bg-agent/5 border border-agent/20 rounded p-6 mb-6">
                       <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-medium">{selectedScan.url}</h3>
+                        <h3 className="text-lg font-medium">{selectedScan.targetUrl}</h3>
                         <span className={`px-3 py-1 rounded text-sm font-medium ${getStatusColor(selectedScan.status)}`}>
                           {selectedScan.status.toUpperCase()}
                         </span>
                       </div>
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
-                          <p className="text-foreground/70">Host</p>
-                          <p className="font-medium">{selectedScan.host}</p>
+                          <p className="text-foreground/70">URL</p>
+                          <p className="font-medium">{selectedScan.targetUrl}</p>
                         </div>
                         <div>
                           <p className="text-foreground/70">Scan Date</p>
-                          <p className="font-medium">{new Date(selectedScan.timestamp).toLocaleString()}</p>
+                          <p className="font-medium">{new Date(selectedScan.createdAt).toLocaleString()}</p>
                         </div>
                         <div>
-                          <p className="text-foreground/70">Duration</p>
-                          <p className="font-medium">{selectedScan.scanDuration || 'N/A'} ms</p>
+                          <p className="text-foreground/70">Mode</p>
+                          <p className="font-medium">{selectedScan.mode}</p>
                         </div>
                         <div>
                           <p className="text-foreground/70">Vulnerabilities</p>
-                          <p className="font-medium">{Array.isArray(selectedScan.vulnerabilities) ? selectedScan.vulnerabilities.length : 0}</p>
+                          <p className="font-medium">{selectedScan.results.length}</p>
                         </div>
                       </div>
                     </div>
 
                     {/* Vulnerabilities */}
-                    {Array.isArray(selectedScan.vulnerabilities) && selectedScan.vulnerabilities.length > 0 ? (
+                    {selectedScan.results.length > 0 ? (
                       <div>
                         <h3 className="text-lg font-semibold mb-4">Vulnerabilities Found</h3>
                         <div className="space-y-4">
-                          {(selectedScan.vulnerabilities as Vulnerability[]).map((vuln: Vulnerability) => (
+                          {selectedScan.results.map((vuln) => (
                             <div key={vuln.id} className="p-4 border border-vulnerability/20 rounded bg-vulnerability/5">
                               <div className="flex items-center justify-between mb-2">
-                                <h4 className="font-medium">{vuln.name}</h4>
+                                <h4 className="font-medium">{vuln.type}</h4>
                                 <div className="flex items-center gap-2">
                                   <span className={`px-2 py-1 rounded text-xs font-medium ${getSeverityColor(vuln.severity)}`}>
-                                    {vuln.severity.toUpperCase()}
+                                    {vuln.severity}
                                   </span>
-                                  {vuln.owaspTop10 && (
-                                    <a
-                                      href={vuln.owaspLink}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded hover:bg-blue-200"
-                                    >
-                                      OWASP Top 10
-                                    </a>
-                                  )}
+                                  <span className={`px-2 py-1 rounded text-xs font-medium ${getConfidenceColor(vuln.confidence)}`}>
+                                    {vuln.confidence}
+                                  </span>
                                 </div>
                               </div>
                               <p className="text-sm text-foreground/70 mb-2">{vuln.description}</p>
-                              {vuln.owaspCategory && (
-                                <p className="text-xs text-foreground/50">Category: {vuln.owaspCategory}</p>
-                              )}
+                              <p className="text-xs text-foreground/50 mb-2">Location: {vuln.location}</p>
+                              <p className="text-xs text-foreground/50">Remediation: {vuln.remediation}</p>
                             </div>
                           ))}
                         </div>
