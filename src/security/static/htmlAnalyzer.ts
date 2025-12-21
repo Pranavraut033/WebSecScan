@@ -17,6 +17,7 @@ export interface HtmlAnalysisResult {
     location: string;
     remediation: string;
     owaspCategory?: string;
+    owaspId?: string;
     ruleId?: string;
     evidence?: string;
   }>;
@@ -32,39 +33,9 @@ export async function analyzeHTML(
   const vulnerabilities: HtmlAnalysisResult['vulnerabilities'] = [];
   const $ = cheerio.load(html);
 
-  // Check for Content Security Policy
-  const cspCheck = checkContentSecurityPolicy($);
-  if (cspCheck.missing) {
-    vulnerabilities.push(
-      createVulnerabilityFinding(
-        'WSS-SEC-001',
-        sourceUrl,
-        'No CSP meta tag or header detected'
-      )
-    );
-
-    // Only check for inline scripts if CSP is missing
-    // (if CSP exists but is weak, we report the weak CSP instead)
-    const inlineScripts = findUnsafeInlineScripts($);
-    for (const script of inlineScripts) {
-      vulnerabilities.push(
-        createVulnerabilityFinding(
-          'WSS-SEC-002',
-          `${sourceUrl} - Inline script`,
-          script.context,
-          'Inline script found without nonce or hash. This weakens CSP protection against XSS.'
-        )
-      );
-    }
-  } else if (cspCheck.weak) {
-    vulnerabilities.push(
-      createVulnerabilityFinding(
-        'WSS-SEC-002',
-        sourceUrl,
-        cspCheck.evidence || ''
-      )
-    );
-  }
+  // Note: CSP checking is handled by the dynamic cspAnalyzer (HTTP headers)
+  // to avoid duplicate findings. Static HTML analysis only checks for
+  // inline script usage patterns that could be exploited.
 
   // Check form security
   const formIssues = analyzeFormSecurity($);
@@ -79,74 +50,9 @@ export async function analyzeHTML(
   return { vulnerabilities };
 }
 
-/**
- * Check for Content Security Policy presence and strength
- */
-function checkContentSecurityPolicy($: ReturnType<typeof cheerio.load>): {
-  missing: boolean;
-  weak: boolean;
-  evidence?: string;
-} {
-  // Check for CSP meta tag with http-equiv attribute (case-insensitive)
-  let cspMeta = $('meta[http-equiv]').filter((_, el) => {
-    const httpEquiv = $(el).attr('http-equiv');
-    return httpEquiv?.toLowerCase() === 'content-security-policy';
-  });
 
-  if (cspMeta.length === 0) {
-    return { missing: true, weak: false };
-  }
 
-  const cspContent = cspMeta.attr('content');
 
-  if (!cspContent) {
-    return { missing: true, weak: false };
-  }
-
-  // Check for unsafe directives
-  if (cspContent.includes("'unsafe-inline'") || cspContent.includes("'unsafe-eval'")) {
-    return {
-      missing: false,
-      weak: true,
-      evidence: `CSP contains unsafe directives: ${cspContent}`
-    };
-  }
-
-  return { missing: false, weak: false };
-}
-
-/**
- * Find inline scripts that lack proper CSP protection
- */
-function findUnsafeInlineScripts($: ReturnType<typeof cheerio.load>): Array<{ context: string }> {
-  const scripts: Array<{ context: string }> = [];
-
-  // Find inline script tags (without src attribute and without nonce)
-  $('script').each((_, elem) => {
-    const $script = $(elem);
-    const hasSrc = $script.attr('src');
-    const hasNonce = $script.attr('nonce');
-
-    // Skip scripts with src or nonce attributes
-    if (hasSrc || hasNonce) {
-      return;
-    }
-
-    const scriptContent = $script.html()?.trim() || '';
-
-    // Skip empty scripts or Next.js hydration scripts (they're framework-generated)
-    if (scriptContent.length > 0 && !scriptContent.includes('__NEXT_DATA__')) {
-      const preview = scriptContent.length > 100
-        ? scriptContent.substring(0, 100) + '...'
-        : scriptContent;
-      scripts.push({
-        context: `Inline script without nonce: ${preview}`
-      });
-    }
-  });
-
-  return scripts;
-}
 
 /**
  * Analyze form elements for security issues

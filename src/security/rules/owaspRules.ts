@@ -20,31 +20,31 @@ export interface VulnerabilityRule {
 }
 
 /**
- * OWASP Top 10 2021 Category Mapping
+ * OWASP Top 10 2025 Category Mapping
  */
 export const OWASP_CATEGORIES = {
-  A01_BROKEN_ACCESS_CONTROL: 'A01:2021 - Broken Access Control',
-  A02_CRYPTOGRAPHIC_FAILURES: 'A02:2021 - Cryptographic Failures',
-  A03_INJECTION: 'A03:2021 - Injection',
-  A04_INSECURE_DESIGN: 'A04:2021 - Insecure Design',
-  A05_SECURITY_MISCONFIGURATION: 'A05:2021 - Security Misconfiguration',
-  A06_VULNERABLE_COMPONENTS: 'A06:2021 - Vulnerable and Outdated Components',
-  A07_AUTH_FAILURES: 'A07:2021 - Identification and Authentication Failures',
-  A08_DATA_INTEGRITY: 'A08:2021 - Software and Data Integrity Failures',
-  A09_LOGGING_FAILURES: 'A09:2021 - Security Logging and Monitoring Failures',
-  A10_SSRF: 'A10:2021 - Server-Side Request Forgery'
+  A01_BROKEN_ACCESS_CONTROL: 'A01:2025 - Broken Access Control',
+  A02_SECURITY_MISCONFIGURATION: 'A02:2025 - Security Misconfiguration',
+  A03_SUPPLY_CHAIN_FAILURES: 'A03:2025 - Software Supply Chain Failures',
+  A04_CRYPTOGRAPHIC_FAILURES: 'A04:2025 - Cryptographic Failures',
+  A05_INJECTION: 'A05:2025 - Injection',
+  A06_INSECURE_DESIGN: 'A06:2025 - Insecure Design',
+  A07_AUTH_FAILURES: 'A07:2025 - Authentication Failures',
+  A08_DATA_INTEGRITY: 'A08:2025 - Software or Data Integrity Failures',
+  A09_LOGGING_FAILURES: 'A09:2025 - Security Logging & Alerting Failures',
+  A10_EXCEPTIONAL_CONDITIONS: 'A10:2025 - Mishandling of Exceptional Conditions'
 } as const;
 
 /**
  * Vulnerability Rule Definitions
  */
 export const VULNERABILITY_RULES: Record<string, VulnerabilityRule> = {
-  // XSS Vulnerabilities (A03: Injection)
+  // XSS Vulnerabilities (A05: Injection)
   'WSS-XSS-001': {
     id: 'WSS-XSS-001',
     name: 'Reflected Cross-Site Scripting (XSS)',
-    owaspCategory: OWASP_CATEGORIES.A03_INJECTION,
-    owaspId: 'A03:2021',
+    owaspCategory: OWASP_CATEGORIES.A05_INJECTION,
+    owaspId: 'A05:2025',
     description: 'User input is reflected in the page without proper sanitization, allowing script injection.',
     severity: 'HIGH',
     confidence: 'HIGH',
@@ -58,8 +58,8 @@ export const VULNERABILITY_RULES: Record<string, VulnerabilityRule> = {
   'WSS-XSS-002': {
     id: 'WSS-XSS-002',
     name: 'Dangerous innerHTML Usage',
-    owaspCategory: OWASP_CATEGORIES.A03_INJECTION,
-    owaspId: 'A03:2021',
+    owaspCategory: OWASP_CATEGORIES.A05_INJECTION,
+    owaspId: 'A05:2025',
     description: 'Direct use of innerHTML or dangerouslySetInnerHTML with unsanitized data can lead to XSS.',
     severity: 'HIGH',
     confidence: 'MEDIUM',
@@ -72,8 +72,8 @@ export const VULNERABILITY_RULES: Record<string, VulnerabilityRule> = {
   'WSS-XSS-003': {
     id: 'WSS-XSS-003',
     name: 'Unsafe eval() Usage',
-    owaspCategory: OWASP_CATEGORIES.A03_INJECTION,
-    owaspId: 'A03:2021',
+    owaspCategory: OWASP_CATEGORIES.A05_INJECTION,
+    owaspId: 'A05:2025',
     description: 'Use of eval() or Function() constructor with user input enables arbitrary code execution.',
     severity: 'CRITICAL',
     confidence: 'HIGH',
@@ -83,12 +83,12 @@ export const VULNERABILITY_RULES: Record<string, VulnerabilityRule> = {
     ]
   },
 
-  // Security Misconfiguration (A05)
+  // Security Misconfiguration (A02)
   'WSS-SEC-001': {
     id: 'WSS-SEC-001',
     name: 'Missing Content Security Policy',
-    owaspCategory: OWASP_CATEGORIES.A05_SECURITY_MISCONFIGURATION,
-    owaspId: 'A05:2021',
+    owaspCategory: OWASP_CATEGORIES.A02_SECURITY_MISCONFIGURATION,
+    owaspId: 'A02:2025',
     description: 'Content-Security-Policy header is missing, allowing execution of inline scripts and reducing XSS protection.',
     severity: 'MEDIUM',
     confidence: 'HIGH',
@@ -102,8 +102,8 @@ export const VULNERABILITY_RULES: Record<string, VulnerabilityRule> = {
   'WSS-SEC-002': {
     id: 'WSS-SEC-002',
     name: 'Weak Content Security Policy',
-    owaspCategory: OWASP_CATEGORIES.A05_SECURITY_MISCONFIGURATION,
-    owaspId: 'A05:2021',
+    owaspCategory: OWASP_CATEGORIES.A02_SECURITY_MISCONFIGURATION,
+    owaspId: 'A02:2025',
     description: "CSP allows 'unsafe-inline' or 'unsafe-eval', which weakens XSS protection.",
     severity: 'MEDIUM',
     confidence: 'HIGH',
@@ -116,8 +116,8 @@ export const VULNERABILITY_RULES: Record<string, VulnerabilityRule> = {
   'WSS-SEC-003': {
     id: 'WSS-SEC-003',
     name: 'Missing X-Frame-Options Header',
-    owaspCategory: OWASP_CATEGORIES.A05_SECURITY_MISCONFIGURATION,
-    owaspId: 'A05:2021',
+    owaspCategory: OWASP_CATEGORIES.A02_SECURITY_MISCONFIGURATION,
+    owaspId: 'A02:2025',
     description: 'X-Frame-Options header is missing, making the site vulnerable to clickjacking attacks.',
     severity: 'MEDIUM',
     confidence: 'HIGH',
@@ -131,8 +131,8 @@ export const VULNERABILITY_RULES: Record<string, VulnerabilityRule> = {
   'WSS-SEC-004': {
     id: 'WSS-SEC-004',
     name: 'Missing X-Content-Type-Options Header',
-    owaspCategory: OWASP_CATEGORIES.A05_SECURITY_MISCONFIGURATION,
-    owaspId: 'A05:2021',
+    owaspCategory: OWASP_CATEGORIES.A02_SECURITY_MISCONFIGURATION,
+    owaspId: 'A02:2025',
     description: 'X-Content-Type-Options header is missing, allowing MIME type sniffing attacks.',
     severity: 'LOW',
     confidence: 'HIGH',
@@ -145,8 +145,8 @@ export const VULNERABILITY_RULES: Record<string, VulnerabilityRule> = {
   'WSS-SEC-005': {
     id: 'WSS-SEC-005',
     name: 'Missing Strict-Transport-Security Header',
-    owaspCategory: OWASP_CATEGORIES.A02_CRYPTOGRAPHIC_FAILURES,
-    owaspId: 'A02:2021',
+    owaspCategory: OWASP_CATEGORIES.A04_CRYPTOGRAPHIC_FAILURES,
+    owaspId: 'A04:2025',
     description: 'HSTS header is missing, allowing potential downgrade attacks from HTTPS to HTTP.',
     severity: 'MEDIUM',
     confidence: 'HIGH',
@@ -157,12 +157,12 @@ export const VULNERABILITY_RULES: Record<string, VulnerabilityRule> = {
     ]
   },
 
-  // Authentication & Session Management (A07)
+  // Authentication Failures (A07)
   'WSS-AUTH-001': {
     id: 'WSS-AUTH-001',
     name: 'Insecure Cookie - Missing Secure Flag',
     owaspCategory: OWASP_CATEGORIES.A07_AUTH_FAILURES,
-    owaspId: 'A07:2021',
+    owaspId: 'A07:2025',
     description: 'Cookie is set without the Secure flag, allowing transmission over unencrypted HTTP connections.',
     severity: 'HIGH',
     confidence: 'HIGH',
@@ -177,7 +177,7 @@ export const VULNERABILITY_RULES: Record<string, VulnerabilityRule> = {
     id: 'WSS-AUTH-002',
     name: 'Insecure Cookie - Missing HttpOnly Flag',
     owaspCategory: OWASP_CATEGORIES.A07_AUTH_FAILURES,
-    owaspId: 'A07:2021',
+    owaspId: 'A07:2025',
     description: 'Cookie is set without HttpOnly flag, making it accessible to JavaScript and vulnerable to XSS-based theft.',
     severity: 'HIGH',
     confidence: 'HIGH',
@@ -191,7 +191,7 @@ export const VULNERABILITY_RULES: Record<string, VulnerabilityRule> = {
     id: 'WSS-AUTH-003',
     name: 'Insecure Cookie - Missing SameSite Attribute',
     owaspCategory: OWASP_CATEGORIES.A07_AUTH_FAILURES,
-    owaspId: 'A07:2021',
+    owaspId: 'A07:2025',
     description: 'Cookie lacks SameSite attribute, making it vulnerable to CSRF attacks.',
     severity: 'MEDIUM',
     confidence: 'HIGH',
@@ -202,12 +202,12 @@ export const VULNERABILITY_RULES: Record<string, VulnerabilityRule> = {
     ]
   },
 
-  // Vulnerable Dependencies (A06)
+  // Software Supply Chain Failures (A03)
   'WSS-DEP-001': {
     id: 'WSS-DEP-001',
     name: 'Vulnerable Dependency Detected',
-    owaspCategory: OWASP_CATEGORIES.A06_VULNERABLE_COMPONENTS,
-    owaspId: 'A06:2021',
+    owaspCategory: OWASP_CATEGORIES.A03_SUPPLY_CHAIN_FAILURES,
+    owaspId: 'A03:2025',
     description: 'A package dependency has known security vulnerabilities (CVE).',
     severity: 'HIGH',
     confidence: 'HIGH',
@@ -220,8 +220,8 @@ export const VULNERABILITY_RULES: Record<string, VulnerabilityRule> = {
   'WSS-DEP-002': {
     id: 'WSS-DEP-002',
     name: 'Outdated Package Detected',
-    owaspCategory: OWASP_CATEGORIES.A06_VULNERABLE_COMPONENTS,
-    owaspId: 'A06:2021',
+    owaspCategory: OWASP_CATEGORIES.A03_SUPPLY_CHAIN_FAILURES,
+    owaspId: 'A03:2025',
     description: 'Package is significantly outdated and may contain unpatched vulnerabilities.',
     severity: 'MEDIUM',
     confidence: 'MEDIUM',
@@ -231,12 +231,12 @@ export const VULNERABILITY_RULES: Record<string, VulnerabilityRule> = {
     ]
   },
 
-  // Secrets & Credentials (A02)
+  // Secrets & Credentials (A04 - Cryptographic Failures)
   'WSS-SEC-006': {
     id: 'WSS-SEC-006',
     name: 'Hardcoded Secret Detected',
-    owaspCategory: OWASP_CATEGORIES.A02_CRYPTOGRAPHIC_FAILURES,
-    owaspId: 'A02:2021',
+    owaspCategory: OWASP_CATEGORIES.A04_CRYPTOGRAPHIC_FAILURES,
+    owaspId: 'A04:2025',
     description: 'Hardcoded credentials, API keys, or secrets found in source code.',
     severity: 'CRITICAL',
     confidence: 'MEDIUM',
@@ -246,12 +246,12 @@ export const VULNERABILITY_RULES: Record<string, VulnerabilityRule> = {
     ]
   },
 
-  // Form Security (A05)
+  // Form Security (A02/A04)
   'WSS-FORM-001': {
     id: 'WSS-FORM-001',
     name: 'Form Missing Action Attribute',
-    owaspCategory: OWASP_CATEGORIES.A05_SECURITY_MISCONFIGURATION,
-    owaspId: 'A05:2021',
+    owaspCategory: OWASP_CATEGORIES.A02_SECURITY_MISCONFIGURATION,
+    owaspId: 'A02:2025',
     description: 'HTML form lacks an action attribute, which may lead to unintended behavior or open redirects.',
     severity: 'LOW',
     confidence: 'MEDIUM',
@@ -264,8 +264,8 @@ export const VULNERABILITY_RULES: Record<string, VulnerabilityRule> = {
   'WSS-FORM-002': {
     id: 'WSS-FORM-002',
     name: 'Form Uses Insecure HTTP Action',
-    owaspCategory: OWASP_CATEGORIES.A02_CRYPTOGRAPHIC_FAILURES,
-    owaspId: 'A02:2021',
+    owaspCategory: OWASP_CATEGORIES.A04_CRYPTOGRAPHIC_FAILURES,
+    owaspId: 'A04:2025',
     description: 'Form submits data over unencrypted HTTP, exposing sensitive information.',
     severity: 'HIGH',
     confidence: 'HIGH',
@@ -299,6 +299,7 @@ export function createVulnerabilityFinding(
   location: string;
   remediation: string;
   owaspCategory?: string;
+  owaspId?: string;
   ruleId?: string;
   evidence?: string;
 } {
@@ -317,6 +318,7 @@ export function createVulnerabilityFinding(
     location,
     remediation: rule.remediation,
     owaspCategory: rule.owaspCategory,
+    owaspId: rule.owaspId,
     evidence: evidence || ''
   };
 }

@@ -17,6 +17,7 @@ export interface XssTestResult {
     location: string;
     remediation: string;
     owaspCategory?: string;
+    owaspId?: string;
     ruleId?: string;
     evidence?: string;
   }>;

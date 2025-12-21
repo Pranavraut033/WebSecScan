@@ -16,6 +16,7 @@ export interface DependencyAnalysisResult {
     location: string;
     remediation: string;
     owaspCategory?: string;
+    owaspId?: string;
     ruleId?: string;
     evidence?: string;
   }>;

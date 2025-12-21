@@ -17,6 +17,7 @@ export interface AuthCheckResult {
     location: string;
     remediation: string;
     owaspCategory?: string;
+    owaspId?: string;
     ruleId?: string;
     evidence?: string;
   }>;
@@ -136,28 +137,8 @@ function checkSecurityHeaders(
     );
   }
 
-  // Check Content-Security-Policy
-  const csp = normalizedHeaders['content-security-policy'];
-  if (!csp) {
-    vulnerabilities.push(
-      createVulnerabilityFinding(
-        'WSS-SEC-001',
-        targetUrl,
-        'Content-Security-Policy header not found'
-      )
-    );
-  } else {
-    // Check for weak CSP
-    if (csp.includes("'unsafe-inline'") || csp.includes("'unsafe-eval'")) {
-      vulnerabilities.push(
-        createVulnerabilityFinding(
-          'WSS-SEC-002',
-          targetUrl,
-          `CSP contains unsafe directives: ${csp.substring(0, 100)}...`
-        )
-      );
-    }
-  }
+  // Note: CSP checking is handled by the dedicated cspAnalyzer module
+  // to avoid duplicate findings and provide comprehensive CSP analysis
 
   // Check X-XSS-Protection (deprecated but still informational)
   const xssProtection = normalizedHeaders['x-xss-protection'];
