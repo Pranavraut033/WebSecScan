@@ -2,6 +2,13 @@
 
 import { useState } from 'react'
 import { ScanMode } from '@prisma/client'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
+import Button from '@/components/ui/Button'
+import Input from '@/components/ui/Input'
+import Select from '@/components/ui/Select'
+import Checkbox from '@/components/ui/Checkbox'
+import Alert from '@/components/ui/Alert'
+import Spinner from '@/components/ui/Spinner'
 
 interface ScanFormProps {
   onScanComplete?: () => void
@@ -13,6 +20,12 @@ export default function ScanForm({ onScanComplete }: ScanFormProps) {
   const [scanning, setScanning] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [consent, setConsent] = useState(false)
+  const [urlInfo, setUrlInfo] = useState<{
+    protocol: string
+    warnings: string[]
+    securityThreats: string[]
+    redirected: boolean
+  } | null>(null)
 
   const handleScan = async () => {
     if (!scanUrl.trim()) {
@@ -46,6 +59,11 @@ export default function ScanForm({ onScanComplete }: ScanFormProps) {
         throw new Error(data.error || 'Failed to start scan')
       }
 
+      // Store URL normalization info
+      if (data.urlInfo) {
+        setUrlInfo(data.urlInfo)
+      }
+
       // Poll for scan completion
       const scanId = data.scanId
       let attempts = 0
@@ -53,7 +71,7 @@ export default function ScanForm({ onScanComplete }: ScanFormProps) {
 
       const pollInterval = setInterval(async () => {
         attempts++
-        
+
         try {
           const statusResponse = await fetch(`/api/scan/${scanId}/status`)
           const statusData = await statusResponse.json()
@@ -63,7 +81,8 @@ export default function ScanForm({ onScanComplete }: ScanFormProps) {
             setScanning(false)
             setScanUrl('')
             setConsent(false)
-            
+            setUrlInfo(null)
+
             if (onScanComplete) {
               onScanComplete()
             }
@@ -89,83 +108,105 @@ export default function ScanForm({ onScanComplete }: ScanFormProps) {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 shadow-sm">
-      <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">Start New Scan</h2>
-      
-      <div className="space-y-4">
-        <div>
-          <label htmlFor="url" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Target URL
-          </label>
-          <input
-            id="url"
-            type="url"
-            value={scanUrl}
-            onChange={(e) => setScanUrl(e.target.value)}
-            placeholder="https://example.com"
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            disabled={scanning}
-          />
-        </div>
+    <Card variant="glow">
+      <CardHeader>
+        <CardTitle className="text-cyber-blue-light glow-text">Start New Scan</CardTitle>
+      </CardHeader>
+
+      <CardContent className="space-y-4">
+        <Input
+          id="url"
+          type="url"
+          label="Target URL"
+          value={scanUrl}
+          onChange={(e) => setScanUrl(e.target.value)}
+          placeholder="https://example.com"
+          disabled={scanning}
+          leftIcon={
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+            </svg>
+          }
+        />
 
         <div>
-          <label htmlFor="mode" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Scan Mode
-          </label>
-          <select
+          <Select
             id="mode"
+            label="Scan Mode"
             value={scanMode}
             onChange={(e) => setScanMode(e.target.value as ScanMode)}
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
             disabled={scanning}
           >
             <option value={ScanMode.STATIC}>Static Analysis Only</option>
             <option value={ScanMode.DYNAMIC}>Dynamic Analysis Only</option>
             <option value={ScanMode.BOTH}>Both (Recommended)</option>
-          </select>
-          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-            {scanMode === ScanMode.STATIC && 'Analyzes code structure and dependencies'}
-            {scanMode === ScanMode.DYNAMIC && 'Tests runtime behavior and responses'}
-            {scanMode === ScanMode.BOTH && 'Comprehensive analysis combining both methods'}
+          </Select>
+          <p className="mt-1.5 text-xs text-cyber-gray-400">
+            {scanMode === ScanMode.STATIC && '🔍 Analyzes code structure and dependencies'}
+            {scanMode === ScanMode.DYNAMIC && '🚀 Tests runtime behavior and responses'}
+            {scanMode === ScanMode.BOTH && '⚡ Comprehensive analysis combining both methods'}
           </p>
         </div>
 
-        <div className="flex items-start">
-          <input
-            id="consent"
-            type="checkbox"
-            checked={consent}
-            onChange={(e) => setConsent(e.target.checked)}
-            className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-            disabled={scanning}
-          />
-          <label htmlFor="consent" className="ml-2 text-sm text-gray-700 dark:text-gray-300">
-            I confirm that I own this website or have explicit permission to scan it. 
-            Scanning websites without permission may be illegal.
-          </label>
-        </div>
+        <Checkbox
+          id="consent"
+          checked={consent}
+          onChange={(e) => setConsent(e.target.checked)}
+          disabled={scanning}
+          label="I confirm that I own this website or have explicit permission to scan it. Scanning websites without permission may be illegal."
+        />
 
         {error && (
-          <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md">
-            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-          </div>
+          <Alert variant="danger" title="Error">
+            {error}
+          </Alert>
         )}
 
-        <button
+        {urlInfo && !scanning && (
+          <Alert
+            variant={urlInfo.securityThreats.length > 0 ? 'warning' : 'info'}
+            title="URL Information"
+          >
+            <ul className="space-y-1">
+              <li>• Protocol: <span className="font-mono font-bold">{urlInfo.protocol.toUpperCase()}</span></li>
+              {urlInfo.redirected && <li>• URL redirects detected</li>}
+              {urlInfo.warnings.map((warning, i) => (
+                <li key={i}>• {warning}</li>
+              ))}
+              {urlInfo.securityThreats.length > 0 && (
+                <li className="font-medium">
+                  ⚠️ Security threats: {urlInfo.securityThreats.join(', ')}
+                </li>
+              )}
+            </ul>
+          </Alert>
+        )}
+
+        <Button
           onClick={handleScan}
           disabled={scanning || !scanUrl.trim() || !consent}
-          className="w-full px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+          isLoading={scanning}
+          variant="primary"
+          size="lg"
+          className="w-full"
+          leftIcon={
+            !scanning && (
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            )
+          }
         >
-          {scanning ? 'Scanning...' : 'Start Security Scan'}
-        </button>
+          {scanning ? 'Scanning in Progress...' : 'Start Security Scan'}
+        </Button>
 
         {scanning && (
-          <div className="flex items-center justify-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-            <span>Scan in progress... This may take a few moments</span>
+          <div className="flex items-center justify-center space-x-3 text-sm text-cyber-gray-400">
+            <Spinner size="sm" variant="primary" />
+            <span>Analyzing security vulnerabilities...</span>
           </div>
         )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 }

@@ -2,29 +2,31 @@
 
 import Link from 'next/link'
 import type { Scan, Vulnerability } from '@prisma/client'
+import { getGradeColor } from '@/lib/scoring'
+import { Card, CardContent } from '@/components/ui/Card'
+import Badge from '@/components/ui/Badge'
+import Button from '@/components/ui/Button'
 
 interface ScanSummaryCardProps {
   scan: Scan & { results: Vulnerability[] }
 }
 
 export default function ScanSummaryCard({ scan }: ScanSummaryCardProps) {
-  const getSeverityColor = (severity: string) => {
+  const getSeverityVariant = (severity: string): 'critical' | 'high' | 'medium' | 'low' | 'default' => {
     switch (severity.toLowerCase()) {
-      case 'critical': return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
-      case 'high': return 'bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400'
-      case 'medium': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
-      case 'low': return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
+      case 'critical': return 'critical'
+      case 'high': return 'high'
+      case 'medium': return 'medium'
+      case 'low': return 'low'
+      default: return 'default'
     }
   }
 
-  const getStatusColor = (status: string) => {
+  const getStatusVariant = (status: string): 'success' | 'info' | 'default' => {
     switch (status.toLowerCase()) {
-      case 'completed': return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
-      case 'running': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400'
-      case 'pending': return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
-      case 'failed': return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
+      case 'completed': return 'success'
+      case 'running': return 'info'
+      default: return 'default'
     }
   }
 
@@ -38,78 +40,100 @@ export default function ScanSummaryCard({ scan }: ScanSummaryCardProps) {
   const totalVulnerabilities = scan.results.length
 
   return (
-    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-            {scan.hostname || new URL(scan.targetUrl).hostname}
-          </h3>
-          <p className="text-xs text-gray-500 dark:text-gray-400 truncate" title={scan.targetUrl}>
-            {scan.targetUrl}
-          </p>
-        </div>
-        <span className={`px-2 py-1 rounded text-xs font-medium whitespace-nowrap ml-2 ${getStatusColor(scan.status)}`}>
-          {scan.status}
-        </span>
-      </div>
-
-      <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 mb-3">
-        <span>{scan.mode} scan</span>
-        <span>{new Date(scan.createdAt).toLocaleDateString()}</span>
-      </div>
-
-      {scan.status === 'COMPLETED' && totalVulnerabilities > 0 ? (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {totalVulnerabilities} {totalVulnerabilities === 1 ? 'Issue' : 'Issues'} Found
-            </span>
+    <Card variant="bordered" className="hover:border-cyber-blue transition-all duration-200">
+      <CardContent>
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex-1 min-w-0">
+            <h3 className="text-base font-semibold text-cyber-gray-900 dark:text-cyber-gray-50 truncate flex items-center gap-2">
+              <svg className="h-4 w-4 text-cyber-blue dark:text-cyber-blue-light flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+              </svg>
+              {scan.hostname || new URL(scan.targetUrl).hostname}
+            </h3>
+            <p className="text-xs text-cyber-gray-500 dark:text-cyber-gray-400 truncate font-mono mt-1" title={scan.targetUrl}>
+              {scan.targetUrl}
+            </p>
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            {severityCounts.critical > 0 && (
-              <div className={`px-2 py-1 rounded text-xs font-medium ${getSeverityColor('critical')}`}>
-                Critical: {severityCounts.critical}
-              </div>
-            )}
-            {severityCounts.high > 0 && (
-              <div className={`px-2 py-1 rounded text-xs font-medium ${getSeverityColor('high')}`}>
-                High: {severityCounts.high}
-              </div>
-            )}
-            {severityCounts.medium > 0 && (
-              <div className={`px-2 py-1 rounded text-xs font-medium ${getSeverityColor('medium')}`}>
-                Medium: {severityCounts.medium}
-              </div>
-            )}
-            {severityCounts.low > 0 && (
-              <div className={`px-2 py-1 rounded text-xs font-medium ${getSeverityColor('low')}`}>
-                Low: {severityCounts.low}
-              </div>
+          <div className="flex items-center gap-2 ml-3 flex-shrink-0">
+            <Badge variant={getStatusVariant(scan.status)} size="sm">
+              {scan.status}
+            </Badge>
+            {scan.status === 'COMPLETED' && scan.grade && (
+              <Badge variant="info" size="sm" className="font-bold">
+                {scan.grade}{typeof scan.score === 'number' ? ` · ${scan.score}` : ''}
+              </Badge>
             )}
           </div>
         </div>
-      ) : scan.status === 'COMPLETED' ? (
-        <div className="text-center py-2">
-          <p className="text-sm text-green-600 dark:text-green-400 font-medium">✓ No Issues Found</p>
-        </div>
-      ) : scan.status === 'FAILED' ? (
-        <div className="text-center py-2">
-          <p className="text-sm text-red-600 dark:text-red-400">Scan Failed</p>
-        </div>
-      ) : (
-        <div className="text-center py-2">
-          <p className="text-sm text-gray-500 dark:text-gray-400">Scan in progress...</p>
-        </div>
-      )}
 
-      {scan.status === 'COMPLETED' && (
-        <Link
-          href={`/scan/${scan.id}`}
-          className="mt-3 block text-center px-4 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors text-sm font-medium"
-        >
-          View Details
-        </Link>
-      )}
-    </div>
+        <div className="flex items-center justify-between text-xs text-cyber-gray-600 dark:text-cyber-gray-500 mb-3 font-mono">
+          <span className="flex items-center gap-1">
+            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            {scan.mode}
+          </span>
+          <span className="flex items-center gap-1">
+            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            {new Date(scan.createdAt).toLocaleDateString()}
+          </span>
+        </div>
+
+        {scan.status === 'COMPLETED' && totalVulnerabilities > 0 ? (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-cyber-gray-700 dark:text-cyber-gray-300">
+                {totalVulnerabilities} {totalVulnerabilities === 1 ? 'Issue' : 'Issues'} Found
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {severityCounts.critical > 0 && (
+                <Badge variant="critical" size="sm" className="justify-center">
+                  Critical: {severityCounts.critical}
+                </Badge>
+              )}
+              {severityCounts.high > 0 && (
+                <Badge variant="high" size="sm" className="justify-center">
+                  High: {severityCounts.high}
+                </Badge>
+              )}
+              {severityCounts.medium > 0 && (
+                <Badge variant="medium" size="sm" className="justify-center">
+                  Medium: {severityCounts.medium}
+                </Badge>
+              )}
+              {severityCounts.low > 0 && (
+                <Badge variant="low" size="sm" className="justify-center">
+                  Low: {severityCounts.low}
+                </Badge>
+              )}
+            </div>
+          </div>
+        ) : scan.status === 'COMPLETED' ? (
+          <div className="text-center py-2">
+            <Badge variant="success" size="md">✓ No Issues Found</Badge>
+          </div>
+        ) : scan.status === 'FAILED' ? (
+          <div className="text-center py-2">
+            <Badge variant="critical" size="md">Scan Failed</Badge>
+          </div>
+        ) : (
+          <div className="text-center py-2 text-sm text-cyber-gray-600 dark:text-cyber-gray-400 flex items-center justify-center gap-2">
+            <div className="animate-spin rounded-full h-3 w-3 border-2 border-cyber-blue border-t-transparent"></div>
+            Scanning...
+          </div>
+        )}
+
+        {scan.status === 'COMPLETED' && (
+          <Link href={`/scan/${scan.id}`} className="mt-4 block">
+            <Button variant="ghost" size="sm" className="w-full">
+              View Details
+            </Button>
+          </Link>
+        )}
+      </CardContent>
+    </Card>
   )
 }

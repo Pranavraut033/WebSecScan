@@ -3,15 +3,23 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import type { Scan, Vulnerability } from '@prisma/client'
-import { ScanMode } from '@prisma/client'
-import { getRecentScans, createScan, runStaticAnalysis, runDynamicAnalysis } from './actions'
+import { getRecentScans } from './actions'
+import ScanForm from '@/components/ScanForm'
+import ScanSummaryCard from '@/components/ScanSummaryCard'
+import AppLayout from '@/components/AppLayout'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
+import Spinner from '@/components/ui/Spinner'
+import Button from '@/components/ui/Button'
 
 export default function Home() {
   const [recentScans, setRecentScans] = useState<(Scan & { results: Vulnerability[] })[]>([])
   const [loading, setLoading] = useState(true)
-  const [scanUrl, setScanUrl] = useState('')
-  const [scanMode, setScanMode] = useState<ScanMode>(ScanMode.BOTH)
-  const [scanning, setScanning] = useState(false)
+  const [stats, setStats] = useState({
+    totalScans: 0,
+    totalVulnerabilities: 0,
+    criticalCount: 0,
+    highCount: 0,
+  })
 
   useEffect(() => {
     loadData()
@@ -21,6 +29,16 @@ export default function Home() {
     try {
       const scans = await getRecentScans()
       setRecentScans(scans)
+
+      // Calculate statistics
+      const totalScans = scans.length
+      const totalVulnerabilities = scans.reduce((sum, scan) => sum + scan.results.length, 0)
+      const criticalCount = scans.reduce((sum, scan) =>
+        sum + scan.results.filter(v => v.severity === 'CRITICAL').length, 0)
+      const highCount = scans.reduce((sum, scan) =>
+        sum + scan.results.filter(v => v.severity === 'HIGH').length, 0)
+
+      setStats({ totalScans, totalVulnerabilities, criticalCount, highCount })
     } catch (error) {
       console.error('Error loading data:', error)
     } finally {
@@ -28,139 +46,120 @@ export default function Home() {
     }
   }
 
-  const handleScan = async () => {
-    if (!scanUrl.trim()) return
-
-    setScanning(true)
-    try {
-      const { scanId } = await createScan(scanUrl.trim(), scanMode)
-
-      // Run analysis based on mode
-      if (scanMode === ScanMode.STATIC || scanMode === ScanMode.BOTH) {
-        await runStaticAnalysis(scanId)
-      }
-      if (scanMode === ScanMode.DYNAMIC || scanMode === ScanMode.BOTH) {
-        await runDynamicAnalysis(scanId)
-      }
-
-      await loadData()
-      setScanUrl('')
-    } catch (error) {
-      console.error('Error scanning website:', error)
-      alert('Error scanning website. Please try again.')
-    } finally {
-      setScanning(false)
-    }
-  }
-
-  const getSeverityColor = (severity: string) => {
-    switch (severity.toLowerCase()) {
-      case 'critical': return 'text-red-600 bg-red-100'
-      case 'high': return 'text-orange-600 bg-orange-100'
-      case 'medium': return 'text-yellow-600 bg-yellow-100'
-      case 'low': return 'text-green-600 bg-green-100'
-      case 'completed': return 'text-green-600 bg-green-100'
-      case 'running': return 'text-blue-600 bg-blue-100'
-      case 'pending': return 'text-gray-600 bg-gray-100'
-      case 'failed': return 'text-red-600 bg-red-100'
-      default: return 'text-gray-600 bg-gray-100'
-    }
-  }
-
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="border-b border-agent/20 p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-agent">WebSecScan</h1>
-            <p className="text-sm text-foreground/70">Automated Security Scanner for Web Applications</p>
-          </div>
-          <Link
-            href="/results"
-            className="px-4 py-2 bg-agent/20 text-agent rounded hover:bg-agent/30 transition-colors"
-          >
-            View Results
-          </Link>
+    <AppLayout>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Hero Section */}
+        <div className="mb-12 text-center">
+          <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-scan mb-4">
+            WebSecScan
+          </h1>
+          <p className="text-cyber-gray-700 dark:text-cyber-gray-300 text-lg max-w-2xl mx-auto">
+            Advanced security vulnerability scanner for modern web applications
+          </p>
         </div>
-      </header>
-      <main className="p-8">
-        <div className="max-w-4xl mx-auto">
+
+        {/* Statistics Dashboard */}
+        {!loading && recentScans.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <Card variant="bordered" padding="md" className="bg-white dark:bg-cyber-dark/80">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-medium text-cyber-gray-600 dark:text-cyber-gray-400">Total Scans</h3>
+                  <p className="text-3xl font-bold text-cyber-gray-900 dark:text-cyber-gray-50 mt-2">{stats.totalScans}</p>
+                </div>
+                <svg className="h-12 w-12 text-cyber-blue dark:text-cyber-blue-light opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </Card>
+
+            <Card variant="bordered" padding="md" className="bg-white dark:bg-cyber-dark/80">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-medium text-cyber-gray-600 dark:text-cyber-gray-400">Total Issues</h3>
+                  <p className="text-3xl font-bold text-cyber-gray-900 dark:text-cyber-gray-50 mt-2">{stats.totalVulnerabilities}</p>
+                </div>
+                <svg className="h-12 w-12 text-cyber-purple dark:text-cyber-purple-light opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+            </Card>
+
+            <Card variant="bordered" padding="md" className="border-red-200 dark:border-severity-critical/50">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-medium text-cyber-gray-600 dark:text-cyber-gray-400">Critical</h3>
+                  <p className="text-3xl font-bold text-cyber-red-dark dark:text-severity-critical mt-2">{stats.criticalCount}</p>
+                </div>
+                <svg className="h-12 w-12 text-red-500 dark:text-severity-critical opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </Card>
+
+            <Card variant="bordered" padding="md" className="border-orange-200 dark:border-orange-500/50">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-medium text-cyber-gray-600 dark:text-cyber-gray-400">High Severity</h3>
+                  <p className="text-3xl font-bold text-severity-high dark:text-severity-high mt-2">{stats.highCount}</p>
+                </div>
+                <svg className="h-12 w-12 text-orange-500 dark:text-orange-400 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+            </Card>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Scan Form */}
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">Scan a Website</h2>
-            <div className="flex gap-4 items-center">
-              <input
-                type="url"
-                value={scanUrl}
-                onChange={(e) => setScanUrl(e.target.value)}
-                placeholder="Enter website URL (e.g., https://example.com)"
-                className="flex-1 px-4 py-2 border border-agent/20 rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-agent/50"
-                disabled={scanning}
-              />
-              <select
-                value={scanMode}
-                onChange={(e) => setScanMode(e.target.value as ScanMode)}
-                className="px-4 py-2 border border-agent/20 rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-agent/50"
-                disabled={scanning}
-              >
-                <option value={ScanMode.STATIC}>Static Only</option>
-                <option value={ScanMode.DYNAMIC}>Dynamic Only</option>
-                <option value={ScanMode.BOTH}>Both</option>
-              </select>
-              <button
-                onClick={handleScan}
-                disabled={scanning || !scanUrl.trim()}
-                className="px-6 py-2 bg-agent text-white rounded hover:bg-agent/80 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {scanning ? 'Scanning...' : 'Scan'}
-              </button>
-            </div>
-          </section>
+          <div className="lg:col-span-1">
+            <ScanForm onScanComplete={loadData} />
+          </div>
 
           {/* Recent Scans */}
-          <section>
-            <h2 className="text-xl font-semibold mb-4">Recent Scans</h2>
-            {loading ? (
-              <p className="text-foreground/70">Loading recent scans...</p>
-            ) : recentScans.length === 0 ? (
-              <p className="text-foreground/70">No recent scans found.</p>
-            ) : (
-              <div className="space-y-4">
-                {recentScans.map((scan) => (
-                  <div key={scan.id} className="p-4 border border-agent/20 rounded bg-agent/5">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-medium">{scan.targetUrl}</h3>
-                      <div className="flex items-center gap-2">
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${getSeverityColor(scan.status)}`}>
-                          {scan.status}
-                        </span>
-                        <span className="text-xs text-foreground/50">{scan.mode}</span>
-                      </div>
-                    </div>
-                    <p className="text-sm text-foreground/70">Created: {new Date(scan.createdAt).toLocaleString()}</p>
-                    {scan.results.length > 0 && (
-                      <div className="mt-2">
-                        <p className="text-sm font-medium">Vulnerabilities: {scan.results.length}</p>
-                        <div className="flex gap-2 mt-1 flex-wrap">
-                          {['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].map(severity => {
-                            const count = scan.results.filter(v => v.severity === severity).length
-                            if (count === 0) return null
-                            return (
-                              <span key={severity} className={`px-2 py-1 rounded text-xs ${getSeverityColor(severity)}`}>
-                                {severity}: {count}
-                              </span>
-                            )
-                          })}
-                        </div>
-                      </div>
-                    )}
+          <div className="lg:col-span-2">
+            <Card variant="glow">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-cyber-gray-900 dark:text-cyber-blue-light">Recent Scans</CardTitle>
+                {recentScans.length > 0 && (
+                  <Link href="/results">
+                    <Button variant="ghost" size="sm">
+                      View All
+                      <svg className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </Button>
+                  </Link>
+                )}
+              </CardHeader>
+
+              <CardContent>
+                {loading ? (
+                  <div className="text-center py-12">
+                    <Spinner size="lg" variant="primary" className="mx-auto" />
+                    <p className="text-cyber-gray-600 dark:text-cyber-gray-300 mt-4">Loading scans...</p>
                   </div>
-                ))}
-              </div>
-            )}
-          </section>
+                ) : recentScans.length === 0 ? (
+                  <div className="text-center py-12">
+                    <svg className="h-16 w-16 text-cyber-gray-400 dark:text-cyber-gray-600 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <p className="text-cyber-gray-600 dark:text-cyber-gray-300">No scans yet. Start your first scan!</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {recentScans.slice(0, 5).map((scan) => (
+                      <ScanSummaryCard key={scan.id} scan={scan} />
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
-      </main>
-    </div>
-  );
+      </div>
+    </AppLayout>
+  )
 }
