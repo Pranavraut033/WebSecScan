@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { ScanMode } from '@prisma/client'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
@@ -15,6 +16,7 @@ interface ScanFormProps {
 }
 
 export default function ScanForm({ onScanComplete }: ScanFormProps) {
+  const router = useRouter()
   const [scanUrl, setScanUrl] = useState('')
   const [scanMode, setScanMode] = useState<ScanMode>(ScanMode.BOTH)
   const [scanning, setScanning] = useState(false)
@@ -64,41 +66,9 @@ export default function ScanForm({ onScanComplete }: ScanFormProps) {
         setUrlInfo(data.urlInfo)
       }
 
-      // Poll for scan completion
+      // Redirect to scan page to watch progress in real-time
       const scanId = data.scanId
-      let attempts = 0
-      const maxAttempts = 60 // 60 seconds max
-
-      const pollInterval = setInterval(async () => {
-        attempts++
-
-        try {
-          const statusResponse = await fetch(`/api/scan/${scanId}/status`)
-          const statusData = await statusResponse.json()
-
-          if (statusData.status === 'COMPLETED' || statusData.status === 'FAILED') {
-            clearInterval(pollInterval)
-            setScanning(false)
-            setScanUrl('')
-            setConsent(false)
-            setUrlInfo(null)
-
-            if (onScanComplete) {
-              onScanComplete()
-            }
-          }
-
-          if (attempts >= maxAttempts) {
-            clearInterval(pollInterval)
-            setScanning(false)
-            setError('Scan is taking longer than expected. Please check results page.')
-          }
-        } catch (err) {
-          clearInterval(pollInterval)
-          setScanning(false)
-          setError('Error checking scan status')
-        }
-      }, 2000) // Check every 2 seconds
+      router.push(`/scan/${scanId}`)
 
     } catch (err) {
       console.error('Error scanning website:', err)

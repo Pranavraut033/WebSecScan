@@ -5,7 +5,7 @@
  * in JavaScript/TypeScript source code through deterministic pattern matching.
  */
 
-import { createVulnerabilityFinding } from '../rules/owaspRules.ts';
+import { createVulnerabilityFinding } from '../rules/owaspRules';
 
 export interface JsAnalysisResult {
   vulnerabilities: Array<{

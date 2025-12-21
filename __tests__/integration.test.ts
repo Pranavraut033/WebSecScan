@@ -127,9 +127,9 @@ describe('Integration Tests - Test Fixtures', () => {
         `Should cover at least 3 OWASP categories, found ${categories.size}: ${[...categories].join(', ')}`);
 
       // Check for specific categories
-      const hasInjection = [...categories].some(c => c?.includes('A03:2021'));
-      const hasMisconfig = [...categories].some(c => c?.includes('A05:2021'));
-      const hasVulnComponents = [...categories].some(c => c?.includes('A06:2021'));
+      const hasInjection = [...categories].some(c => c?.includes('A05:2025'));
+      const hasMisconfig = [...categories].some(c => c?.includes('A02:2025'));
+      const hasVulnComponents = [...categories].some(c => c?.includes('A03:2025'));
 
       assert.ok(hasInjection || hasMisconfig || hasVulnComponents,
         'Should cover key OWASP categories');
