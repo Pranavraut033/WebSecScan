@@ -1,6 +1,6 @@
 # API Reference
 
-Complete API documentation for WebSecScan's REST API endpoints and Server Actions.
+Complete API documentation for WebSecScan's REST API endpoints, Server Actions, and real-time logging.
 
 ---
 
@@ -71,6 +71,8 @@ Initiates a new security scan.
   }
 }
 ```
+
+**Note**: After receiving the `scanId`, clients should redirect to `/scan/{scanId}` to view real-time logs and progress.
 
 **Response Fields**:
 
@@ -273,7 +275,7 @@ Retrieve complete scan results including all vulnerabilities.
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `severity` | string | Filter by severity: `CRITICAL`, `HIGH`, `MEDIUM`, `LOW` |
-| `owaspCategory` | string | Filter by OWASP category (e.g., `A03:2021-Injection`) |
+| `owaspCategory` | string | Filter by OWASP category (e.g., `A05:2025-Injection`) |
 
 **Response** (200 OK):
 
@@ -298,7 +300,7 @@ Retrieve complete scan results including all vulnerabilities.
     {
       "id": "vuln_abc123",
       "vulnId": "WSS-STATIC-JS-001",
-      "owaspCategory": "A03:2021-Injection",
+      "owaspCategory": "A05:2025-Injection",
       "cweId": "CWE-95",
       "severity": "CRITICAL",
       "confidence": "HIGH",
@@ -308,7 +310,7 @@ Retrieve complete scan results including all vulnerabilities.
       "location": "src/utils/parser.js:42",
       "remediation": "Remove eval() usage entirely. Use JSON.parse() for JSON data...",
       "references": [
-        "https://owasp.org/Top10/A03_2021-Injection/",
+        "https://owasp.org/Top10/2025/",
         "https://cwe.mitre.org/data/definitions/95.html"
       ],
       "createdAt": "2025-12-20T10:35:12.000Z"
@@ -359,7 +361,116 @@ async function fetchResults(scanId: string) {
 
 ---
 
-### 4. Get Scan History
+### 4. Stream Scan Logs (SSE)
+
+**NEW** - Stream real-time scan progress logs using Server-Sent Events.
+
+**Endpoint**: `GET /api/scan/logs?scanId=:id`
+
+**Query Parameters**:
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `scanId` | string | ✅ | Scan ID to stream logs for |
+
+**Response**: Server-Sent Events stream
+
+**Event Format**:
+
+```
+data: {"scanId":"clx...","timestamp":"2025-12-21T10:30:45.123Z","level":"info","message":"Starting dynamic analysis...","phase":"DYNAMIC"}
+
+data: {"scanId":"clx...","timestamp":"2025-12-21T10:30:46.456Z","level":"info","message":"Fetching headers from https://example.com...","phase":"DYNAMIC"}
+
+data: {"scanId":"clx...","timestamp":"2025-12-21T10:30:47.789Z","level":"success","message":"Crawl completed. Found 20 URLs, 0 endpoints, 2 forms","phase":"DYNAMIC"}
+```
+
+**Log Object Structure**:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `scanId` | string | ID of the scan |
+| `timestamp` | string | ISO 8601 timestamp |
+| `level` | enum | `"info"`, `"success"`, `"warning"`, `"error"` |
+| `message` | string | Human-readable log message |
+| `phase` | string (optional) | Scan phase: `"STATIC"`, `"DYNAMIC"`, etc. |
+| `metadata` | object (optional) | Additional structured data |
+
+**Log Levels**:
+
+- **info** (•): General progress updates
+- **success** (✓): Successful completion of a phase
+- **warning** (⚠): Non-critical issues detected
+- **error** (✗): Critical errors or failures
+
+**Example Client Implementation**:
+
+```typescript
+function connectToScanLogs(scanId: string) {
+  const eventSource = new EventSource(`/api/scan/logs?scanId=${scanId}`);
+  
+  eventSource.onopen = () => {
+    console.log('Connected to scan log stream');
+  };
+  
+  eventSource.onmessage = (event) => {
+    const log = JSON.parse(event.data);
+    console.log(`[${log.level}] ${log.message}`);
+  };
+  
+  eventSource.onerror = (error) => {
+    console.error('SSE connection error:', error);
+    eventSource.close();
+  };
+  
+  return eventSource;
+}
+
+// Usage
+const eventSource = connectToScanLogs('clx1a2b3c4d5e6f7g8h9');
+
+// Clean up when done
+eventSource.close();
+```
+
+**React Hook Example**:
+
+```typescript
+function useScanLogs(scanId: string) {
+  const [logs, setLogs] = useState<ScanLog[]>([]);
+  const [isConnected, setIsConnected] = useState(false);
+  
+  useEffect(() => {
+    const eventSource = new EventSource(`/api/scan/logs?scanId=${scanId}`);
+    
+    eventSource.onopen = () => setIsConnected(true);
+    
+    eventSource.onmessage = (event) => {
+      const log = JSON.parse(event.data);
+      setLogs(prev => [...prev, log]);
+    };
+    
+    eventSource.onerror = () => {
+      setIsConnected(false);
+      eventSource.close();
+    };
+    
+    return () => eventSource.close();
+  }, [scanId]);
+  
+  return { logs, isConnected };
+}
+```
+
+**Notes**:
+- Connection stays open until scan completes or client disconnects
+- Logs are not persisted to database (in-memory only)
+- Automatic reconnection handled by browser
+- Works with Next.js serverless functions
+
+---
+
+### 5. Get Scan History
 
 Retrieve scan history for a specific hostname.
 
@@ -676,7 +787,7 @@ interface Vulnerability {
   description: string;
   location: string;                    // File:line or URL
   remediation: string;                 // Fix guidance
-  owaspCategory: string | null;        // A03:2021-Injection
+  owaspCategory: string | null;        // A05:2025-Injection
   owaspId: string | null;              // WSS-STATIC-JS-001
   ruleId: string | null;               // Rule identifier
 }

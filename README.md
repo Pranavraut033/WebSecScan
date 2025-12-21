@@ -45,6 +45,8 @@ WebSecScan is an automated, lightweight security scanner that identifies common 
 - Track up to 20 scans per hostname
 - One-click rescan functionality
 - Compare results over time
+- **Real-time scan progress logs** with Server-Sent Events (SSE)
+- Live status updates during scan execution
 - Export capabilities (planned)
 
 ## Expected Outcome
@@ -95,7 +97,8 @@ Open [http://localhost:3000](http://localhost:3000) to view the UI.
    - **DYNAMIC**: Live testing with security scoring
    - **BOTH**: Complete analysis (recommended)
 3. Click "Start Scan"
-4. View results with security score and grade
+4. **Watch real-time logs** as the scan progresses
+5. View results with security score and grade
 
 ### Understanding Your Score
 
@@ -126,6 +129,7 @@ Grade assigned based on final score
 - `POST /api/scan/start` — Start a new scan
 - `GET /api/scan/:id/status` — Poll scan status
 - `GET /api/scan/:id/results` — Fetch complete results with score and tests
+- `GET /api/scan/logs?scanId=:id` — Stream real-time scan logs via SSE
 - `GET /api/history/:hostname` — Get scan history for a hostname
 
 ### Server Actions
@@ -193,8 +197,10 @@ WebSecScan/
 │   ├── app/                    # Next.js App Router
 │   │   ├── actions.ts         # Server Actions (createScan, runAnalysis)
 │   │   ├── api/               # REST API endpoints
-│   │   └── scan/[id]/         # Scan results page
+│   │   │   └── scan/logs/     # SSE endpoint for real-time logs
+│   │   └── scan/[id]/         # Scan results page with live logs
 │   ├── components/            # React Components
+│   │   ├── ScanLogs.tsx       # Real-time log display
 │   │   ├── ScoreCard.tsx      # Security score display
 │   │   ├── SecurityTestCard.tsx # Test result cards
 │   │   ├── ScanHistory.tsx    # Historical scans
@@ -325,3 +331,43 @@ WebSecScan uses modular security agents for scanning:
 - **Dependency Scanner**: Vulnerability checking
 
 See [agents.md](agents.md) for agent architecture and [tasks.md](tasks.md) for task definitions.
+
+---
+
+## 🎉 Recent Updates
+
+### Real-time Scan Monitoring (December 2025)
+
+**NEW**: Watch your security scans execute in real-time with live progress logs.
+
+**What's New:**
+- ✅ **Server-Sent Events (SSE)** - Real-time log streaming from server to client
+- ✅ **Live Progress Display** - See scan progress with color-coded logs (info, success, warning, error)
+- ✅ **Immediate Feedback** - Users redirected to scan page immediately after starting scan
+- ✅ **Auto-scroll Logs** - Fixed-height scrollable log container showing 3-4 recent logs
+- ✅ **Phase Indicators** - Clear labels for STATIC and DYNAMIC scan phases
+- ✅ **Connection Status** - Live indicator showing active SSE connection
+
+**Technical Details:**
+- Central logging library: `src/lib/scanLogger.ts`
+- SSE API endpoint: `GET /api/scan/logs?scanId={id}`
+- UI component: `src/components/ScanLogs.tsx`
+- Logs are in-memory only (not persisted) for optimal performance
+
+**Example Log Output:**
+```
+• 10:30:45 [DYNAMIC] Starting dynamic analysis...
+✓ 10:30:47 [DYNAMIC] Crawl completed. Found 20 URLs, 0 endpoints, 2 forms
+• 10:30:48 [DYNAMIC] Performing auth and security header checks...
+✓ 10:30:51 [DYNAMIC] Dynamic analysis completed. Score: 85/100 (Grade: B)
+```
+
+**Documentation:**
+- [Real-time Logging Guide](docs/real-time-logging.md) - Complete implementation details
+- [API Reference](docs/api.md#4-stream-scan-logs-sse) - SSE endpoint documentation
+- [Development Guide](docs/development.md#using-real-time-logging-in-scanners) - How to add logs to scanners
+
+**Migration Notes:**
+- No breaking changes to existing APIs
+- Scan workflow now redirects to `/scan/{id}` immediately after start
+- Old polling-based status checking still works alongside SSE logs

@@ -22,7 +22,10 @@ The tool systematically detects security issues aligned with the **OWASP Top 10 
 - **📦 Dependency Scanning**: Identify known vulnerabilities in third-party libraries
 - **📊 Actionable Reports**: Developer-friendly vulnerability reports with clear remediation steps
 - **🎨 Modern UI**: Clean, intuitive dashboard built with Next.js
-- **🔒 Ethical & Safe**: Respects robots.txt, enforces rate limits, no destructive testing
+- **� Security Scoring**: Mozilla Observatory-style scoring (0-100) with letter grades (A+ to F)
+- **🔄 Real-time Progress**: Live scan logs streamed via Server-Sent Events
+- **📜 Scan History**: Track security improvements over time (up to 20 scans per hostname)
+- **�🔒 Ethical & Safe**: Respects robots.txt, enforces rate limits, no destructive testing
 
 ---
 
@@ -64,6 +67,12 @@ The tool systematically detects security issues aligned with the **OWASP Top 10 
 <h3 style="margin-top: 0;">📡 API Reference</h3>
 <p>REST API endpoints and server actions documentation</p>
 <p><a href="api/">→ API Docs</a></p>
+</div>
+
+<div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px;">
+<h3 style="margin-top: 0;">🔄 Real-time Logging</h3>
+<p>Learn about the SSE-based real-time progress monitoring</p>
+<p><a href="real-time-logging/">→ Logging Guide</a></p>
 </div>
 
 </div>

@@ -112,10 +112,17 @@ src/
 ├── components/                  # React Components
 │   ├── ScanForm.tsx            # Scan configuration form
 │   ├── ScanSummaryCard.tsx     # Vulnerability summary widget
-│   └── VulnerabilityCard.tsx   # Individual vulnerability display
+│   ├── VulnerabilityCard.tsx   # Individual vulnerability display
+│   ├── ScoreCard.tsx           # Security score display (NEW)
+│   ├── SecurityTestCard.tsx    # Security test results (NEW)
+│   ├── ScanHistory.tsx         # Historical scans (NEW)
+│   └── ScanLogs.tsx            # Real-time log display (NEW)
 │
 ├── lib/                        # Shared utilities
-│   └── db.ts                   # Prisma client singleton
+│   ├── db.ts                   # Prisma client singleton
+│   ├── scoring.ts              # Security scoring algorithm (NEW)
+│   ├── urlNormalizer.ts        # URL validation & normalization (NEW)
+│   └── scanLogger.ts           # Real-time logging via SSE (NEW)
 │
 └── security/                   # Security scanning engines
     ├── static/                 # Static analysis
@@ -336,7 +343,7 @@ export const NEW_CHECK_RULE = {
   id: 'NEW_CHECK',
   pattern: /your-regex-pattern/g,
   type: 'Your Vulnerability Type',
-  owaspCategory: 'A03:2021-Injection',
+  owaspCategory: 'A05:2025-Injection',
   severity: 'HIGH' as const,
   confidence: 'HIGH' as const,
   title: 'Clear vulnerability title',
@@ -400,6 +407,95 @@ describe('New check', () => {
 **4. Update documentation:**
 - Add to [testing-coverage.md](testing-coverage.md)
 - Update feature count in [features.md](features.md)
+
+---
+
+### Using Real-time Logging in Scanners
+
+**NEW** - WebSecScan includes a centralized logging system for real-time progress updates.
+
+**1. Import the ScanLogger:**
+
+```typescript
+import { ScanLogger } from '@/lib/scanLogger';
+```
+
+**2. Emit logs at key stages:**
+
+```typescript
+export async function runMyAnalyzer(scanId: string, targetUrl: string) {
+  // Start phase
+  ScanLogger.info(scanId, 'Starting custom analysis...', 'CUSTOM');
+  
+  try {
+    // Progress update
+    ScanLogger.info(scanId, `Analyzing ${targetUrl}...`, 'CUSTOM');
+    
+    const results = await performAnalysis(targetUrl);
+    
+    // Success message
+    ScanLogger.success(
+      scanId, 
+      `Analysis completed. Found ${results.length} issues`,
+      'CUSTOM'
+    );
+    
+    return results;
+  } catch (error) {
+    // Error logging
+    ScanLogger.error(scanId, `Analysis failed: ${error.message}`, 'CUSTOM');
+    throw error;
+  }
+}
+```
+
+**3. Log levels available:**
+
+```typescript
+// General information
+ScanLogger.info(scanId, 'Processing data...', 'PHASE_NAME');
+
+// Successful completion
+ScanLogger.success(scanId, 'Operation completed', 'PHASE_NAME');
+
+// Non-critical warnings
+ScanLogger.warning(scanId, 'Skipping optional check', 'PHASE_NAME');
+
+// Critical errors
+ScanLogger.error(scanId, 'Failed to connect', 'PHASE_NAME');
+```
+
+**4. Include metadata (optional):**
+
+```typescript
+ScanLogger.info(
+  scanId, 
+  'Crawl progress update',
+  'DYNAMIC',
+  { urlsFound: 20, depth: 2, elapsed: 1234 }
+);
+```
+
+**Key Features:**
+- Logs stream to connected clients via Server-Sent Events
+- No database writes (in-memory only for performance)
+- Automatic cleanup when scan completes
+- Multiple clients can watch the same scan
+
+**Client-side usage:**
+
+The `ScanLogs` component automatically connects and displays logs:
+
+```tsx
+import ScanLogs from '@/components/ScanLogs';
+
+// In your scan page
+{scan.status === 'RUNNING' && (
+  <ScanLogs scanId={scan.id} />
+)}
+```
+
+See [Real-time Logging Documentation](real-time-logging.md) for full details.
 
 ---
 

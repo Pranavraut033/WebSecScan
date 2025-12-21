@@ -1,6 +1,49 @@
 # Features
 
-WebSecScan provides comprehensive security scanning through three complementary approaches: static analysis, dynamic testing, and dependency vulnerability checking.
+WebSecScan provides comprehensive security scanning through three complementary approaches: static analysis, dynamic testing, and dependency vulnerability checking. The platform includes real-time progress monitoring and Mozilla Observatory-style security scoring.
+
+---
+
+## 🔄 Real-time Scan Monitoring
+
+WebSecScan provides live feedback during security scans using **Server-Sent Events (SSE)** for real-time log streaming.
+
+### Live Progress Logs
+
+Watch your scan progress in real-time with color-coded logs:
+
+```
+• 10:30:45 [DYNAMIC] Starting dynamic analysis...
+• 10:30:46 [DYNAMIC] Fetching headers from https://example.com...
+• 10:30:46 [DYNAMIC] Analyzing security headers...
+✓ 10:30:47 [DYNAMIC] Crawl completed. Found 20 URLs, 0 endpoints, 2 forms
+• 10:30:48 [DYNAMIC] Performing auth and security header checks...
+• 10:30:50 [DYNAMIC] Saving 7 security test results...
+✓ 10:30:51 [DYNAMIC] Dynamic analysis completed. Score: 85/100 (Grade: B)
+```
+
+### Features
+- **Fixed-height scrollable container** - Shows 3-4 logs at a time
+- **Auto-scroll** - Automatically scrolls to latest log entry
+- **Color-coded levels** - Info (gray), Success (green), Warning (yellow), Error (red)
+- **Phase labels** - STATIC, DYNAMIC phases clearly marked
+- **Live connection indicator** - Visual status showing active SSE connection
+- **Timestamps** - Each log shows exact time of emission
+
+### User Flow
+1. Enter target URL and click "Start Scan"
+2. **Immediately redirected** to scan page
+3. **Watch real-time logs** as scan executes
+4. Logs update live via Server-Sent Events
+5. When complete, logs disappear and full results display
+
+### Technical Implementation
+- Uses **SSE (Server-Sent Events)** instead of WebSockets
+- Better compatibility with Next.js and serverless deployments
+- Logs kept in-memory (not persisted to database)
+- Automatic cleanup when scan completes or client disconnects
+
+See [Real-time Logging Documentation](real-time-logging.md) for implementation details.
 
 ---
 
@@ -163,7 +206,7 @@ Sites accessible only via HTTP are flagged as **HIGH severity** vulnerabilities:
 {
   "type": "INSECURE_PROTOCOL",
   "severity": "HIGH",
-  "owaspCategory": "A02:2021-Cryptographic Failures",
+  "owaspCategory": "A04:2025-Cryptographic Failures",
   "message": "Site uses HTTP instead of HTTPS. All traffic is transmitted in cleartext.",
   "remediation": "Enable HTTPS by obtaining an SSL/TLS certificate. Configure server redirects and implement HSTS headers."
 }
@@ -512,7 +555,7 @@ Each finding includes:
 ```json
 {
   "id": "WSS-STATIC-JS-001",
-  "owaspCategory": "A03:2021-Injection",
+  "owaspCategory": "A05:2025-Injection",
   "severity": "CRITICAL",
   "confidence": "HIGH",
   "title": "Use of eval() with potential user input",
@@ -526,7 +569,7 @@ Each finding includes:
     "Implement input validation and sanitization"
   ],
   "references": [
-    "https://owasp.org/Top10/A03_2021-Injection/",
+    "https://owasp.org/Top10/2025/",
     "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval"
   ]
 }

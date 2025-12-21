@@ -142,7 +142,7 @@ export async function analyzeHTML(
       const scriptContent = $(elem).html() || '';
       vulnerabilities.push({
         id: generateId('HTML', 'INLINE_SCRIPT'),
-        owaspCategory: 'A03:2021-Injection',
+        owaspCategory: 'A05:2025-Injection',
         severity: 'HIGH',
         title: 'Inline script without nonce',
         description: 'Inline scripts bypass CSP unless nonce is used',
@@ -223,7 +223,7 @@ export async function analyzeDependencies(
       if (isVersionVulnerable(version, advisory.vulnerable_versions)) {
         vulnerabilities.push({
           id: generateId('DEP', pkg),
-          owaspCategory: 'A06:2021-Vulnerable Components',
+          owaspCategory: 'A03:2025-Software Supply Chain Failures',
           severity: mapAdvisorySeverity(advisory.severity),
           title: `${pkg}@${version}: ${advisory.title}`,
           description: advisory.overview,
@@ -548,53 +548,46 @@ Identify known vulnerabilities in third-party dependencies by comparing versions
 ### Implementation
 
 ```typescript
-export async function scanLibraries(
-  projectPath: string
-): Promise<LibraryScanResult> {
-  // 1. Locate and parse manifests
-  const packageJson = await readFile(
-    path.join(projectPath, 'package.json'),
-    'utf-8'
-  );
+export async function analyzeDependencies(
+  packageJsonContent: string,
+  sourceUrl: string
+): Promise<DependencyAnalysisResult> {
+  // 1. Parse manifest
+  const manifest = JSON.parse(packageJsonContent);
+  const dependencies = {
+    ...manifest.dependencies,
+    ...manifest.devDependencies
+  };
   
-  const lockfile = await readFile(
-    path.join(projectPath, 'package-lock.json'),
-    'utf-8'
-  ).catch(() => null);
-  
-  // 2. Extract dependencies
-  const dependencies = extractDependencies(packageJson, lockfile);
-  
-  // 3. Load advisory database
+  // 2. Load vulnerability database
   const advisories = await loadAdvisoryDatabase();
   
-  // 4. Match versions
-  const vulnerabilities: LibraryVulnerability[] = [];
+  // 3. Check each dependency
+  const vulnerabilities: Vulnerability[] = [];
   
-  for (const dep of dependencies) {
+  for (const [pkg, version] of Object.entries(dependencies)) {
     const matchingAdvisories = findAdvisories(
-      dep.name,
-      dep.version,
+      pkg,
+      version as string,
       advisories
     );
     
     for (const advisory of matchingAdvisories) {
       vulnerabilities.push({
-        package: dep.name,
-        installedVersion: dep.version,
-        vulnerability: {
-          cve: advisory.cve,
-          title: advisory.title,
-          severity: advisory.severity,
-          description: advisory.description,
-          patchedVersions: advisory.patched_versions
-        },
-        fixGuidance: generateFixGuidance(dep, advisory)
+        id: generateId('DEP', pkg),
+        owaspCategory: 'A03:2025-Software Supply Chain Failures',
+        severity: mapAdvisorySeverity(advisory.severity),
+        title: `${pkg}@${version}: ${advisory.title}`,
+        description: advisory.description,
+        evidence: `"${pkg}": "${version}"`,
+        location: 'package.json',
+        remediation: `Update to ${pkg}@${advisory.patched_versions}`,
+        references: [advisory.url, advisory.cve]
       });
     }
   }
   
-  return { vulnerabilities, totalDependencies: dependencies.length };
+  return { vulnerabilities };
 }
 ```
 
@@ -639,7 +632,7 @@ All agents produce structured `Vulnerability` objects:
 ```typescript
 interface Vulnerability {
   id: string;                    // WSS-STATIC-JS-001
-  owaspCategory: string;         // A03:2021-Injection
+  owaspCategory: string;         // A05:2025-Injection
   cweId?: string;                // CWE-79
   severity: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
   confidence: 'HIGH' | 'MEDIUM' | 'LOW';

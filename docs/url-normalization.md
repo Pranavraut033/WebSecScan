@@ -15,7 +15,7 @@ WebSecScan automatically normalizes and secures URLs during the scanning process
 
 ### 3. HTTP Security Threat Detection
 - Flags sites using HTTP as **HIGH severity** security threats
-- Maps to OWASP A02:2021 - Cryptographic Failures
+- Maps to OWASP A04:2025 - Cryptographic Failures
 - Provides detailed remediation guidance including:
   - Obtaining SSL/TLS certificates
   - Server configuration for HTTPS redirection
@@ -52,7 +52,7 @@ When HTTP is detected, a vulnerability record is created with:
 - **Vulnerability ID**: `WSS-PROTOCOL-{timestamp}`
 - **Name**: Insecure HTTP Protocol
 - **Severity**: HIGH
-- **OWASP Category**: A02:2021 - Cryptographic Failures
+- **OWASP Category**: A04:2025 - Cryptographic Failures
 - **CWE ID**: CWE-319 (Cleartext Transmission of Sensitive Information)
 - **CVSS Score**: 7.5
 - **Confidence**: HIGH

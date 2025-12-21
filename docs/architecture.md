@@ -103,12 +103,14 @@ WebSecScan/
 │   │   ├── VulnerabilityCard.tsx  # Vulnerability display
 │   │   ├── ScoreCard.tsx          # Security score badge
 │   │   ├── SecurityTestCard.tsx   # Individual test result
-│   │   └── ScanHistory.tsx        # Historical scans table
+│   │   ├── ScanHistory.tsx        # Historical scans table
+│   │   └── ScanLogs.tsx           # Real-time log display (NEW)
 │   │
 │   ├── lib/                   # Shared utilities
 │   │   ├── db.ts                 # Prisma client singleton
 │   │   ├── scoring.ts            # Security scoring system
-│   │   └── urlNormalizer.ts      # URL validation & normalization (NEW)
+│   │   ├── urlNormalizer.ts      # URL validation & normalization
+│   │   └── scanLogger.ts         # Real-time logging via SSE (NEW)
 │   │
 │   └── security/              # Security scanning engines
 │       ├── static/            # Static analysis
@@ -167,7 +169,7 @@ WebSecScan/
         ↓
 2. POST /api/scan/start receives request
         ↓
-3. URL Normalization & Validation (NEW)
+3. URL Normalization & Validation
    • Validate URL format
    • Add protocol if missing (defaults to HTTPS)
    • Test HTTPS availability
@@ -178,24 +180,30 @@ WebSecScan/
    • Record normalized URL
    • Store HTTP threat as vulnerability if detected
         ↓
-5. Dispatch scan to appropriate agent(s)
+5. User redirected to /scan/{scanId} page
+   • SSE connection established via GET /api/scan/logs (NEW)
+   • Real-time logs stream to UI
+        ↓
+6. Dispatch scan to appropriate agent(s)
         ↓
    ┌────┴────┬────────────┬─────────────┐
    ↓         ↓            ↓             ↓
 Static    Dynamic    Dependency      Rules
 Analyzer  Tester     Scanner        Validator
+   │         │            │             │
+   │ (emits real-time logs via ScanLogger)
    ↓         ↓            ↓             ↓
    └────┬────┴────────────┴─────────────┘
         ↓
-6. Collect vulnerabilities from all agents
+7. Collect vulnerabilities from all agents
         ↓
-7. Apply OWASP mapping & severity scoring
+8. Apply OWASP mapping & severity scoring
         ↓
-8. Store results in database (status: COMPLETED)
+9. Store results in database (status: COMPLETED)
         ↓
-9. Generate report & notify UI
+10. SSE connection closes, full results displayed
         ↓
-10. User views results
+11. User views detailed results & security score
 ```
 
 ### Request/Response Cycle
@@ -503,7 +511,7 @@ GET /api/scan/{scanId}/results
 **Security Features**:
 - Automatic HTTPS upgrade when available
 - HTTP usage flagged as HIGH severity threat
-- Maps to OWASP A02:2021 - Cryptographic Failures
+- Maps to OWASP A04:2025 - Cryptographic Failures
 - Non-destructive testing (HEAD requests only)
 - Configurable timeouts prevent hanging
 
