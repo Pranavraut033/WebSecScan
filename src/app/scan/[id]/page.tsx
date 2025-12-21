@@ -11,6 +11,7 @@ import { SecurityTestCard } from '@/components/SecurityTestCard'
 import { createScan } from '@/app/actions'
 import { ScanHistory } from '@/components/ScanHistory'
 import AppLayout from '@/components/AppLayout'
+import ScanLogs from '@/components/ScanLogs'
 
 type ScanWithDetails = Scan & {
   results: Vulnerability[]
@@ -197,6 +198,13 @@ export default function ScanDetailPage({ params }: { params: Promise<{ id: strin
           </div>
         </div>
       </div>
+
+      {/* Real-time Logs - shown when scan is running */}
+      {(scan.status === 'RUNNING' || scan.status === 'PENDING') && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <ScanLogs scanId={scan.id} />
+        </div>
+      )}
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Tab Navigation */}

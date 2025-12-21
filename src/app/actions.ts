@@ -3,6 +3,7 @@
 import { prisma } from '@/lib/db'
 import { ScanMode, ScanStatus, Vulnerability } from '@prisma/client'
 import { revalidatePath } from 'next/cache'
+import { ScanLogger } from '@/lib/scanLogger'
 
 // Import modular security analyzers
 import { analyzeJavaScript } from '@/security/static/jsAnalyzer'
@@ -119,11 +120,11 @@ export async function recordProtocolVulnerability(
 ): Promise<void> {
   try {
     // Map to OWASP category
-    let owaspCategory = 'A05:2021-Security Misconfiguration'
-    let owaspId = 'A05:2021'
+    let owaspCategory = 'A05:2025-Security Misconfiguration'
+    let owaspId = 'A05:2025'
     if (threat.type === 'INSECURE_PROTOCOL') {
-      owaspCategory = 'A02:2021-Cryptographic Failures'
-      owaspId = 'A02:2021'
+      owaspCategory = 'A02:2025-Cryptographic Failures'
+      owaspId = 'A02:2025'
     }
 
     await prisma.vulnerability.create({
@@ -153,10 +154,14 @@ export async function runStaticAnalysis(scanId: string): Promise<void> {
       data: { status: ScanStatus.RUNNING },
     })
 
+    ScanLogger.info(scanId, 'Starting static analysis...', 'STATIC')
+
     const scan = await prisma.scan.findUnique({
       where: { id: scanId },
     })
     if (!scan) throw new Error('Scan not found')
+
+    ScanLogger.info(scanId, `Fetching page content from ${scan.targetUrl}`, 'STATIC')
 
     // Fetch the page HTML and inline scripts
     const response = await fetch(scan.targetUrl, {
@@ -168,15 +173,20 @@ export async function runStaticAnalysis(scanId: string): Promise<void> {
     const allVulnerabilities: any[] = []
 
     // 1. Analyze HTML for security issues
+    ScanLogger.info(scanId, 'Analyzing HTML content...', 'STATIC')
     const htmlAnalysis = await analyzeHTML(html, scan.targetUrl)
     allVulnerabilities.push(...htmlAnalysis.vulnerabilities)
+    ScanLogger.success(scanId, `Found ${htmlAnalysis.vulnerabilities.length} HTML issues`, 'STATIC')
 
     // 2. Analyze JavaScript code from inline scripts and script tags
+    ScanLogger.info(scanId, 'Analyzing JavaScript code...', 'STATIC')
     // Extract inline scripts
     const scriptMatches = html.matchAll(/<script(?![^>]*src=)[^>]*>([\s\S]*?)<\/script>/gi)
+    let scriptCount = 0
     for (const match of scriptMatches) {
       const scriptContent = match[1]
       if (scriptContent.trim()) {
+        scriptCount++
         const jsAnalysis = await analyzeJavaScript(scriptContent, `${scan.targetUrl} (inline script)`)
         allVulnerabilities.push(...jsAnalysis.vulnerabilities)
       }
@@ -186,6 +196,7 @@ export async function runStaticAnalysis(scanId: string): Promise<void> {
     const externalScriptMatches = html.matchAll(/<script[^>]+src=["']([^"']+)["']/gi)
     const scriptUrls = Array.from(externalScriptMatches).map(m => m[1])
 
+    ScanLogger.info(scanId, `Analyzing ${scriptUrls.length} external scripts...`, 'STATIC')
     for (const scriptUrl of scriptUrls.slice(0, 5)) { // Limit to 5 scripts to avoid excessive requests
       try {
         const absoluteUrl = new URL(scriptUrl, scan.targetUrl).toString()
@@ -206,11 +217,14 @@ export async function runStaticAnalysis(scanId: string): Promise<void> {
     }
 
     // 3. Analyze dependencies (check for package.json)
+    ScanLogger.info(scanId, 'Checking dependencies...', 'STATIC')
     const depAnalysis = await analyzeDependenciesFromUrl(scan.targetUrl)
     allVulnerabilities.push(...depAnalysis.vulnerabilities)
 
     // Deduplicate vulnerabilities: merge same type/ruleId with multiple locations
     const deduplicatedVulns = deduplicateVulnerabilities(allVulnerabilities)
+
+    ScanLogger.info(scanId, `Saving ${deduplicatedVulns.length} vulnerabilities...`, 'STATIC')
 
     // Create vulnerability records in database
     for (const vuln of deduplicatedVulns) {
@@ -236,9 +250,12 @@ export async function runStaticAnalysis(scanId: string): Promise<void> {
       data: { status: ScanStatus.COMPLETED },
     })
 
+    ScanLogger.success(scanId, 'Static analysis completed successfully', 'STATIC')
+
     revalidatePath('/')
   } catch (error) {
     console.error('Error in static analysis:', error)
+    ScanLogger.error(scanId, 'Static analysis failed', 'STATIC')
     await prisma.scan.update({
       where: { id: scanId },
       data: { status: ScanStatus.FAILED },
@@ -255,6 +272,8 @@ export async function runDynamicAnalysis(scanId: string): Promise<void> {
       data: { status: ScanStatus.RUNNING },
     })
 
+    ScanLogger.info(scanId, 'Starting dynamic analysis...', 'DYNAMIC')
+
     const scan = await prisma.scan.findUnique({
       where: { id: scanId },
     })
@@ -265,7 +284,7 @@ export async function runDynamicAnalysis(scanId: string): Promise<void> {
     const securityTests: HeaderTestResult[] = []
 
     // 0. Fetch and analyze HTTP headers first
-    console.log(`Fetching headers from ${scan.targetUrl}...`)
+    ScanLogger.info(scanId, `Fetching headers from ${scan.targetUrl}...`, 'DYNAMIC')
     const response = await fetch(scan.targetUrl, {
       headers: { 'User-Agent': 'WebSecScan/1.0 (Educational Security Scanner)' },
       redirect: 'manual' // Don't follow redirects to see original headers
@@ -277,6 +296,7 @@ export async function runDynamicAnalysis(scanId: string): Promise<void> {
     })
 
     // Analyze security headers
+    ScanLogger.info(scanId, 'Analyzing security headers...', 'DYNAMIC')
     const headerTests = await analyzeHeaders(scan.targetUrl, headers)
     securityTests.push(...headerTests)
 
@@ -295,7 +315,7 @@ export async function runDynamicAnalysis(scanId: string): Promise<void> {
     const scoringResult = calculateScore(securityTests)
 
     // 1. Crawl the website to discover endpoints and forms
-    console.log(`Starting crawl of ${scan.targetUrl}...`)
+    ScanLogger.info(scanId, `Starting crawl of ${scan.targetUrl}...`, 'DYNAMIC')
     const crawlResult = await crawlWebsite(scan.targetUrl, {
       maxDepth: 2,
       maxPages: 20,
@@ -303,10 +323,14 @@ export async function runDynamicAnalysis(scanId: string): Promise<void> {
       respectRobotsTxt: true
     })
 
-    console.log(`Crawl completed. Found ${crawlResult.urls.length} URLs, ${crawlResult.endpoints.length} endpoints, ${crawlResult.forms.length} forms`)
+    ScanLogger.success(
+      scanId,
+      `Crawl completed. Found ${crawlResult.urls.length} URLs, ${crawlResult.endpoints.length} endpoints, ${crawlResult.forms.length} forms`,
+      'DYNAMIC'
+    )
 
     // 2. Perform authentication and security header checks
-    console.log('Performing auth and security header checks...')
+    ScanLogger.info(scanId, 'Performing auth and security header checks...', 'DYNAMIC')
     const authCheckResult = await performAuthChecks(scan.targetUrl)
     allVulnerabilities.push(...authCheckResult.vulnerabilities)
 
@@ -315,13 +339,13 @@ export async function runDynamicAnalysis(scanId: string): Promise<void> {
     allVulnerabilities.push(...authWeaknesses)
 
     // 4. Test for XSS vulnerabilities on discovered endpoints
-    console.log('Testing for XSS vulnerabilities...')
+    ScanLogger.info(scanId, 'Testing for XSS vulnerabilities...', 'DYNAMIC')
     const xssResult = await testXss(scan.targetUrl, crawlResult.endpoints)
     allVulnerabilities.push(...xssResult.vulnerabilities)
 
     // 5. Test forms for XSS
     if (crawlResult.forms.length > 0) {
-      console.log(`Testing ${crawlResult.forms.length} forms for XSS...`)
+      ScanLogger.info(scanId, `Testing ${crawlResult.forms.length} forms for XSS...`, 'DYNAMIC')
       const formXssResult = await testFormXss(crawlResult.forms)
       allVulnerabilities.push(...formXssResult.vulnerabilities)
     }
@@ -330,7 +354,11 @@ export async function runDynamicAnalysis(scanId: string): Promise<void> {
     const deduplicatedVulns = deduplicateVulnerabilities(allVulnerabilities)
 
     // Create vulnerability records in database
-    console.log(`Found ${allVulnerabilities.length} vulnerabilities (${deduplicatedVulns.length} after deduplication), saving to database...`)
+    ScanLogger.info(
+      scanId,
+      `Found ${allVulnerabilities.length} vulnerabilities (${deduplicatedVulns.length} after deduplication)`,
+      'DYNAMIC'
+    )
     for (const vuln of deduplicatedVulns) {
       await prisma.vulnerability.create({
         data: {
@@ -349,7 +377,7 @@ export async function runDynamicAnalysis(scanId: string): Promise<void> {
     }
 
     // Save security test results
-    console.log(`Saving ${securityTests.length} security test results...`)
+    ScanLogger.info(scanId, `Saving ${securityTests.length} security test results...`, 'DYNAMIC')
     for (const test of securityTests) {
       await prisma.securityTest.create({
         data: {
@@ -385,9 +413,12 @@ export async function runDynamicAnalysis(scanId: string): Promise<void> {
       },
     })
 
+    ScanLogger.success(scanId, `Dynamic analysis completed. Score: ${scoringResult.score}/100 (Grade: ${scoringResult.grade})`, 'DYNAMIC')
+
     revalidatePath('/')
   } catch (error) {
     console.error('Error in dynamic analysis:', error)
+    ScanLogger.error(scanId, 'Dynamic analysis failed', 'DYNAMIC')
     await prisma.scan.update({
       where: { id: scanId },
       data: { status: ScanStatus.FAILED },
