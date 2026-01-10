@@ -239,8 +239,23 @@ export async function analyzeDependenciesFromUrl(targetUrl: string): Promise<Dep
         });
 
         if (response.ok) {
+          // Check if response is actually JSON
+          const contentType = response.headers.get('content-type') || '';
+          if (!contentType.includes('application/json') && !contentType.includes('text/plain')) {
+            // Not JSON, likely HTML or other content
+            continue;
+          }
+
           const content = await response.text();
-          return await analyzeDependencies(content, url.toString());
+
+          // Validate it's actually JSON before parsing
+          try {
+            JSON.parse(content);
+            return await analyzeDependencies(content, url.toString());
+          } catch {
+            // Not valid JSON, try next path
+            continue;
+          }
         }
       } catch {
         // Continue to next path
