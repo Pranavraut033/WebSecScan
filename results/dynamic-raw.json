@@ -1,0 +1,48 @@
+{
+  "scanId": "cmk8tj3ke0006fejthfubumps",
+  "target": "https://juice-shop.herokuapp.com",
+  "mode": "DYNAMIC",
+  "startTime": "2026-01-10T21:29:46.189Z",
+  "endTime": "2026-01-10T21:29:49.177Z",
+  "duration": 2988,
+  "totalFindings": 3,
+  "findingsBySeverity": {
+    "critical": 0,
+    "high": 0,
+    "medium": 2,
+    "low": 1,
+    "info": 0
+  },
+  "findingsByCategory": {
+    "A02:2025 - Security Misconfiguration": 2,
+    "A04:2025 - Cryptographic Failures": 1
+  },
+  "pagesScanned": 1,
+  "endpointsDiscovered": 0,
+  "scriptsAnalyzed": 0,
+  "dependenciesChecked": 0,
+  "memoryUsage": {
+    "heapUsed": 13592136,
+    "heapTotal": 35766272,
+    "external": -5196012
+  },
+  "score": 55,
+  "riskLevel": "HIGH",
+  "findings": [
+    {
+      "category": "A02:2025 - Security Misconfiguration",
+      "severity": "MEDIUM",
+      "confidence": "HIGH"
+    },
+    {
+      "category": "A02:2025 - Security Misconfiguration",
+      "severity": "LOW",
+      "confidence": "HIGH"
+    },
+    {
+      "category": "A04:2025 - Cryptographic Failures",
+      "severity": "MEDIUM",
+      "confidence": "HIGH"
+    }
+  ]
+}

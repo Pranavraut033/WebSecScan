@@ -1,0 +1,4 @@
+Scan ID,Target,Mode,Duration (s),Total Findings,Critical,High,Medium,Low,Info,Score,Risk Level
+cmk8tj2qy0000fejt5g4pbmg3,https://juice-shop.herokuapp.com,STATIC,1.05,5,1,4,0,0,0,20,Critical
+cmk8tj3ke0006fejthfubumps,https://juice-shop.herokuapp.com,DYNAMIC,2.98,3,0,0,2,1,0,55,High
+cmk8tj5vg000hfejtgf1u6isk,https://juice-shop.herokuapp.com,BOTH,2.67,8,1,4,2,1,0,55,High

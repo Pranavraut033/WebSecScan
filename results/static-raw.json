@@ -1,0 +1,57 @@
+{
+  "scanId": "cmk8tj2qy0000fejt5g4pbmg3",
+  "target": "https://juice-shop.herokuapp.com",
+  "mode": "STATIC",
+  "startTime": "2026-01-10T21:29:45.075Z",
+  "endTime": "2026-01-10T21:29:46.182Z",
+  "duration": 1107,
+  "totalFindings": 5,
+  "findingsBySeverity": {
+    "critical": 1,
+    "high": 4,
+    "medium": 0,
+    "low": 0,
+    "info": 0
+  },
+  "findingsByCategory": {
+    "A05:2025 - Injection": 5
+  },
+  "pagesScanned": 0,
+  "endpointsDiscovered": 0,
+  "scriptsAnalyzed": 6,
+  "dependenciesChecked": 0,
+  "memoryUsage": {
+    "heapUsed": 2689072,
+    "heapTotal": 9797632,
+    "external": 14995097
+  },
+  "score": 20,
+  "riskLevel": "CRITICAL",
+  "findings": [
+    {
+      "category": "A05:2025 - Injection",
+      "severity": "HIGH",
+      "confidence": "MEDIUM"
+    },
+    {
+      "category": "A05:2025 - Injection",
+      "severity": "HIGH",
+      "confidence": "MEDIUM"
+    },
+    {
+      "category": "A05:2025 - Injection",
+      "severity": "HIGH",
+      "confidence": "MEDIUM"
+    },
+    {
+      "category": "A05:2025 - Injection",
+      "severity": "CRITICAL",
+      "confidence": "HIGH"
+    },
+    {
+      "category": "A05:2025 - Injection",
+      "severity": "HIGH",
+      "confidence": "MEDIUM"
+    }
+  ]
+}
