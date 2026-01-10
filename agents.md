@@ -40,3 +40,9 @@ WebSecScan uses specialized, modular agents that each perform a focused set of d
 
 ## Extensibility
 - New checks should be added as small, testable modules and registered with the agent runner. Modules must include unit tests and example inputs for deterministic behavior.
+
+### Backward Compatibility Policy
+- Agents and rule modules do not preserve backward compatibility by default.
+- Prioritize deterministic correctness, clear OWASP mapping, and simplicity over legacy behavior.
+- When changing outputs, schemas, or result shapes, update unit/integration tests and relevant docs (`README.md`, `agents.md`, `tasks.md`).
+- Communicate breaking changes in release notes/changelogs; ensure CI gates (typecheck, lint, tests) enforce the new contract.
