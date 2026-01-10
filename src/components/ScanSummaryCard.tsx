@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import type { Scan, Vulnerability } from '@prisma/client'
-import { getGradeColor } from '@/lib/scoring'
+import { getRiskLevel, getRiskColor } from '@/lib/scoring'
 import { Card, CardContent } from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
@@ -58,9 +58,15 @@ export default function ScanSummaryCard({ scan }: ScanSummaryCardProps) {
             <Badge variant={getStatusVariant(scan.status)} size="sm">
               {scan.status}
             </Badge>
-            {scan.status === 'COMPLETED' && scan.grade && (
-              <Badge variant="info" size="sm" className="font-bold">
-                {scan.grade}{typeof scan.score === 'number' ? ` · ${scan.score}` : ''}
+            {scan.status === 'COMPLETED' && typeof scan.score === 'number' && (
+              <Badge
+                variant={getRiskLevel(scan.score) === 'LOW' ? 'success' :
+                  getRiskLevel(scan.score) === 'MEDIUM' ? 'info' :
+                    getRiskLevel(scan.score) === 'HIGH' ? 'default' : 'critical'}
+                size="sm"
+                className="font-bold"
+              >
+                {getRiskLevel(scan.score)} · {scan.score}
               </Badge>
             )}
           </div>

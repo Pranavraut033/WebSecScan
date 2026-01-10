@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { getRiskLevel, getRiskColor } from '@/lib/scoring'
 
 interface HistoryItem {
   id: string
@@ -56,23 +57,36 @@ export function ScanHistory({ hostname }: { hostname: string }) {
                   <th className="py-2 px-2">Status</th>
                   <th className="py-2 px-2">Mode</th>
                   <th className="py-2 px-2">Score</th>
-                  <th className="py-2 px-2">Grade</th>
+                  <th className="py-2 px-2">Risk Level</th>
                   <th className="py-2 px-2">Open</th>
                 </tr>
               </thead>
               <tbody>
-                {items.map((item) => (
-                  <tr key={item.id} className="border-t border-gray-200 dark:border-gray-700">
-                    <td className="py-2 px-2 text-gray-900 dark:text-gray-100">{new Date(item.createdAt).toLocaleString()}</td>
-                    <td className="py-2 px-2 text-gray-900 dark:text-gray-100">{item.status}</td>
-                    <td className="py-2 px-2 text-gray-900 dark:text-gray-100">{item.mode}</td>
-                    <td className="py-2 px-2 text-gray-900 dark:text-gray-100">{item.score ?? '-'}</td>
-                    <td className="py-2 px-2 text-gray-900 dark:text-gray-100">{item.grade ?? '-'}</td>
-                    <td className="py-2 px-2">
-                      <a href={`/scan/${item.id}`} className="text-blue-600 dark:text-blue-400 hover:underline">View</a>
-                    </td>
-                  </tr>
-                ))}
+                {items.map((item) => {
+                  const riskLevel = item.score !== null ? getRiskLevel(item.score) : null
+                  const riskColor = riskLevel ? getRiskColor(riskLevel) : ''
+
+                  return (
+                    <tr key={item.id} className="border-t border-gray-200 dark:border-gray-700">
+                      <td className="py-2 px-2 text-gray-900 dark:text-gray-100">{new Date(item.createdAt).toLocaleString()}</td>
+                      <td className="py-2 px-2 text-gray-900 dark:text-gray-100">{item.status}</td>
+                      <td className="py-2 px-2 text-gray-900 dark:text-gray-100">{item.mode}</td>
+                      <td className="py-2 px-2 text-gray-900 dark:text-gray-100">{item.score ?? '-'}</td>
+                      <td className="py-2 px-2">
+                        {riskLevel ? (
+                          <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${riskColor}`}>
+                            {riskLevel}
+                          </span>
+                        ) : (
+                          <span className="text-gray-900 dark:text-gray-100">-</span>
+                        )}
+                      </td>
+                      <td className="py-2 px-2">
+                        <a href={`/scan/${item.id}`} className="text-blue-600 dark:text-blue-400 hover:underline">View</a>
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>

@@ -271,10 +271,9 @@ export default function ScanDetailPage({ params }: { params: Promise<{ id: strin
             )}
 
             {/* Score Card */}
-            {scan.score !== null && scan.grade && scan.status === 'COMPLETED' && (
+            {scan.score !== null && scan.status === 'COMPLETED' && (
               <ScoreCard
                 score={scan.score}
-                grade={scan.grade}
                 passedTests={passedTests}
                 totalTests={totalTests}
               />
