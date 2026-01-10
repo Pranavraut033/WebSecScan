@@ -45,9 +45,13 @@ nav:
   - What We Test: testing-coverage.md
   - Architecture: architecture.md
   - Scanning Agents: agents.md
+  - Security Scoring: scoring.md
   - Development:
       - Setup & Guide: development.md
       - Testing: testing.md
+  - Evaluation:
+      - Benchmarking: benchmarking.md
+      - Real-World Testing: real-world-testing.md
   - API Reference: api.md
   - Deployment: deployment.md
   - Security & Ethics: security-ethics.md

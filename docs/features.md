@@ -19,7 +19,7 @@ Watch your scan progress in real-time with color-coded logs:
 ✓ 10:30:47 [DYNAMIC] Crawl completed. Found 20 URLs, 0 endpoints, 2 forms
 • 10:30:48 [DYNAMIC] Performing auth and security header checks...
 • 10:30:50 [DYNAMIC] Saving 7 security test results...
-✓ 10:30:51 [DYNAMIC] Dynamic analysis completed. Score: 85/100 (Grade: B)
+✓ 10:30:51 [DYNAMIC] Dynamic analysis completed. Score: 85/100 (Risk: LOW)
 ```
 
 ### Features
@@ -276,26 +276,26 @@ Safeguards against scanning restricted addresses:
 
 Dynamic testing involves running safe, non-destructive tests against a live web application.
 
-### 🏆 Security Scoring System (Mozilla Observatory-style)
+### 🏆 Security Scoring System
 
-WebSecScan now includes a comprehensive security scoring system that grades your application's security posture from 0-100.
+WebSecScan includes a comprehensive security scoring system that assesses your application's security posture using a numeric 0-100 scale with risk-based categorization.
 
 #### Score Calculation
 
 - **Base Score**: 100
 - Tests add or subtract points based on security compliance
 - Final score clamped to 0-100 range
-- Letter grade assigned: **A+**, **A**, **B**, **C**, **D**, **F**
+- Risk level assigned: **LOW**, **MEDIUM**, **HIGH**, or **CRITICAL**
 
-**Grading Scale**:
+**Risk Bands**:
 ```
-A+ = 135+ points (with extra credit)
-A  = 100-134 points
-B  = 85-99 points
-C  = 70-84 points
-D  = 50-69 points
-F  = 0-49 points
+LOW      = Score ≥ 80  (Good security posture)
+MEDIUM   = Score 60-79 (Moderate concerns)
+HIGH     = Score 40-59 (Significant issues)
+CRITICAL = Score < 40  (Severe vulnerabilities)
 ```
+
+**See [Scoring Methodology](scoring.md) for detailed rationale and calculation details.**
 
 #### Security Tests Performed
 
@@ -615,7 +615,7 @@ We minimize false positives through:
 View up to 20 previous scans for any hostname:
 
 **Features**:
-- Score and grade tracking over time
+- Score and risk level tracking over time
 - Status of each scan (COMPLETED, FAILED, RUNNING)
 - Scan mode used (STATIC, DYNAMIC, BOTH)
 - Quick navigation to detailed reports
@@ -625,7 +625,7 @@ View up to 20 previous scans for any hostname:
 ```
 Scan History for example.com
 
-Date                  Status      Mode     Score  Grade
+Date                  Status      Mode     Score  Risk Level
 2025-12-20 10:30 AM  COMPLETED   BOTH     85     B
 2025-12-19 02:15 PM  COMPLETED   DYNAMIC  72     C
 2025-12-18 09:00 AM  COMPLETED   BOTH     91     A

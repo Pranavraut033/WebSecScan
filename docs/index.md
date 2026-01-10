@@ -22,7 +22,7 @@ The tool systematically detects security issues aligned with the **OWASP Top 10 
 - **📦 Dependency Scanning**: Identify known vulnerabilities in third-party libraries
 - **📊 Actionable Reports**: Developer-friendly vulnerability reports with clear remediation steps
 - **🎨 Modern UI**: Clean, intuitive dashboard built with Next.js
-- **� Security Scoring**: Mozilla Observatory-style scoring (0-100) with letter grades (A+ to F)
+- **📊 Security Scoring**: Numeric scoring (0-100) with risk-based assessment (LOW/MEDIUM/HIGH/CRITICAL)
 - **🔄 Real-time Progress**: Live scan logs streamed via Server-Sent Events
 - **📜 Scan History**: Track security improvements over time (up to 20 scans per hostname)
 - **�🔒 Ethical & Safe**: Respects robots.txt, enforces rate limits, no destructive testing
