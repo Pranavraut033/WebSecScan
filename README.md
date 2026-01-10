@@ -1,6 +1,6 @@
 # WebSecScan
 
-An Automated Security Scanner for Web Application Vulnerabilities with Mozilla Observatory-style Scoring
+An Automated Security Scanner for Web Application Vulnerabilities with Risk-Based Assessment
 
 ## Problem Statement
 
@@ -10,8 +10,8 @@ As web applications proliferate, they increasingly become targets for cyberattac
 
 WebSecScan is an automated, lightweight security scanner that identifies common web application vulnerabilities through both static code analysis and dynamic behavioral testing. The tool provides:
 
-- **Comprehensive Security Scoring** (0-100 scale with letter grades A+ to F)
-- **Mozilla Observatory-style Testing** with detailed security header analysis
+- **Comprehensive Security Scoring** (0-100 scale with risk-based assessment)
+- **Risk Level Categorization** (LOW, MEDIUM, HIGH, CRITICAL)
 - **CSP Analysis** with 10 specific checks for Content Security Policy
 - **Cookie Security Validation** including Secure, HttpOnly, and SameSite attributes
 - **OWASP Top 10 2025 Mapping** for all detected vulnerabilities
@@ -28,8 +28,8 @@ WebSecScan is an automated, lightweight security scanner that identifies common 
 - See [CSRF Implementation](./CSRF-IMPLEMENTATION.md) and [Security Flow](./SECURITY-FLOW.md) for details
 
 ### 🏆 Security Scoring System
-- Letter grades from **A+** (135+ points) to **F** (0-49 points)
-- Based on Mozilla Observatory methodology
+- Risk levels: **LOW** (≥80), **MEDIUM** (60-79), **HIGH** (40-59), **CRITICAL** (<40)
+- Transparent, deterministic scoring methodology
 - Real-time score calculation during scans
 - Historical trend tracking
 
@@ -61,7 +61,7 @@ WebSecScan is an automated, lightweight security scanner that identifies common 
 WebSecScan provides practical, actionable vulnerability reports with security scoring that developers can use to enhance application security before deployment. The tool promotes secure coding practices, reduces common vulnerabilities across web projects, and contributes to a more secure web ecosystem, especially benefiting teams with limited cybersecurity resources.
 
 **Key Deliverables**:
-- ✅ Security score (0-100) and letter grade (A+ to F)
+- ✅ Security score (0-100) with risk level (LOW/MEDIUM/HIGH/CRITICAL)
 - ✅ Detailed test results for 10+ security checks
 - ✅ Raw HTTP headers and security configuration capture
 - ✅ Scan history and trend analysis
@@ -105,7 +105,7 @@ Open [http://localhost:3000](http://localhost:3000) to view the UI.
    - **BOTH**: Complete analysis (recommended)
 3. Click "Start Scan"
 4. **Watch real-time logs** as the scan progresses
-5. View results with security score and grade
+5. View results with security score and risk level
 
 ### Understanding Your Score
 
@@ -125,7 +125,8 @@ Bonuses:
 - All cookies secure: +5
 
 Final Score = Base + Bonuses - Deductions
-Grade assigned based on final score
+Risk level assigned based on final score:
+  LOW (≥80) | MEDIUM (60-79) | HIGH (40-59) | CRITICAL (<40)
 ```
 
 ---
@@ -158,7 +159,6 @@ Used for trusted server-side operations:
     "mode": "BOTH",
     "status": "COMPLETED",
     "score": 85,
-    "grade": "B",
     "completedAt": "2025-12-20T10:35:23.000Z",
     "scanSummary": {
       "totalTests": 10,
@@ -264,7 +264,7 @@ Comprehensive documentation is available in the `/docs` directory:
 ## Acceptance Criteria
 - ✅ Detects vulnerabilities in intentionally insecure fixtures
 - ✅ Results stored and retrievable from Prisma database
-- ✅ Clear UI presentation with security scores and grades
+- ✅ Clear UI presentation with security scores and risk levels
 - ✅ Deterministic output for the same input
 - ✅ Security tests pass/fail with actionable recommendations
 - ✅ Raw headers and CSP captured for analysis
@@ -329,6 +329,60 @@ npx prisma studio          # View database in browser
 
 ---
 
+## 📊 Evaluation & Benchmarking
+
+WebSecScan includes comprehensive evaluation and benchmarking tools for academic assessment and real-world validation.
+
+### Quick Start
+
+```bash
+# Start OWASP Juice Shop test environment
+npm run docker:juice-shop
+
+# Run benchmark
+npm run benchmark -- --target http://localhost:3001 --mode BOTH
+
+# Compare scan modes
+npm run compare -- --all --output results/juice-shop
+```
+
+### Features
+
+- ✅ **Automated Benchmarking**: Comprehensive metrics collection (findings, coverage, performance)
+- ✅ **Comparative Analysis**: Compare STATIC vs DYNAMIC vs BOTH scan modes
+- ✅ **OWASP ZAP Comparison**: Framework for benchmarking against industry tools
+- ✅ **False-Positive Analysis**: Stratified sampling and validation workflow
+- ✅ **Docker Test Environment**: OWASP Juice Shop + ZAP for reproducible testing
+- ✅ **Ethical Guidelines**: Explicit consent framework and legal requirements
+
+### Documentation
+
+- **[Benchmarking Guide](docs/benchmarking.md)**: Methodology, setup, and comparative analysis
+- **[Real-World Testing](docs/real-world-testing.md)**: Ethical guidelines, consent framework, and safety practices
+- **[Evaluation Quick Start](EVALUATION-QUICKSTART.md)**: Step-by-step guide to run your first benchmark
+- **[Implementation Summary](docs/IMPLEMENTATION-SUMMARY.md)**: Complete Phase 3 implementation details
+
+### Sample Benchmark Output
+
+```
+=== Benchmark Complete ===
+Duration: 45.23s
+Total Findings: 42
+  Critical: 3
+  High: 12
+  Medium: 18
+  Low: 7
+  Info: 2
+Score: 58/100 (High Risk)
+Pages Scanned: 23
+Endpoints Discovered: 15
+Memory Delta: 45.32 MB
+
+Results saved to results/juice-shop/both-raw.json
+```
+
+---
+
 ## Agents & Task System
 
 WebSecScan uses modular security agents for scanning:
@@ -366,7 +420,7 @@ See [agents.md](agents.md) for agent architecture and [tasks.md](tasks.md) for t
 • 10:30:45 [DYNAMIC] Starting dynamic analysis...
 ✓ 10:30:47 [DYNAMIC] Crawl completed. Found 20 URLs, 0 endpoints, 2 forms
 • 10:30:48 [DYNAMIC] Performing auth and security header checks...
-✓ 10:30:51 [DYNAMIC] Dynamic analysis completed. Score: 85/100 (Grade: B)
+✓ 10:30:51 [DYNAMIC] Dynamic analysis completed. Score: 85/100 (Risk: LOW)
 ```
 
 **Documentation:**
