@@ -13,7 +13,13 @@
     "migrate": "prisma migrate dev",
     "db:push": "prisma db push",
     "test": "node --test __tests__/**/*.test.ts --experimental-strip-types",
-    "test:watch": "node --test --watch __tests__/**/*.test.ts --experimental-strip-types"
+    "test:watch": "node --test --watch __tests__/**/*.test.ts --experimental-strip-types",
+    "typecheck": "tsc --noEmit",
+    "benchmark": "tsx scripts/benchmark.ts",
+    "compare": "tsx scripts/compare.ts",
+    "docker:juice-shop": "docker-compose up -d juice-shop",
+    "docker:zap": "docker-compose up -d zap",
+    "docker:down": "docker-compose down"
   },
   "dependencies": {
     "@prisma/adapter-better-sqlite3": "^7.2.0",
@@ -40,6 +46,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.0",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }
