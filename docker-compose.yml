@@ -7,3 +7,36 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
+
+  # OWASP Juice Shop - Intentionally vulnerable web application for testing
+  juice-shop:
+    image: bkimminich/juice-shop:latest
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=production
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3000",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # OWASP ZAP - For benchmarking comparison
+  zap:
+    image: ghcr.io/zaproxy/zaproxy:stable
+    ports:
+      - "8080:8080"
+    command: zap-webswing.sh
+    environment:
+      - ZAP_PORT=8080
+    volumes:
+      - ./results/zap:/zap/wrk:rw
