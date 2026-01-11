@@ -246,6 +246,98 @@ export const VULNERABILITY_RULES: Record<string, VulnerabilityRule> = {
     ]
   },
 
+  // SQL Injection (A05 - Injection)
+  'WSS-SQLI-001': {
+    id: 'WSS-SQLI-001',
+    name: 'SQL Injection Vulnerability',
+    owaspCategory: OWASP_CATEGORIES.A05_INJECTION,
+    owaspId: 'A05:2025',
+    description: 'Database error messages or behavior indicate potential SQL injection vulnerability.',
+    severity: 'HIGH',
+    confidence: 'HIGH',
+    remediation: 'Use parameterized queries or prepared statements. Never concatenate user input into SQL queries. Use ORM frameworks with built-in protection. Validate and sanitize all input.',
+    references: [
+      'https://owasp.org/www-community/attacks/SQL_Injection',
+      'https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html'
+    ]
+  },
+
+  // Path Traversal (A01 - Broken Access Control)
+  'WSS-PATH-001': {
+    id: 'WSS-PATH-001',
+    name: 'Path Traversal Vulnerability',
+    owaspCategory: OWASP_CATEGORIES.A01_BROKEN_ACCESS_CONTROL,
+    owaspId: 'A01:2025',
+    description: 'Application allows access to files outside the intended directory through path manipulation.',
+    severity: 'HIGH',
+    confidence: 'HIGH',
+    remediation: 'Validate and sanitize file paths. Use allowlists for permitted files. Avoid user input in file system operations. Use path.resolve() and check that resolved path is within allowed directory.',
+    references: [
+      'https://owasp.org/www-community/attacks/Path_Traversal',
+      'https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html'
+    ]
+  },
+
+  // CSRF (A01 - Broken Access Control)
+  'WSS-CSRF-001': {
+    id: 'WSS-CSRF-001',
+    name: 'Missing CSRF Token',
+    owaspCategory: OWASP_CATEGORIES.A01_BROKEN_ACCESS_CONTROL,
+    owaspId: 'A01:2025',
+    description: 'State-changing form lacks CSRF token protection, allowing cross-site request forgery attacks.',
+    severity: 'MEDIUM',
+    confidence: 'HIGH',
+    remediation: 'Implement CSRF tokens for all state-changing operations. Use framework CSRF protection. Verify token on server side. Set SameSite cookie attribute.',
+    references: [
+      'https://owasp.org/www-community/attacks/csrf',
+      'https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html'
+    ]
+  },
+
+  'WSS-CSRF-002': {
+    id: 'WSS-CSRF-002',
+    name: 'Missing SameSite Cookie Attribute',
+    owaspCategory: OWASP_CATEGORIES.A01_BROKEN_ACCESS_CONTROL,
+    owaspId: 'A01:2025',
+    description: 'Session cookie lacks SameSite attribute, making CSRF attacks easier.',
+    severity: 'MEDIUM',
+    confidence: 'HIGH',
+    remediation: "Set SameSite=Lax or SameSite=Strict on session cookies. Use Strict for sensitive applications.",
+    references: [
+      'https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie/SameSite'
+    ]
+  },
+
+  // Authentication Bypass (A07 - Authentication Failures)
+  'WSS-AUTH-004': {
+    id: 'WSS-AUTH-004',
+    name: 'Authentication Bypass Detected',
+    owaspCategory: OWASP_CATEGORIES.A07_AUTH_FAILURES,
+    owaspId: 'A07:2025',
+    description: 'Protected resource accessible without authentication or with easily bypassable checks.',
+    severity: 'CRITICAL',
+    confidence: 'HIGH',
+    remediation: 'Implement proper authentication checks on all protected resources. Use framework authentication middleware. Verify credentials server-side. Never trust client-side checks.',
+    references: [
+      'https://owasp.org/www-community/Broken_Authentication_and_Session_Management',
+      'https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html'
+    ]
+  },
+
+  'WSS-AUTH-005': {
+    id: 'WSS-AUTH-005',
+    name: 'Weak Session Token',
+    owaspCategory: OWASP_CATEGORIES.A07_AUTH_FAILURES,
+    owaspId: 'A07:2025',
+    description: 'Session token has insufficient entropy or predictable patterns, enabling session hijacking.',
+    severity: 'HIGH',
+    confidence: 'MEDIUM',
+    remediation: 'Use cryptographically secure random token generation. Ensure tokens have at least 128 bits of entropy. Regenerate tokens after login. Set appropriate expiration.',
+    references: [
+      'https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html'
+    ]
+  },
+
   // Form Security (A02/A04)
   'WSS-FORM-001': {
     id: 'WSS-FORM-001',
