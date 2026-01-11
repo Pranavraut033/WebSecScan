@@ -15,11 +15,60 @@
 
 import * as cheerio from 'cheerio';
 
+/**
+ * Detailed metadata about the crawl operation
+ * Provides audit trail and performance metrics for every scan
+ */
+export interface CrawlMetadata {
+  /** Number of unique pages successfully crawled */
+  pagesScanned: number;
+  
+  /** Total HTTP requests made (including failed ones) */
+  totalRequests: number;
+  
+  /** Total bytes received across all responses */
+  totalSize: number;
+  
+  /** Average response time in milliseconds */
+  averageResponseTime: number;
+  
+  /** Total crawl duration in milliseconds */
+  duration: number;
+  
+  /** ISO timestamp when crawl started */
+  startTime: string;
+  
+  /** ISO timestamp when crawl ended */
+  endTime: string;
+  
+  /** Actual maximum depth reached during crawl */
+  maxDepthReached: number;
+  
+  /** Whether robots.txt was checked and respected */
+  robotsTxtRespected: boolean;
+  
+  /** Number of URLs skipped due to robots.txt disallow */
+  skippedByRobots: number;
+  
+  /** Number of requests that failed (network errors, timeouts, etc.) */
+  failedRequests: number;
+  
+  /** Number of unique API endpoints discovered */
+  uniqueEndpoints: number;
+  
+  /** Number of HTML forms discovered */
+  formsDiscovered: number;
+  
+  /** Pages crawled per second */
+  crawlSpeed: number;
+}
+
 export interface CrawlResult {
   urls: string[];
   endpoints: string[];
   forms: Array<{ url: string; method: string; action: string }>;
   errors: string[];
+  metadata: CrawlMetadata;
 }
 
 /**
@@ -152,8 +201,33 @@ export async function crawlWebsite(
     urls: [],
     endpoints: [],
     forms: [],
-    errors: []
+    errors: [],
+    metadata: {
+      pagesScanned: 0,
+      totalRequests: 0,
+      totalSize: 0,
+      averageResponseTime: 0,
+      duration: 0,
+      startTime: '',
+      endTime: '',
+      maxDepthReached: 0,
+      robotsTxtRespected: opts.respectRobotsTxt,
+      skippedByRobots: 0,
+      failedRequests: 0,
+      uniqueEndpoints: 0,
+      formsDiscovered: 0,
+      crawlSpeed: 0,
+    }
   };
+
+  // Metrics tracking
+  const startTime = new Date();
+  const responseTimes: number[] = [];
+  let totalSize = 0;
+  let totalRequests = 0;
+  let skippedByRobots = 0;
+  let failedRequests = 0;
+  let maxDepthReached = 0;
 
   const visited = new Set<string>();
   const queue: Array<{ url: string; depth: number }> = [{ url: normalizeUrlForCrawl(startUrl), depth: 0 }];
@@ -186,10 +260,16 @@ export async function crawlWebsite(
 
     // Skip if max depth exceeded
     if (depth > opts.maxDepth) continue;
+    
+    // Track max depth reached
+    if (depth > maxDepthReached) {
+      maxDepthReached = depth;
+    }
 
     // Check robots.txt compliance
     if (isDisallowedByRobots(url, baseUrl.origin, disallowedPaths)) {
       result.errors.push(`Skipped ${url} (disallowed by robots.txt)`);
+      skippedByRobots++;
       continue;
     }
 
@@ -203,6 +283,9 @@ export async function crawlWebsite(
       if (visited.size > 1) {
         await sleep(opts.rateLimit);
       }
+      
+      const requestStartTime = Date.now();
+      totalRequests++;
 
       // Build request headers (merge session credentials if provided)
       const headers: Record<string, string> = {
@@ -232,9 +315,14 @@ export async function crawlWebsite(
         headers,
         signal: AbortSignal.timeout(opts.timeout)
       });
+      
+      // Track response time
+      const responseTime = Date.now() - requestStartTime;
+      responseTimes.push(responseTime);
 
       if (!response.ok) {
         result.errors.push(`Failed to fetch ${normalizedUrl}: ${response.status}`);
+        failedRequests++;
         continue;
       }
 
@@ -244,6 +332,9 @@ export async function crawlWebsite(
       }
 
       const html = await response.text();
+      
+      // Track response size
+      totalSize += new Blob([html]).size;
 
       // Extract links (already normalized inside extractLinks)
       const links = extractLinks(html, normalizedUrl, baseUrl.origin, opts.allowExternalLinks);
@@ -265,11 +356,38 @@ export async function crawlWebsite(
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       result.errors.push(`Error crawling ${normalizedUrl}: ${message}`);
+      failedRequests++;
     }
   }
 
   // Deduplicate endpoints
   result.endpoints = [...new Set(result.endpoints)];
+  
+  // Calculate final metrics
+  const endTime = new Date();
+  const duration = endTime.getTime() - startTime.getTime();
+  const averageResponseTime = responseTimes.length > 0
+    ? Math.round(responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length)
+    : 0;
+  const crawlSpeed = duration > 0 ? Math.round((visited.size / (duration / 1000)) * 100) / 100 : 0;
+  
+  // Populate metadata
+  result.metadata = {
+    pagesScanned: visited.size,
+    totalRequests,
+    totalSize,
+    averageResponseTime,
+    duration,
+    startTime: startTime.toISOString(),
+    endTime: endTime.toISOString(),
+    maxDepthReached,
+    robotsTxtRespected: opts.respectRobotsTxt,
+    skippedByRobots,
+    failedRequests,
+    uniqueEndpoints: result.endpoints.length,
+    formsDiscovered: result.forms.length,
+    crawlSpeed,
+  };
 
   return result;
 }
