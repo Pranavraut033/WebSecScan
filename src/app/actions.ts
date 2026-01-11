@@ -9,7 +9,7 @@ import { ScanLogger } from '@/lib/scanLogger'
 import { analyzeJavaScript } from '@/security/static/jsAnalyzer'
 import { analyzeHTML } from '@/security/static/htmlAnalyzer'
 import { analyzeDependenciesFromUrl } from '@/security/static/dependencyAnalyzer'
-import { crawlWebsite } from '@/security/dynamic/crawler'
+import { crawlWebsite, CrawlerOptions } from '@/security/dynamic/crawler'
 import { testXss, testFormXss } from '@/security/dynamic/xssTester'
 import { performAuthChecks, checkAuthWeaknesses } from '@/security/dynamic/authChecks'
 import { analyzeHeaders, type HeaderTestResult } from '@/security/dynamic/headerAnalyzer'
@@ -17,6 +17,15 @@ import { analyzeCookies } from '@/security/dynamic/cookieAnalyzer'
 import { analyzeCSP } from '@/security/dynamic/cspAnalyzer'
 import { calculateScore } from '@/lib/scoring'
 import type { NormalizeUrlResult } from '@/lib/urlNormalizer'
+import type { AuthConfig } from '@/security/dynamic/authScanner'
+import { performAuthenticatedScan } from '@/security/dynamic/authScanner'
+
+// Global store for crawler options (temporary, per-scan)
+// In production, this would be stored in Redis or the database
+declare global {
+  var scanCrawlerOptions: Record<string, Required<CrawlerOptions>> | undefined;
+  var scanAuthConfig: Record<string, AuthConfig> | undefined;
+}
 
 /**
  * Deduplicate vulnerabilities by grouping same ruleId/type together
@@ -47,7 +56,12 @@ ${vuln.location}`
 
 // Server Actions as per specs
 
-export async function createScan(targetUrl: string, mode: ScanMode): Promise<{ scanId: string }> {
+export async function createScan(
+  targetUrl: string,
+  mode: ScanMode,
+  crawlerOptions?: Required<CrawlerOptions>,
+  authConfig?: AuthConfig
+): Promise<{ scanId: string }> {
   try {
     // Extract hostname from URL
     const url = new URL(targetUrl)
@@ -61,6 +75,20 @@ export async function createScan(targetUrl: string, mode: ScanMode): Promise<{ s
         status: ScanStatus.PENDING,
       },
     })
+
+    // Store crawler options in scan metadata if provided
+    if (crawlerOptions) {
+      // Options will be retrieved when running dynamic analysis
+      global.scanCrawlerOptions = global.scanCrawlerOptions || {};
+      global.scanCrawlerOptions[scan.id] = crawlerOptions;
+    }
+
+    // Store auth config if provided (never persist to database)
+    if (authConfig) {
+      global.scanAuthConfig = global.scanAuthConfig || {};
+      global.scanAuthConfig[scan.id] = authConfig;
+    }
+
     revalidatePath('/')
     return { scanId: scan.id }
   } catch (error) {
@@ -316,12 +344,84 @@ export async function runDynamicAnalysis(scanId: string): Promise<void> {
 
     // 1. Crawl the website to discover endpoints and forms
     ScanLogger.info(scanId, `Starting crawl of ${scan.targetUrl}...`, 'DYNAMIC')
-    const crawlResult = await crawlWebsite(scan.targetUrl, {
+
+    // Retrieve crawler options if configured, otherwise use defaults
+    const crawlerOptions = (global.scanCrawlerOptions && global.scanCrawlerOptions[scanId]) || {
       maxDepth: 2,
       maxPages: 20,
       rateLimit: 1000,
-      respectRobotsTxt: true
-    })
+      respectRobotsTxt: true,
+      allowExternalLinks: false,
+      timeout: 10000
+    };
+
+    // Check for authenticated scan configuration
+    const authConfig = global.scanAuthConfig && global.scanAuthConfig[scanId];
+    
+    // Perform authenticated scan if config provided
+    if (authConfig) {
+      ScanLogger.info(scanId, 'Performing authenticated scan with Playwright...', 'DYNAMIC')
+      
+      try {
+        const authScanResult = await performAuthenticatedScan(authConfig);
+        
+        if (authScanResult.authResult.success) {
+          ScanLogger.success(
+            scanId,
+            `Authentication successful. Found ${authScanResult.authResult.cookies.length} cookies`,
+            'DYNAMIC'
+          );
+          
+          // Add auth warnings as vulnerabilities
+          if (authScanResult.authResult.warnings && authScanResult.authResult.warnings.length > 0) {
+            ScanLogger.warning(
+              scanId,
+              `Auth warnings: ${authScanResult.authResult.warnings.join(', ')}`,
+              'DYNAMIC'
+            );
+          }
+          
+          // Add session vulnerabilities to results
+          allVulnerabilities.push(...authScanResult.scanResult.vulnerabilities);
+          
+          // Use session credentials for crawling (cast to avoid type issues with optional property)
+          (crawlerOptions as CrawlerOptions).sessionCredentials = {
+            headers: authScanResult.authResult.sessionHeaders,
+            cookies: authScanResult.authResult.cookies.map(c => ({
+              name: c.name,
+              value: c.value
+            }))
+          };
+          
+          ScanLogger.info(
+            scanId,
+            `Crawling with authenticated session (${authScanResult.scanResult.sessionAnalysis.cookieCount} cookies)`,
+            'DYNAMIC'
+          );
+        } else {
+          ScanLogger.error(
+            scanId,
+            `Authentication failed: ${authScanResult.authResult.error}`,
+            'DYNAMIC'
+          );
+          // Continue with unauthenticated scan
+        }
+        
+        // Clean up auth config from memory (security: never persist credentials)
+        if (global.scanAuthConfig) {
+          delete global.scanAuthConfig[scanId];
+        }
+      } catch (authError) {
+        ScanLogger.error(
+          scanId,
+          `Authentication error: ${authError instanceof Error ? authError.message : String(authError)}`,
+          'DYNAMIC'
+        );
+        // Continue with unauthenticated scan
+      }
+    }
+
+    const crawlResult = await crawlWebsite(scan.targetUrl, crawlerOptions)
 
     ScanLogger.success(
       scanId,
