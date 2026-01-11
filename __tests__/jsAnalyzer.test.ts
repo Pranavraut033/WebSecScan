@@ -1,11 +1,16 @@
 /**
  * Unit tests for JavaScript Analyzer
  * Tests deterministic detection of dangerous JavaScript patterns
+ * and context-aware confidence scoring
  */
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
-import { analyzeJavaScript } from '../src/security/static/jsAnalyzer.ts';
+import {
+  analyzeJavaScript,
+  detectFramework,
+  detectMinifiedCode
+} from '../src/security/static/jsAnalyzer.ts';
 
 describe('JavaScript Analyzer', () => {
   describe('eval() detection', () => {
@@ -150,6 +155,234 @@ describe('JavaScript Analyzer', () => {
       const result = await analyzeJavaScript(code, 'safe.js');
 
       assert.strictEqual(result.vulnerabilities.length, 0, 'Should not flag safe code');
+    });
+  });
+
+  describe('Context-aware confidence scoring', () => {
+    describe('Framework detection', () => {
+      it('should detect Angular framework code', () => {
+        const angularCode = `
+          import { Component } from '@angular/core';
+          @Component({ selector: 'app-root' })
+          export class AppComponent {
+            ngOnInit() {
+              eval('console.log("test")');
+            }
+          }
+        `;
+
+        const result = detectFramework(angularCode);
+        assert.strictEqual(result.isFramework, true, 'Should detect Angular');
+        assert.strictEqual(result.frameworkName, 'Angular', 'Should identify Angular framework');
+      });
+
+      it('should detect React framework code', () => {
+        const reactCode = `
+          import React from 'react';
+          class MyComponent extends React.Component {
+            render() {
+              return React.createElement('div', null, 'Hello');
+            }
+          }
+        `;
+
+        const result = detectFramework(reactCode);
+        assert.strictEqual(result.isFramework, true, 'Should detect React');
+        assert.strictEqual(result.frameworkName, 'React', 'Should identify React framework');
+      });
+
+      it('should detect Vue framework code', () => {
+        const vueCode = `
+          import { defineComponent } from 'vue';
+          export default defineComponent({
+            name: 'MyComponent'
+          });
+        `;
+
+        const result = detectFramework(vueCode);
+        assert.strictEqual(result.isFramework, true, 'Should detect Vue');
+        assert.strictEqual(result.frameworkName, 'Vue', 'Should identify Vue framework');
+      });
+
+      it('should detect jQuery library code', () => {
+        const jQueryCode = `
+          $(document).ready(function() {
+            $('.btn').click(function() {
+              eval(userInput);
+            });
+          });
+        `;
+
+        const result = detectFramework(jQueryCode);
+        assert.strictEqual(result.isFramework, true, 'Should detect jQuery');
+        assert.strictEqual(result.frameworkName, 'jQuery', 'Should identify jQuery');
+      });
+
+      it('should not detect framework in plain JavaScript', () => {
+        const plainCode = `
+          function myFunction() {
+            const data = { key: 'value' };
+            return data;
+          }
+        `;
+
+        const result = detectFramework(plainCode);
+        assert.strictEqual(result.isFramework, false, 'Should not detect framework');
+      });
+    });
+
+    describe('Minified code detection', () => {
+      it('should detect minified code with long lines', () => {
+        const minifiedCode = 'function a(){var b=1,c=2,d=3,e=4,f=5,g=6;return eval(b+c+d+e+f+g)}' + 'x'.repeat(500);
+
+        const result = detectMinifiedCode(minifiedCode);
+        assert.strictEqual(result, true, 'Should detect minified code by line length');
+      });
+
+      it('should detect webpack bundled code', () => {
+        const webpackCode = `
+          (function(modules) {
+            var installedModules = {};
+            function __webpack_require__(moduleId) {
+              if(installedModules[moduleId]) {
+                return installedModules[moduleId].exports;
+              }
+            }
+          })([]);
+        `;
+
+        const result = detectMinifiedCode(webpackCode);
+        assert.strictEqual(result, true, 'Should detect webpack bundle');
+      });
+
+      it('should detect UMD pattern', () => {
+        const umdCode = `
+          (function (root, factory) {
+            if (typeof exports === 'object' && typeof module === 'object')
+              module.exports = factory();
+            else if (typeof define === 'function')
+              define([], factory);
+          }(this, function() { return eval('test'); }));
+        `;
+
+        const result = detectMinifiedCode(umdCode);
+        assert.strictEqual(result, true, 'Should detect UMD pattern');
+      });
+
+      it('should not detect normal formatted code as minified', () => {
+        const normalCode = `
+          function calculateTotal(items) {
+            let total = 0;
+            for (const item of items) {
+              total += item.price;
+            }
+            return total;
+          }
+        `;
+
+        const result = detectMinifiedCode(normalCode);
+        assert.strictEqual(result, false, 'Should not flag normal code as minified');
+      });
+    });
+
+    describe('Confidence adjustment', () => {
+      it('should downgrade confidence for eval in framework code', async () => {
+        const angularCode = `
+          import { Component } from '@angular/core';
+          @Component({ selector: 'app-test' })
+          export class TestComponent {
+            test() {
+              eval('2 + 2');
+            }
+          }
+        `;
+
+        const result = await analyzeJavaScript(angularCode, 'angular.ts', false);
+
+        const evalVuln = result.vulnerabilities.find(v => v.ruleId === 'WSS-XSS-003');
+        assert.ok(evalVuln, 'Should find eval vulnerability');
+        assert.strictEqual(evalVuln.confidence, 'MEDIUM', 'Should downgrade confidence for framework code');
+        assert.ok(
+          evalVuln.description.includes('Angular'),
+          'Should mention framework in description'
+        );
+      });
+
+      it('should downgrade confidence for eval in minified code', async () => {
+        const minifiedCode = 'function a(){var b=1;return eval(b)}' + 'x'.repeat(500);
+
+        const result = await analyzeJavaScript(minifiedCode, 'bundle.min.js', false);
+
+        const evalVuln = result.vulnerabilities.find(v => v.ruleId === 'WSS-XSS-003');
+        assert.ok(evalVuln, 'Should find eval vulnerability');
+        assert.strictEqual(evalVuln.confidence, 'MEDIUM', 'Should downgrade confidence for minified code');
+        assert.ok(
+          evalVuln.description.includes('minified'),
+          'Should mention minified code in description'
+        );
+      });
+
+      it('should downgrade confidence further when CSP is present', async () => {
+        const code = `
+          function test() {
+            eval('2 + 2');
+          }
+        `;
+
+        const result = await analyzeJavaScript(code, 'test.js', true);
+
+        const evalVuln = result.vulnerabilities.find(v => v.ruleId === 'WSS-XSS-003');
+        assert.ok(evalVuln, 'Should find eval vulnerability');
+        assert.strictEqual(evalVuln.confidence, 'LOW', 'Should downgrade to LOW when CSP blocks eval');
+      });
+
+      it('should maintain HIGH confidence for eval in application code without CSP', async () => {
+        const appCode = `
+          function processUserInput(input) {
+            // Direct eval of user input - dangerous
+            return eval(input);
+          }
+        `;
+
+        const result = await analyzeJavaScript(appCode, 'app.js', false);
+
+        const evalVuln = result.vulnerabilities.find(v => v.ruleId === 'WSS-XSS-003');
+        assert.ok(evalVuln, 'Should find eval vulnerability');
+        assert.strictEqual(evalVuln.confidence, 'HIGH', 'Should maintain HIGH confidence for app code');
+      });
+
+      it('should downgrade Function constructor in React code', async () => {
+        const reactCode = `
+          import React from 'react';
+          function MyComponent() {
+            const fn = new Function('a', 'b', 'return a + b');
+            return <div>{fn(1, 2)}</div>;
+          }
+        `;
+
+        const result = await analyzeJavaScript(reactCode, 'component.jsx', false);
+
+        const functionVuln = result.vulnerabilities.find(v =>
+          v.description.includes('Function()')
+        );
+        assert.ok(functionVuln, 'Should find Function constructor vulnerability');
+        assert.strictEqual(functionVuln.confidence, 'MEDIUM', 'Should downgrade confidence for React code');
+      });
+
+      it('should handle multiple context indicators', async () => {
+        // Minified Angular code with CSP
+        const complexCode = `import{Component}from'@angular/core';eval('test');` + 'x'.repeat(500);
+
+        const result = await analyzeJavaScript(complexCode, 'bundle.min.js', true);
+
+        const evalVuln = result.vulnerabilities.find(v => v.ruleId === 'WSS-XSS-003');
+        assert.ok(evalVuln, 'Should find eval vulnerability');
+        assert.strictEqual(evalVuln.confidence, 'LOW', 'Should apply strongest downgrade (CSP + framework/minified)');
+        assert.ok(
+          evalVuln.description.includes('Angular') || evalVuln.description.includes('minified'),
+          'Should mention context in description'
+        );
+      });
     });
   });
 });

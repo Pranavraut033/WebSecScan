@@ -3,9 +3,11 @@
  * 
  * Detects dangerous JavaScript patterns, unsafe APIs, and potential XSS vectors
  * in JavaScript/TypeScript source code through deterministic pattern matching.
+ * Includes context-aware confidence scoring to reduce false positives from framework code.
  */
 
 import { createVulnerabilityFinding } from '../rules/owaspRules';
+import type { Confidence } from '@prisma/client';
 
 export interface JsAnalysisResult {
   vulnerabilities: Array<{
@@ -20,40 +22,79 @@ export interface JsAnalysisResult {
     ruleId?: string;
     evidence?: string;
   }>;
+  codeContext: CodeContext;
+}
+
+export interface CodeContext {
+  isFramework: boolean;
+  isMinified: boolean;
+  frameworkName?: string;
+  hasCSP: boolean;
 }
 
 /**
  * Analyze JavaScript/TypeScript code for security vulnerabilities
+ * with context-aware confidence scoring
  */
 export async function analyzeJavaScript(
   code: string,
-  sourceUrl: string
+  sourceUrl: string,
+  hasCSP: boolean = false
 ): Promise<JsAnalysisResult> {
   const vulnerabilities: JsAnalysisResult['vulnerabilities'] = [];
+
+  // Analyze code context to adjust confidence scoring
+  const context = analyzeCodeContext(code, hasCSP);
 
   // Check for eval() usage
   const evalMatches = findEvalUsage(code);
   for (const match of evalMatches) {
-    vulnerabilities.push(
-      createVulnerabilityFinding(
-        'WSS-XSS-003',
-        `${sourceUrl} - Line ${match.line}`,
-        match.context
-      )
+    const baseVuln = createVulnerabilityFinding(
+      'WSS-XSS-003',
+      `${sourceUrl} - Line ${match.line}`,
+      match.context
     );
+    const adjustedConfidence = adjustConfidence(baseVuln.confidence, context, 'eval');
+
+    let description = baseVuln.description;
+    if (context.isFramework) {
+      description += ` (Found in ${context.frameworkName || 'framework'} code - likely library code)`;
+    }
+    if (context.isMinified) {
+      description += ' (Found in minified code - verify source maps for actual location)';
+    }
+
+    vulnerabilities.push({
+      ...baseVuln,
+      confidence: adjustedConfidence,
+      description
+    });
   }
 
   // Check for new Function() usage
   const functionConstructorMatches = findFunctionConstructor(code);
   for (const match of functionConstructorMatches) {
-    vulnerabilities.push(
-      createVulnerabilityFinding(
-        'WSS-XSS-003',
-        `${sourceUrl} - Line ${match.line}`,
-        match.context,
-        'Use of Function() constructor enables arbitrary code execution, similar to eval().'
-      )
+    const baseVuln = createVulnerabilityFinding(
+      'WSS-XSS-003',
+      `${sourceUrl} - Line ${match.line}`,
+      match.context,
+      'Use of Function() constructor enables arbitrary code execution, similar to eval().'
     );
+    const adjustedConfidence = adjustConfidence(baseVuln.confidence, context, 'Function');
+
+    let description = baseVuln.description;
+    if (context.isFramework) {
+      description += ` (Found in ${context.frameworkName || 'framework'} code - likely library code)`;
+    }
+    if (context.isMinified) {
+      description += ' (Found in minified code - verify source maps for actual location)';
+    }
+
+    vulnerabilities.push({
+      ...baseVuln,
+      confidence: adjustedConfidence,
+      description
+    });
   }
 
   // Check for innerHTML usage
@@ -94,7 +135,10 @@ export async function analyzeJavaScript(
     );
   }
 
-  return { vulnerabilities };
+  return { 
+    vulnerabilities,
+    codeContext: context
+  };
 }
 
 /**
@@ -251,4 +295,106 @@ function findHardcodedSecrets(code: string): Array<{ line: number; context: stri
   });
 
   return matches;
+}
+
+/**
+ * Analyze code context to determine if it's framework/library code or minified
+ */
+function analyzeCodeContext(code: string, hasCSP: boolean): CodeContext {
+  const context: CodeContext = {
+    isFramework: false,
+    isMinified: false,
+    hasCSP
+  };
+
+  // Detect framework signatures
+  const frameworkPatterns = [
+    { pattern: /@angular\/core|ng-|ngOnInit|@Component|@Injectable/, name: 'Angular' },
+    { pattern: /React\.createElement|React\.Component|import.*from.*['"]react['"]/, name: 'React' },
+    { pattern: /Vue\.component|createApp|defineComponent|import.*from.*['"]vue['"]/, name: 'Vue' },
+    { pattern: /@sveltejs|svelte:component/, name: 'Svelte' },
+    { pattern: /jQuery|\$\(|\$\.|\bjQuery\b/, name: 'jQuery' },
+    { pattern: /lodash|underscore|_\.map|_\.filter/, name: 'Lodash/Underscore' }
+  ];
+
+  for (const { pattern, name } of frameworkPatterns) {
+    if (pattern.test(code)) {
+      context.isFramework = true;
+      context.frameworkName = name;
+      break;
+    }
+  }
+
+  // Detect minified code patterns
+  const minifiedIndicators = [
+    // Long lines (>500 chars without newlines)
+    /^.{500,}$/m,
+    // Single-letter variable names in high density (>10 in 100 chars)
+    /\b[a-z]\b.*\b[a-z]\b.*\b[a-z]\b.*\b[a-z]\b.*\b[a-z]\b.*\b[a-z]\b.*\b[a-z]\b.*\b[a-z]\b.*\b[a-z]\b.*\b[a-z]\b/,
+    // Webpack/Rollup markers
+    /\/\*\*\*\*\*\*\*\*\*\*|webpackBootstrap|__webpack_require__|\(function\s*\(modules\)/,
+    // UMD pattern (with s flag for multiline)
+    /typeof\s+exports[\s\S]*typeof\s+module[\s\S]*typeof\s+define/,
+    // Terser/UglifyJS markers
+    /!function\s*\(.*\)\{.*\}\s*\(/
+  ];
+
+  for (const pattern of minifiedIndicators) {
+    if (pattern.test(code)) {
+      context.isMinified = true;
+      break;
+    }
+  }
+
+  return context;
+}
+
+/**
+ * Adjust confidence based on code context
+ * Framework/minified code gets downgraded confidence
+ * CSP presence can upgrade confidence for some vulnerabilities
+ */
+function adjustConfidence(
+  baseConfidence: Confidence,
+  context: CodeContext,
+  vulnType: string
+): Confidence {
+  let confidence: Confidence = baseConfidence;
+
+  // Downgrade if framework or minified code
+  if (context.isFramework || context.isMinified) {
+    if (baseConfidence === 'HIGH') {
+      confidence = 'MEDIUM';
+    }
+    // MEDIUM stays MEDIUM, LOW stays LOW
+  }
+
+  // CSP cross-check for eval-related vulnerabilities
+  if ((vulnType === 'eval' || vulnType === 'Function') && context.hasCSP) {
+    // If CSP is present and blocks unsafe-eval, downgrade further
+    confidence = 'LOW';
+  }
+
+  return confidence;
+}
+
+/**
+ * Detect if code context is framework/library code
+ * Exported for testing
+ */
+export function detectFramework(code: string): { isFramework: boolean; frameworkName?: string } {
+  const context = analyzeCodeContext(code, false);
+  return {
+    isFramework: context.isFramework,
+    frameworkName: context.frameworkName
+  };
+}
+
+/**
+ * Detect if code is minified
+ * Exported for testing
+ */
+export function detectMinifiedCode(code: string): boolean {
+  const context = analyzeCodeContext(code, false);
+  return context.isMinified;
 }
