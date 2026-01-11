@@ -3,6 +3,9 @@ import { createScan, runStaticAnalysis, runDynamicAnalysis, recordProtocolVulner
 import { ScanMode } from '@prisma/client'
 import { normalizeUrl, validateUrlFormat } from '@/lib/urlNormalizer'
 import { validateApiRequest } from '@/lib/csrf'
+import { CrawlerOptions } from '@/security/dynamic/crawler'
+import { getSafeCrawlerOptions } from '@/lib/crawlerConfig'
+import { AuthConfig, validateAuthConfig } from '@/security/dynamic/authScanner'
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,7 +19,19 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { targetUrl, mode }: { targetUrl: string; mode: string } = body
+    const {
+      targetUrl,
+      mode,
+      crawlerOptions,
+      allowRobotsTxtOverride,
+      authConfig
+    }: {
+      targetUrl: string;
+      mode: string;
+      crawlerOptions?: Partial<CrawlerOptions>;
+      allowRobotsTxtOverride?: boolean;
+      authConfig?: AuthConfig;
+    } = body
 
     // Validate required fields
     if (!targetUrl || !mode) {
@@ -32,6 +47,44 @@ export async function POST(request: NextRequest) {
         { error: `Invalid mode. Must be one of: ${Object.values(ScanMode).join(', ')}` },
         { status: 400 }
       )
+    }
+
+    // Validate and sanitize crawler options
+    let validatedCrawlerOptions: Required<CrawlerOptions> | undefined;
+    if (crawlerOptions) {
+      try {
+        validatedCrawlerOptions = getSafeCrawlerOptions(
+          crawlerOptions,
+          allowRobotsTxtOverride ?? false
+        );
+      } catch (error) {
+        return NextResponse.json(
+          { error: error instanceof Error ? error.message : 'Invalid crawler configuration' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Validate auth configuration if provided
+    let validatedAuthConfig: AuthConfig | undefined;
+    if (authConfig) {
+      const authValidation = validateAuthConfig(authConfig);
+      if (!authValidation.valid) {
+        return NextResponse.json(
+          { error: `Invalid authentication config: ${authValidation.errors.join(', ')}` },
+          { status: 400 }
+        );
+      }
+      
+      // Ensure auth is only used for dynamic/both modes
+      if (mode === ScanMode.STATIC) {
+        return NextResponse.json(
+          { error: 'Authenticated scanning requires DYNAMIC or BOTH mode' },
+          { status: 400 }
+        );
+      }
+      
+      validatedAuthConfig = authConfig;
     }
 
     // Quick format validation
@@ -79,8 +132,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create scan record
-    const { scanId } = await createScan(sanitizedUrl, mode as ScanMode)
+    // Create scan record with crawler options and auth config
+    const { scanId } = await createScan(
+      sanitizedUrl, 
+      mode as ScanMode, 
+      validatedCrawlerOptions,
+      validatedAuthConfig
+    )
 
     // Start analysis asynchronously using waitUntil (better than setImmediate for Next.js)
     // This ensures the work continues even after response is sent
