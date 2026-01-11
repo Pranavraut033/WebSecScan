@@ -6,6 +6,9 @@ site_url: https://pranavraut.github.io/WebSecScan/
 repo_name: WebSecScan
 repo_url: https://github.com/pranavraut/WebSecScan
 
+exclude_docs: |
+  README.md
+
 theme:
   name: material
   palette:
@@ -51,9 +54,14 @@ nav:
       - Testing: testing.md
       - Crawler Design: crawler-design.md
       - Authenticated Scans: authenticated-scans.md
+      - CSRF Protection: csrf-protection.md
+      - URL Normalization: url-normalization.md
+      - Real-time Logging: real-time-logging.md
+      - Design System: design-system.md
   - Evaluation:
       - Benchmarking: benchmarking.md
       - Real-World Testing: real-world-testing.md
+      - Implementation Summary: IMPLEMENTATION-SUMMARY.md
   - References: references.md
   - API Reference: api.md
   - Deployment: deployment.md
