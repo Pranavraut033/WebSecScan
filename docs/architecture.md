@@ -8,35 +8,70 @@ This document details the technical architecture, design decisions, and implemen
 
 WebSecScan follows a modern, modular architecture built on Next.js with clear separation between UI, business logic, and security scanning engines.
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                    User Interface                       │
-│              (Next.js React Components)                 │
-└────────────────────┬────────────────────────────────────┘
-                     │
-                     ↓
-┌─────────────────────────────────────────────────────────┐
-│                  API Layer                              │
-│  ┌──────────────┐  ┌────────────────────────────────┐  │
-│  │ REST API     │  │ Server Actions                 │  │
-│  │ Routes       │  │ (createScan, runAnalysis)      │  │
-│  └──────────────┘  └────────────────────────────────┘  │
-└────────────────────┬────────────────────────────────────┘
-                     │
-                     ↓
-┌─────────────────────────────────────────────────────────┐
-│              Security Scanning Engine                   │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────┐ │
-│  │   Static    │  │   Dynamic   │  │   Dependency    │ │
-│  │  Analyzer   │  │   Tester    │  │    Scanner      │ │
-│  └─────────────┘  └─────────────┘  └─────────────────┘ │
-└────────────────────┬────────────────────────────────────┘
-                     │
-                     ↓
-┌─────────────────────────────────────────────────────────┐
-│               Data Persistence Layer                    │
-│              (Prisma ORM + SQLite/PostgreSQL)           │
-└─────────────────────────────────────────────────────────┘
+### High-Level Architecture Diagram
+
+```mermaid
+graph TB
+    subgraph "Client Layer"
+        UI[User Interface<br/>Next.js React Components]
+        Browser[Web Browser]
+    end
+    
+    subgraph "API Layer"
+        REST[REST API Routes<br/>/api/scan/*]
+        SA[Server Actions<br/>createScan, runAnalysis]
+        SSE[SSE Endpoint<br/>/api/scan/logs]
+    end
+    
+    subgraph "Security Scanning Engine"
+        Static[Static Analyzer<br/>JS, HTML, Dependencies]
+        Dynamic[Dynamic Tester<br/>Crawler, XSS, Auth]
+        Library[Library Scanner<br/>CVE Detection]
+        Rules[OWASP Rules Engine<br/>Severity Mapping]
+    end
+    
+    subgraph "Data & Utilities"
+        DB[(Database<br/>Prisma ORM<br/>SQLite/PostgreSQL)]
+        Logger[Scan Logger<br/>Real-time Events]
+        Scoring[Scoring Engine<br/>Risk Calculation]
+        URL[URL Normalizer<br/>HTTPS Validation]
+    end
+    
+    Browser -->|HTTP/HTTPS| UI
+    UI -->|API Requests| REST
+    UI -->|Form Submit| SA
+    UI -->|Stream Logs| SSE
+    
+    REST -->|Validate & Normalize| URL
+    SA -->|Validate & Normalize| URL
+    REST -->|Dispatch Scan| Static
+    REST -->|Dispatch Scan| Dynamic
+    REST -->|Dispatch Scan| Library
+    
+    Static -->|Emit Events| Logger
+    Dynamic -->|Emit Events| Logger
+    Library -->|Emit Events| Logger
+    
+    Logger -->|Stream to| SSE
+    
+    Static -->|Findings| Rules
+    Dynamic -->|Findings| Rules
+    Library -->|Findings| Rules
+    
+    Rules -->|Vulnerabilities| Scoring
+    Scoring -->|Results| DB
+    
+    DB -->|Query Results| REST
+    DB -->|Query History| SA
+    
+    style UI fill:#e1f5ff
+    style REST fill:#fff3cd
+    style SA fill:#fff3cd
+    style Static fill:#f8d7da
+    style Dynamic fill:#f8d7da
+    style Library fill:#f8d7da
+    style DB fill:#d4edda
+    style Scoring fill:#d1ecf1
 ```
 
 ---
@@ -162,6 +197,113 @@ WebSecScan/
 
 ## 🔄 Data Flow
 
+### Agent Workflow Sequence Diagram
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant UI as UI Component
+    participant API as API Route
+    participant Norm as URL Normalizer
+    participant DB as Database
+    participant Log as Scan Logger
+    participant Static as Static Analyzer
+    participant Dynamic as Dynamic Tester
+    participant Lib as Library Scanner
+    participant Rules as OWASP Rules
+    participant Score as Scoring Engine
+    
+    User->>UI: Submit scan request
+    UI->>API: POST /api/scan/start
+    
+    activate API
+    API->>Norm: normalizeUrl(targetUrl)
+    Norm->>Norm: Validate format
+    Norm->>Norm: Test HTTPS availability
+    Norm->>Norm: Check redirects
+    Norm-->>API: Normalized URL + warnings
+    
+    API->>DB: Create Scan record (PENDING)
+    DB-->>API: scanId
+    
+    alt HTTP threat detected
+        API->>DB: Store protocol vulnerability
+    end
+    
+    API-->>UI: Redirect to /scan/{scanId}
+    deactivate API
+    
+    UI->>API: GET /api/scan/logs (SSE)
+    activate API
+    API-->>UI: Stream connection opened
+    
+    par Parallel Scanning
+        API->>Static: analyzeStatic(targetUrl)
+        activate Static
+        Static->>Log: emit("Analyzing JavaScript...")
+        Log-->>API: event
+        API-->>UI: stream event
+        Static->>Static: Detect eval(), innerHTML, etc.
+        Static->>Log: emit("Found 4 JS issues")
+        Log-->>API: event
+        API-->>UI: stream event
+        Static-->>API: jsFindings[]
+        deactivate Static
+        
+        API->>Dynamic: analyzeDynamic(targetUrl)
+        activate Dynamic
+        Dynamic->>Log: emit("Starting crawler...")
+        Log-->>API: event
+        API-->>UI: stream event
+        Dynamic->>Dynamic: Crawl pages
+        Dynamic->>Dynamic: Test headers, cookies, CSP
+        Dynamic->>Log: emit("Tested 15 pages")
+        Log-->>API: event
+        API-->>UI: stream event
+        Dynamic-->>API: dynamicFindings[]
+        deactivate Dynamic
+        
+        API->>Lib: scanDependencies(targetUrl)
+        activate Lib
+        Lib->>Log: emit("Checking dependencies...")
+        Log-->>API: event
+        API-->>UI: stream event
+        Lib->>Lib: Parse package.json
+        Lib->>Lib: Query CVE database
+        Lib->>Log: emit("Found 2 outdated packages")
+        Log-->>API: event
+        API-->>UI: stream event
+        Lib-->>API: depFindings[]
+        deactivate Lib
+    end
+    
+    API->>Rules: mapToOWASP(allFindings)
+    activate Rules
+    Rules->>Rules: Categorize by OWASP Top 10
+    Rules->>Rules: Assign severity & confidence
+    Rules-->>API: vulnerabilities[]
+    deactivate Rules
+    
+    API->>Score: calculateScore(vulnerabilities)
+    activate Score
+    Score->>Score: Weight by severity
+    Score->>Score: Apply deductions
+    Score->>Score: Determine risk level
+    Score-->>API: score + riskLevel
+    deactivate Score
+    
+    API->>DB: Update Scan (COMPLETED)
+    API->>DB: Store vulnerabilities
+    
+    API->>Log: emit("Scan complete!")
+    Log-->>API: final event
+    API-->>UI: stream event + close
+    deactivate API
+    
+    UI->>UI: Display results
+    User->>UI: View vulnerability details
+```
+
 ### Scan Execution Flow
 
 ```
@@ -205,6 +347,134 @@ Analyzer  Tester     Scanner        Validator
         ↓
 11. User views detailed results & security score
 ```
+
+### Request/Response Cycle
+
+### Data Flow Diagram
+
+```mermaid
+graph LR
+    subgraph "Input"
+        I1[Target URL]
+        I2[Scan Mode]
+        I3[Crawler Options]
+    end
+    
+    subgraph "Validation & Normalization"
+        V1[Format Validation]
+        V2[Protocol Detection]
+        V3[HTTPS Test]
+        V4[Redirect Check]
+        V5[Security Threats]
+    end
+    
+    subgraph "Scan Orchestration"
+        O1[Create Scan Record]
+        O2[Dispatch to Agents]
+        O3[Real-time Logging]
+    end
+    
+    subgraph "Analysis Agents"
+        A1[JS Analyzer<br/>eval, XSS sinks]
+        A2[HTML Analyzer<br/>CSP, inline scripts]
+        A3[Dep Analyzer<br/>CVE lookup]
+        A4[Crawler<br/>Page discovery]
+        A5[Header Tester<br/>HSTS, X-Frame]
+        A6[Cookie Tester<br/>Secure, HttpOnly]
+    end
+    
+    subgraph "Processing"
+        P1[OWASP Mapping]
+        P2[Severity Assignment]
+        P3[Confidence Rating]
+        P4[Score Calculation]
+        P5[Risk Banding]
+    end
+    
+    subgraph "Storage"
+        S1[(Scan Record)]
+        S2[(Vulnerabilities)]
+        S3[(Security Tests)]
+        S4[(Scan Summary)]
+    end
+    
+    subgraph "Output"
+        OP1[Security Score<br/>0-100]
+        OP2[Risk Level<br/>Critical/High/Medium/Low]
+        OP3[Vulnerability List]
+        OP4[Remediation Guide]
+        OP5[Scan Logs]
+    end
+    
+    I1 --> V1
+    I2 --> O2
+    I3 --> O2
+    
+    V1 --> V2
+    V2 --> V3
+    V3 --> V4
+    V4 --> V5
+    
+    V5 --> O1
+    O1 --> O2
+    O2 --> O3
+    
+    O2 --> A1
+    O2 --> A2
+    O2 --> A3
+    O2 --> A4
+    O2 --> A5
+    O2 --> A6
+    
+    A1 --> O3
+    A2 --> O3
+    A3 --> O3
+    A4 --> O3
+    A5 --> O3
+    A6 --> O3
+    
+    A1 --> P1
+    A2 --> P1
+    A3 --> P1
+    A4 --> P1
+    A5 --> P1
+    A6 --> P1
+    
+    P1 --> P2
+    P2 --> P3
+    P3 --> P4
+    P4 --> P5
+    
+    P5 --> S1
+    P1 --> S2
+    P2 --> S3
+    P4 --> S4
+    
+    S1 --> OP1
+    S1 --> OP2
+    S2 --> OP3
+    S2 --> OP4
+    O3 --> OP5
+    
+    style I1 fill:#e1f5ff
+    style I2 fill:#e1f5ff
+    style I3 fill:#e1f5ff
+    style V5 fill:#f8d7da
+    style P4 fill:#d1ecf1
+    style P5 fill:#d1ecf1
+    style OP1 fill:#d4edda
+    style OP2 fill:#d4edda
+```
+
+**Flow Explanation**:
+
+1. **Input Stage**: User provides target URL, selects scan mode (STATIC/DYNAMIC/BOTH), and optionally configures crawler settings
+2. **Validation**: URL is validated, normalized, tested for HTTPS, and checked for security threats
+3. **Orchestration**: Scan record created, agents dispatched based on mode, real-time logging initialized
+4. **Analysis**: Parallel execution of specialized agents emitting findings and progress events
+5. **Processing**: Findings mapped to OWASP categories, assigned severity/confidence, scored with risk banding
+6. **Storage**: Results persisted to database with structured relationships
+7. **Output**: Comprehensive security report with score, risk level, vulnerabilities, and remediation guidance
 
 ### Request/Response Cycle
 
