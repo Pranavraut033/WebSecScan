@@ -47,6 +47,51 @@ const XSS_TEST_PAYLOADS = [
     id: 'script-context',
     payload: "'; XSSTEST__MARKER__SCRIPT; '",
     description: 'Script context reflection'
+  },
+  // DOM-based XSS payloads
+  {
+    id: 'dom-hash',
+    payload: '#XSSTEST__DOM__MARKER',
+    description: 'DOM hash fragment reflection'
+  },
+  {
+    id: 'dom-search',
+    payload: '?search=XSSTEST__DOM__SEARCH',
+    description: 'DOM search parameter reflection'
+  },
+  // JSON context payloads
+  {
+    id: 'json-context',
+    payload: '","xsstest":"XSSTEST__JSON__MARKER',
+    description: 'JSON context injection'
+  },
+  {
+    id: 'json-unicode',
+    payload: '\\u0058SSTEST__JSON__UNICODE',
+    description: 'JSON unicode escape reflection'
+  },
+  // Event handler contexts
+  {
+    id: 'event-onerror',
+    payload: '" onerror="/*XSSTEST__EVENT__MARKER*/"',
+    description: 'Event handler injection'
+  },
+  {
+    id: 'event-onload',
+    payload: '" onload="/*XSSTEST__ONLOAD__MARKER*/"',
+    description: 'Onload event injection'
+  },
+  // SVG context
+  {
+    id: 'svg-context',
+    payload: '<svg><desc>XSSTEST__SVG__MARKER</desc></svg>',
+    description: 'SVG element injection'
+  },
+  // Template literal context
+  {
+    id: 'template-literal',
+    payload: '${XSSTEST__TEMPLATE__MARKER}',
+    description: 'Template literal injection'
   }
 ];
 
