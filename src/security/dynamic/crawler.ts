@@ -3,6 +3,14 @@
  * 
  * Conservative, safe crawler that discovers endpoints while respecting
  * robots.txt and enforcing rate limits. Non-destructive and ethical.
+ * 
+ * Design Philosophy:
+ * - Safety over exhaustive coverage
+ * - Ethical crawling with explicit consent
+ * - Prevent DoS through rate limiting and page caps
+ * - Respect website policies (robots.txt)
+ * 
+ * See docs/crawler-design.md for detailed rationale and configuration guide.
  */
 
 import * as cheerio from 'cheerio';
@@ -14,22 +22,122 @@ export interface CrawlResult {
   errors: string[];
 }
 
-export interface CrawlerOptions {
-  maxDepth?: number;
-  maxPages?: number;
-  rateLimit?: number; // milliseconds between requests
-  respectRobotsTxt?: boolean;
-  allowExternalLinks?: boolean;
-  timeout?: number;
+/**
+ * Session credentials for authenticated crawling
+ */
+export interface SessionCredentials {
+  /** HTTP headers to include in requests (e.g., Cookie, Authorization) */
+  headers?: Record<string, string>;
+  
+  /** Cookies to send with requests */
+  cookies?: Array<{ name: string; value: string }>;
 }
 
-const DEFAULT_OPTIONS: Required<CrawlerOptions> = {
-  maxDepth: 2,
-  maxPages: 50,
-  rateLimit: 1000, // 1 second between requests
-  respectRobotsTxt: true,
-  allowExternalLinks: false,
-  timeout: 10000
+/**
+ * Configuration options for web crawler
+ * 
+ * All options are optional with safe defaults prioritizing server safety
+ * and ethical crawling over exhaustive coverage.
+ */
+export interface CrawlerOptions {
+  /**
+   * Maximum crawl depth (levels from start URL)
+   * 
+   * Default: 2
+   * Recommended Range: 1-5
+   * Rationale: Prevents exponential URL explosion; deep routes require explicit override
+   * 
+   * Trade-off: maxDepth=2 may miss deeply nested admin routes like:
+   *   / → /dashboard → /admin → /settings (depth 3, SKIPPED)
+   */
+  maxDepth?: number;
+
+  /**
+   * Maximum pages to crawl before stopping
+   * 
+   * Default: 50
+   * Recommended Range: 1-200
+   * Rationale: Caps resource usage and scan duration; prevents accidental DoS
+   * 
+   * Trade-off: Large applications may have hundreds of routes; 50 provides
+   * representative coverage without overwhelming small servers
+   */
+  maxPages?: number;
+
+  /**
+   * Milliseconds to wait between requests (rate limiting)
+   * 
+   * Default: 1000ms (1 second)
+   * Recommended Range: 100-5000ms
+   * Rationale: Prevents overwhelming target server; respectful crawling
+   * 
+   * Performance Impact: 50 pages × 1s = ~50 seconds minimum scan time
+   * WARNING: Values < 500ms may trigger WAF/rate limit blocks
+   */
+  rateLimit?: number;
+
+  /**
+   * Whether to respect robots.txt directives
+   * 
+   * Default: true
+   * Rationale: Ethical crawling honors website owner preferences
+   * 
+   * Trade-off: May skip security-critical admin panels marked as disallowed
+   * For authorized testing, set to false with explicit consent
+   */
+  respectRobotsTxt?: boolean;
+
+  /**
+   * Whether to crawl external (cross-origin) links
+   * 
+   * Default: false
+   * Rationale: Prevents pivoting to external domains during scan
+   * 
+   * Trade-off: Won't test federated auth flows or third-party integrations
+   */
+  allowExternalLinks?: boolean;
+
+  /**
+   * Request timeout in milliseconds
+   * 
+   * Default: 10000ms (10 seconds)
+   * Recommended Range: 5000-30000ms
+   * Rationale: Prevents hanging on unresponsive endpoints
+   */
+  timeout?: number;
+
+  /**
+   * Optional session credentials for authenticated crawling
+   * 
+   * When provided, all requests will include these headers/cookies
+   * to access authenticated pages. Use in conjunction with Playwright
+   * authentication flow (see authScanner.ts).
+   * 
+   * Safety: Sessions are isolated per-scan; credentials never persisted
+   */
+  sessionCredentials?: SessionCredentials;
+}
+
+/**
+ * Safe default crawler configuration
+ * 
+ * Prioritizes:
+ * 1. Server safety (rate limiting, page caps)
+ * 2. Ethical behavior (robots.txt, explicit consent)
+ * 3. Predictable resource usage (bounded depth/pages)
+ * 4. Fast initial scans (shallow depth)
+ * 
+ * These defaults are appropriate for quick security checks on small-to-medium
+ * applications. For comprehensive coverage, see docs/crawler-design.md for
+ * recommended overrides.
+ */
+const DEFAULT_OPTIONS: Required<Omit<CrawlerOptions, 'sessionCredentials'>> = {
+  maxDepth: 2,              // Crawl up to 2 levels deep
+  maxPages: 50,             // Stop after 50 pages discovered
+  rateLimit: 1000,          // 1 second between requests (respectful pacing)
+  respectRobotsTxt: true,   // Honor robots.txt by default (ethical)
+  allowExternalLinks: false, // Only crawl same-origin URLs (prevent pivoting)
+  timeout: 10000            // 10-second timeout per request
 };
 
 /**
@@ -81,11 +189,32 @@ export async function crawlWebsite(
         await sleep(opts.rateLimit);
       }
 
+      // Build request headers (merge session credentials if provided)
+      const headers: Record<string, string> = {
+        'User-Agent': 'WebSecScan/1.0 (Educational Security Scanner)',
+      };
+
+      // Add session headers for authenticated crawling
+      if (opts.sessionCredentials?.headers) {
+        Object.assign(headers, opts.sessionCredentials.headers);
+      }
+
+      // Add cookies if provided (merge with Cookie header if exists)
+      if (opts.sessionCredentials?.cookies && opts.sessionCredentials.cookies.length > 0) {
+        const cookieString = opts.sessionCredentials.cookies
+          .map(c => `${c.name}=${c.value}`)
+          .join('; ');
+        
+        if (headers['Cookie']) {
+          headers['Cookie'] = `${headers['Cookie']}; ${cookieString}`;
+        } else {
+          headers['Cookie'] = cookieString;
+        }
+      }
+
       // Fetch page
       const response = await fetch(url, {
-        headers: {
-          'User-Agent': 'WebSecScan/1.0 (Educational Security Scanner)',
-        },
+        headers,
         signal: AbortSignal.timeout(opts.timeout)
       });
 
