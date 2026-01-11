@@ -22,28 +22,28 @@ import { chromium, Browser, BrowserContext, Page } from 'playwright';
 export interface AuthConfig {
   /** URL of the login page */
   loginUrl: string;
-  
+
   /** CSS selector for username/email input */
   usernameSelector: string;
-  
+
   /** CSS selector for password input */
   passwordSelector: string;
-  
+
   /** CSS selector for submit button */
   submitSelector: string;
-  
+
   /** Test credentials (use dedicated test account only) */
   credentials: {
     username: string;
     password: string;
   };
-  
+
   /** Optional: Success indicator (e.g., element that appears after login) */
   successSelector?: string;
-  
+
   /** Optional: Post-login URL to verify success */
   successUrl?: string;
-  
+
   /** Optional: Pages to scan after authentication */
   protectedPages?: string[];
 }
@@ -131,7 +131,7 @@ export async function authenticateWithPlaywright(
 ): Promise<AuthResult> {
   let browser: Browser | null = null;
   let context: BrowserContext | null = null;
-  
+
   try {
     // Validate configuration
     const validation = validateAuthConfig(config);
@@ -154,7 +154,7 @@ export async function authenticateWithPlaywright(
         '--disable-gpu' // Not needed for headless
       ]
     });
-    
+
     // Create isolated context (no shared cookies or storage)
     context = await browser.newContext({
       userAgent: 'WebSecScan/1.0 (Educational Security Scanner)',
@@ -165,30 +165,30 @@ export async function authenticateWithPlaywright(
       acceptDownloads: false,
       bypassCSP: false
     });
-    
+
     const page = await context.newPage();
-    
+
     // Navigate to login page with timeout
     await page.goto(config.loginUrl, {
       waitUntil: 'networkidle',
       timeout: 15000
     });
-    
+
     // Wait for login form to be ready
     await page.waitForSelector(config.usernameSelector, { timeout: 5000 });
     await page.waitForSelector(config.passwordSelector, { timeout: 5000 });
     await page.waitForSelector(config.submitSelector, { timeout: 5000 });
-    
+
     // Fill credentials (never log these values)
     await page.fill(config.usernameSelector, config.credentials.username);
     await page.fill(config.passwordSelector, config.credentials.password);
-    
+
     // Submit form
     await Promise.all([
-      page.waitForNavigation({ timeout: 10000 }).catch(() => {}), // May not navigate
+      page.waitForNavigation({ timeout: 10000 }).catch(() => { }), // May not navigate
       page.click(config.submitSelector)
     ]);
-    
+
     // Wait for success indicator
     if (config.successSelector) {
       await page.waitForSelector(config.successSelector, { timeout: 10000 });
@@ -198,20 +198,20 @@ export async function authenticateWithPlaywright(
       // Default: wait for network to settle
       await page.waitForLoadState('networkidle', { timeout: 10000 });
     }
-    
+
     // Extract cookies with security attributes
     const cookies = await context.cookies();
-    
+
     // Build session headers for subsequent requests
     const sessionHeaders: Record<string, string> = {};
     const cookieString = cookies
       .map(c => `${c.name}=${c.value}`)
       .join('; ');
-    
+
     if (cookieString) {
       sessionHeaders['Cookie'] = cookieString;
     }
-    
+
     // Analyze session security
     const warnings: string[] = [];
     let secureCount = 0;
@@ -224,9 +224,9 @@ export async function authenticateWithPlaywright(
       if (cookie.sameSite && cookie.sameSite !== 'None') sameSiteCount++;
 
       // Check for common session cookie patterns without Secure flag
-      if ((cookie.name.toLowerCase().includes('session') || 
-           cookie.name.toLowerCase().includes('auth') ||
-           cookie.name.toLowerCase().includes('token')) && !cookie.secure) {
+      if ((cookie.name.toLowerCase().includes('session') ||
+        cookie.name.toLowerCase().includes('auth') ||
+        cookie.name.toLowerCase().includes('token')) && !cookie.secure) {
         warnings.push(`Session cookie '${cookie.name}' missing Secure flag`);
       }
     }
@@ -234,7 +234,7 @@ export async function authenticateWithPlaywright(
     if (cookies.length > 0 && secureCount === 0) {
       warnings.push('No cookies have Secure flag set');
     }
-    
+
     return {
       success: true,
       cookies: cookies.map(c => ({
@@ -248,7 +248,7 @@ export async function authenticateWithPlaywright(
       sessionHeaders,
       warnings: warnings.length > 0 ? warnings : undefined
     };
-    
+
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     return {
@@ -260,10 +260,10 @@ export async function authenticateWithPlaywright(
   } finally {
     // Always clean up browser resources
     if (context) {
-      await context.close().catch(() => {});
+      await context.close().catch(() => { });
     }
     if (browser) {
-      await browser.close().catch(() => {});
+      await browser.close().catch(() => { });
     }
   }
 }
@@ -284,7 +284,7 @@ export async function analyzeAuthenticatedSession(
   protectedPages?: string[]
 ): Promise<AuthScanResult> {
   const vulnerabilities: AuthScanResult['vulnerabilities'] = [];
-  
+
   if (!authResult.success) {
     return {
       authenticated: false,
@@ -312,8 +312,8 @@ export async function analyzeAuthenticatedSession(
 
     // Check for insecure session cookies
     const isSessionCookie = cookie.name.toLowerCase().includes('session') ||
-                           cookie.name.toLowerCase().includes('auth') ||
-                           cookie.name.toLowerCase().includes('token');
+      cookie.name.toLowerCase().includes('auth') ||
+      cookie.name.toLowerCase().includes('token');
 
     if (isSessionCookie && !cookie.secure) {
       vulnerabilities.push({
@@ -393,7 +393,8 @@ export async function analyzeAuthenticatedSession(
  * 2. Extract session credentials
  * 3. Analyze session security
  * 4. Optionally test protected pages with session headers
- * 5. Clean up browser resources
+ * 5. Test for authentication bypass vulnerabilities
+ * 6. Clean up browser resources
  */
 export async function performAuthenticatedScan(
   config: AuthConfig
@@ -403,16 +404,291 @@ export async function performAuthenticatedScan(
 }> {
   // Step 1: Authenticate and extract session
   const authResult = await authenticateWithPlaywright(config);
-  
+
   // Step 2: Analyze authenticated session
   const scanResult = await analyzeAuthenticatedSession(
     authResult,
     config.loginUrl,
     config.protectedPages
   );
-  
+
+  // Step 3: Test for authentication bypass (if protected pages provided)
+  if (config.protectedPages && config.protectedPages.length > 0) {
+    const bypassVulns = await testAuthenticationBypass(
+      config.protectedPages,
+      authResult.cookies
+    );
+    scanResult.vulnerabilities.push(...bypassVulns);
+  }
+
   return {
     authResult,
     scanResult
   };
 }
+
+/**
+ * Test for authentication bypass vulnerabilities
+ * 
+ * Tests:
+ * - Direct access to protected pages without session
+ * - Access with invalid/expired session tokens
+ * - Parameter manipulation bypass attempts
+ * - Client-side auth bypass (hidden fields, cookies)
+ */
+async function testAuthenticationBypass(
+  protectedPages: string[],
+  validCookies: Array<{ name: string; value: string; domain: string }>
+): Promise<Array<{
+  type: string;
+  severity: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' | 'INFO';
+  description: string;
+  evidence?: string;
+  remediation: string;
+}>> {
+  const vulnerabilities: any[] = [];
+  let browser: Browser | null = null;
+
+  try {
+    browser = await chromium.launch({ headless: true });
+
+    for (const page of protectedPages) {
+      // Test 1: Direct access without authentication
+      const unauthResult = await testUnauthenticatedAccess(browser, page);
+      if (unauthResult.vulnerable) {
+        vulnerabilities.push({
+          type: 'Authentication Bypass',
+          severity: 'CRITICAL',
+          description: `Protected page accessible without authentication: ${page}`,
+          evidence: unauthResult.evidence,
+          remediation: 'Implement server-side authentication checks on all protected resources. Redirect unauthenticated users to login page.'
+        });
+      }
+
+      // Test 2: Access with invalid session token
+      if (validCookies.length > 0) {
+        const invalidTokenResult = await testInvalidSessionAccess(browser, page, validCookies);
+        if (invalidTokenResult.vulnerable) {
+          vulnerabilities.push({
+            type: 'Weak Session Validation',
+            severity: 'HIGH',
+            description: `Page accepts invalid session tokens: ${page}`,
+            evidence: invalidTokenResult.evidence,
+            remediation: 'Validate session tokens cryptographically. Check token signature and expiration on server side.'
+          });
+        }
+      }
+
+      // Test 3: Parameter-based authentication bypass
+      const paramBypassResult = await testParameterBypass(browser, page);
+      if (paramBypassResult.vulnerable) {
+        vulnerabilities.push({
+          type: 'Parameter-Based Auth Bypass',
+          severity: 'CRITICAL',
+          description: `Authentication bypassable via URL parameters: ${page}`,
+          evidence: paramBypassResult.evidence,
+          remediation: 'Never trust client-supplied authentication parameters. Implement proper server-side session management.'
+        });
+      }
+    }
+
+  } catch (error) {
+    console.error('Authentication bypass testing error:', error);
+  } finally {
+    if (browser) {
+      await browser.close();
+    }
+  }
+
+  return vulnerabilities;
+}
+
+/**
+ * Test if protected page is accessible without authentication
+ */
+async function testUnauthenticatedAccess(
+  browser: Browser,
+  pageUrl: string
+): Promise<{ vulnerable: boolean; evidence: string }> {
+  const context = await browser.newContext({
+    // No cookies or authentication
+    userAgent: 'WebSecScan/1.0 (Educational Security Scanner)'
+  });
+
+  try {
+    const page = await context.newPage();
+    const response = await page.goto(pageUrl, {
+      waitUntil: 'domcontentloaded',
+      timeout: 10000
+    });
+
+    if (!response) {
+      await page.close();
+      await context.close();
+      return { vulnerable: false, evidence: 'No response received' };
+    }
+
+    const statusCode = response.status();
+    const finalUrl = page.url();
+
+    // If page loads successfully (200 OK) and doesn't redirect to login
+    if (statusCode === 200 && !finalUrl.includes('login') && !finalUrl.includes('auth')) {
+      const content = await page.content();
+
+      // Check if page has actual content (not just error message)
+      const hasContent = content.length > 500;
+      const hasLoginForm = content.toLowerCase().includes('login') ||
+        content.toLowerCase().includes('sign in');
+
+      if (hasContent && !hasLoginForm) {
+        await page.close();
+        await context.close();
+        return {
+          vulnerable: true,
+          evidence: `HTTP ${statusCode}, no redirect to login, content loaded`
+        };
+      }
+    }
+
+    await page.close();
+    await context.close();
+    return { vulnerable: false, evidence: `HTTP ${statusCode}, redirected or access denied` };
+
+  } catch (error) {
+    await context.close();
+    return { vulnerable: false, evidence: 'Access test failed' };
+  }
+}
+
+/**
+ * Test if page accepts invalid/tampered session tokens
+ */
+async function testInvalidSessionAccess(
+  browser: Browser,
+  pageUrl: string,
+  validCookies: Array<{ name: string; value: string; domain: string }>
+): Promise<{ vulnerable: boolean; evidence: string }> {
+  const context = await browser.newContext({
+    userAgent: 'WebSecScan/1.0 (Educational Security Scanner)'
+  });
+
+  try {
+    // Create invalid versions of session cookies
+    const invalidCookies = validCookies.map(cookie => ({
+      ...cookie,
+      value: 'INVALID_' + cookie.value.substring(0, 10), // Tamper with token
+      url: `https://${cookie.domain}`
+    }));
+
+    // Set invalid cookies
+    await context.addCookies(invalidCookies);
+
+    const page = await context.newPage();
+    const response = await page.goto(pageUrl, {
+      waitUntil: 'domcontentloaded',
+      timeout: 10000
+    });
+
+    if (!response) {
+      await page.close();
+      await context.close();
+      return { vulnerable: false, evidence: 'No response received' };
+    }
+
+    const statusCode = response.status();
+    const finalUrl = page.url();
+
+    // If page accepts invalid token (200 OK, no redirect to login)
+    if (statusCode === 200 && !finalUrl.includes('login')) {
+      await page.close();
+      await context.close();
+      return {
+        vulnerable: true,
+        evidence: `HTTP ${statusCode}, invalid token accepted`
+      };
+    }
+
+    await page.close();
+    await context.close();
+    return { vulnerable: false, evidence: `HTTP ${statusCode}, invalid token rejected` };
+
+  } catch (error) {
+    await context.close();
+    return { vulnerable: false, evidence: 'Invalid token test failed' };
+  }
+}
+
+/**
+ * Test for parameter-based authentication bypass
+ */
+async function testParameterBypass(
+  browser: Browser,
+  pageUrl: string
+): Promise<{ vulnerable: boolean; evidence: string }> {
+  const context = await browser.newContext({
+    userAgent: 'WebSecScan/1.0 (Educational Security Scanner)'
+  });
+
+  try {
+    const page = await context.newPage();
+
+    // Common authentication bypass parameters
+    const bypassParams = [
+      { name: 'admin', value: 'true' },
+      { name: 'authenticated', value: '1' },
+      { name: 'auth', value: 'true' },
+      { name: 'user', value: 'admin' },
+      { name: 'role', value: 'admin' },
+      { name: 'debug', value: 'true' },
+      { name: 'bypass', value: '1' }
+    ];
+
+    for (const param of bypassParams) {
+      try {
+        const testUrl = new URL(pageUrl);
+        testUrl.searchParams.set(param.name, param.value);
+
+        const response = await page.goto(testUrl.toString(), {
+          waitUntil: 'domcontentloaded',
+          timeout: 10000
+        });
+
+        if (!response) continue;
+
+        const statusCode = response.status();
+        const finalUrl = page.url();
+
+        // If parameter grants access (200 OK, no redirect)
+        if (statusCode === 200 && !finalUrl.includes('login')) {
+          const content = await page.content();
+          const hasContent = content.length > 500;
+
+          if (hasContent) {
+            await page.close();
+            await context.close();
+            return {
+              vulnerable: true,
+              evidence: `Parameter '${param.name}=${param.value}' bypassed authentication`
+            };
+          }
+        }
+
+      } catch {
+        // Continue to next parameter
+        continue;
+      }
+
+      // Rate limiting
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+
+    await page.close();
+    await context.close();
+    return { vulnerable: false, evidence: 'No parameter bypass detected' };
+
+  } catch (error) {
+    await context.close();
+    return { vulnerable: false, evidence: 'Parameter bypass test failed' };
+  }
+}
+
