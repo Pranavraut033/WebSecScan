@@ -49,9 +49,12 @@ nav:
   - Development:
       - Setup & Guide: development.md
       - Testing: testing.md
+      - Crawler Design: crawler-design.md
+      - Authenticated Scans: authenticated-scans.md
   - Evaluation:
       - Benchmarking: benchmarking.md
       - Real-World Testing: real-world-testing.md
+  - References: references.md
   - API Reference: api.md
   - Deployment: deployment.md
   - Security & Ethics: security-ethics.md
@@ -63,7 +66,11 @@ markdown_extensions:
       pygments_lang_class: true
   - pymdownx.inlinehilite
   - pymdownx.snippets
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.details
