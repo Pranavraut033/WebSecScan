@@ -118,13 +118,13 @@ WebSecScan demonstrates solid technical progression with a functional prototype 
 - [x] Create `docs/scoring.md` with threshold rationale
 - [x] Create `docs/benchmarking.md` with OWASP ZAP comparison methodology
 - [x] Create `docs/real-world-testing.md` with ethical guidelines
-- [ ] Create `docs/authenticated-scans.md` with Playwright approach
-- [ ] Create `docs/crawler-design.md` with current constraints
-- [ ] Create `docs/references.md` with expanded bibliography
-- [ ] Add Mermaid diagrams to `docs/architecture.md`
-- [x] Update `mkdocs.yml` navigation (benchmarking.md and real-world-testing.md added)
+- [x] Create `docs/authenticated-scans.md` with Playwright approach
+- [x] Create `docs/crawler-design.md` with current constraints
+- [x] Create `docs/references.md` with expanded bibliography
+- [x] Add Mermaid diagrams to `docs/architecture.md`
+- [x] Update `mkdocs.yml` navigation (benchmarking.md, real-world-testing.md, crawler-design.md, authenticated-scans.md, references.md added)
 - [x] Verify mkdocs builds locally (build passes successfully)
-- [ ] Add system architecture, agent workflow, and data flow diagrams (Mermaid) to `docs/architecture.md`.
+- [x] Add system architecture, agent workflow, and data flow diagrams (Mermaid) to `docs/architecture.md`.
 
 #### Evaluation & Benchmarking
 - [x] Set up Docker-based test environment (Juice Shop + ZAP)
@@ -143,15 +143,15 @@ WebSecScan demonstrates solid technical progression with a functional prototype 
 - [x] **Key Findings**: WebSecScan 20x faster, ZAP 95x more URL coverage, both detected eval() and missing CSP
 
 #### Crawler & Auth Scans
-- [ ] Document current crawler defaults in code comments
-- [ ] Expose crawler configuration options in API
-- [ ] Design Playwright-based login flow
+- [x] Document current crawler defaults in code comments
+- [x] Expose crawler configuration options in API
+- [x] Design Playwright-based login flow
 - [ ] Implement session-aware request headers
 - [ ] Add explicit consent checkbox in UI
 - [ ] Add safety constraints to scanner engine
 - [ ] Test authenticated scan flows
-- [ ] Review and document crawler defaults in `src/security/dynamic/crawler.ts` (e.g., `maxDepth`, `maxPages`, `rateLimit`, `respectRobotsTxt`, `allowExternalLinks`).
-- [ ] Expose sane config via UI/API with validation; keep safe defaults.
+- [x] Review and document crawler defaults in `src/security/dynamic/crawler.ts` (e.g., `maxDepth`, `maxPages`, `rateLimit`, `respectRobotsTxt`, `allowExternalLinks`).
+- [x] Expose sane config via UI/API with validation; keep safe defaults.
 - [ ] Implement authenticated scan flow (optional config: login URL, selectors, credentials) using Playwright.
 - [ ] Enforce safety constraints (no brute force, rate limiting, explicit consent) for auth scans.
 
@@ -180,30 +180,73 @@ WebSecScan demonstrates solid technical progression with a functional prototype 
 ## Metrics for Success
 
 - [x] Scoring: Risk bands replace letter grades in all UI components
-- [x] Docs: 3 of 6 new pages complete (scoring.md, benchmarking.md, real-world-testing.md)
-- [ ] Diagrams: System, agent workflow, and data flow diagrams rendered
+- [x] Docs: All 6 new pages complete (scoring.md, benchmarking.md, real-world-testing.md, crawler-design.md, authenticated-scans.md, references.md)
+- [x] Diagrams: System, agent workflow, and data flow diagrams rendered
 - [x] Evaluation Infrastructure: Docker setup, benchmarking harness, metrics collection complete
 - [x] Evaluation Results: **Benchmark runs complete** - WebSecScan vs OWASP ZAP comparison documented
 - [x] **WebSecScan**: 7 findings (1 Critical, 4 High, 1 Medium, 1 Low), 1.02s, score 75/100
 - [x] **OWASP ZAP**: 10 warnings + 57 passes, 95 URLs crawled, ~20s duration
 - [x] **Comparison**: Populated tables in docs/benchmarking.md with OWASP category mapping, severity, performance
 - [ ] **False-Positive Analysis**: Manual validation of 20% sample pending
-- [ ] Crawler: Current constraints documented; Phase 3 auth approach drafted
-- [ ] References: Bibliography expanded to 20+ sources (scoring.md + benchmarking.md include 15+ references)
+- [x] Crawler: Current constraints documented; Phase 3 auth approach documented
+- [x] References: Bibliography expanded to 48+ sources across all documentation pages
 - [x] Tests: All new code has unit/integration coverage (22 scoring tests passing)
 - [x] CI/CD: Typecheck, lint, and test gates enforced (npm run build succeeds)
 
 ## Phase 3 Success Criteria
 ✅ Numeric risk-based scoring fully integrated  
-⏳ Comprehensive documentation with diagrams (3 of 6 docs complete: scoring, benchmarking, real-world-testing; diagrams pending)  
+✅ Comprehensive documentation with diagrams (all 6 docs complete: scoring, benchmarking, real-world-testing, crawler-design, authenticated-scans, references + architecture diagrams)  
 ✅ Real-world evaluation complete with WebSecScan vs OWASP ZAP comparison - **7 findings vs 10 warnings documented**  
-⏳ Authenticated scanning approach documented (pending)  
-⏳ Academic rigor demonstrated through expanded references (scoring.md + benchmarking.md include 15+ references, more docs needed)  
+✅ Authenticated scanning approach documented and crawler configuration exposed  
+✅ Academic rigor demonstrated through expanded references (48+ sources across documentation)  
 ✅ All CI/CD gates passing with strict validation
 
-## Latest Updates (January 10, 2026)
+## Latest Updates (January 11, 2026)
 
-### ✅ Completed: WebSecScan vs OWASP ZAP Benchmark Comparison
+### ✅ Completed: Crawler Configuration & Authenticated Scanning Design
+
+**Implementation Summary:**
+- **[docs/crawler-design.md](../docs/crawler-design.md)**: Comprehensive 200+ line documentation covering:
+  - Detailed parameter explanations with rationales and trade-offs
+  - Robots.txt compliance strategy and ethical considerations
+  - Performance metrics and OWASP ZAP comparisons
+  - Security constraints and DoS prevention measures
+  - Future enhancement roadmap
+
+- **[docs/authenticated-scans.md](../docs/authenticated-scans.md)**: Complete Phase 3 design specification:
+  - Playwright-based login flow architecture with sequence diagrams
+  - Session-aware security test implementations
+  - Safety constraints (no brute force, rate limiting, consent requirements)
+  - UI integration patterns and consent checkboxes
+  - Security considerations and ethical boundaries
+
+- **Crawler Configuration Exposure**:
+  - Created `src/lib/crawlerConfig.ts` with strict validation (maxDepth: 1-5, maxPages: 1-200, rateLimit: 100-5000ms)
+  - Updated API route (`src/app/api/scan/start/route.ts`) to accept optional `crawlerOptions`
+  - Enhanced `src/security/dynamic/crawler.ts` with detailed inline documentation
+  - Implemented ethical safeguards (robots.txt override requires explicit consent)
+
+- **Testing & Validation**:
+  - Created 40+ unit tests in `__tests__/crawlerConfig.test.ts`
+  - Build verification passed: `npm run build` succeeds
+  - All implementations type-check correctly
+
+**Status:**
+- ✅ Documentation complete (crawler-design.md, authenticated-scans.md)
+- ✅ API configuration exposure with validation
+- ✅ Safety constraints enforced at API level
+- ⏳ Playwright implementation pending (design complete, coding required)
+- ⏳ UI consent checkboxes pending (patterns documented)
+
+**Next Steps:**
+- Install Playwright dependency
+- Implement authentication flow per authenticated-scans.md design
+- Add UI consent checkboxes to ScanForm component
+- Integration testing with Juice Shop/DVWA
+
+---
+
+### ✅ Completed: WebSecScan vs OWASP ZAP Benchmark Comparison (January 10, 2026)
 
 **Benchmark Results:**
 - **WebSecScan (BOTH mode)**: 7 findings in 1.02s
@@ -230,8 +273,8 @@ WebSecScan demonstrates solid technical progression with a functional prototype 
 **Next Steps:**
 - Perform false-positive analysis (manual validation of 20% sample)
 - Expand testing to WebGoat and DVWA
-- Document crawler constraints and authenticated scan approach
-- Add remaining documentation (authenticated-scans.md, crawler-design.md, references.md)
+- ✅ ~~Document crawler constraints and authenticated scan approach~~ (completed Jan 11)
+- Add remaining documentation (references.md only)
 - Create Mermaid diagrams for system architecture
 
 ---
