@@ -39,9 +39,14 @@ See [docs/MIGRATION-SUMMARY.md](docs/MIGRATION-SUMMARY.md) for complete migratio
 - Purpose: Safe, non-destructive runtime tests against a permitted target URL.
 - Components:
   - `crawler` — conservative crawler that respects robots.txt and rate limits; discovers reachable endpoints and input points.
-  - `xssTester` — sends safe reflected XSS payloads that do not exploit chained vulnerabilities; captures page responses and DOM reflections.
+  - `xssTester` — sends safe reflected XSS payloads across 12 contexts (DOM, JSON, event handlers, SVG, template literals); captures page responses and DOM reflections without exploiting vulnerabilities.
+  - `sqlTester` — error-based SQL injection detection using 7 safe payloads; identifies database error patterns across MySQL, PostgreSQL, MSSQL, Oracle, SQLite without data extraction.
+  - `pathTraversalTester` — tests for directory traversal vulnerabilities using 8 payloads targeting Unix/Windows file systems; detects /etc/passwd, win.ini exposure without arbitrary file reads.
+  - `csrfTester` — analyzes forms for CSRF tokens (8+ patterns), validates token entropy, checks SameSite cookie attributes; only flags state-changing methods.
+  - `authScanner` — verifies session cookie security and tests for authentication bypass via 3 methods: unauthenticated access, invalid tokens, parameter manipulation.
   - `authChecks` — verifies presence of insecure auth patterns (e.g., weak redirects, missing session flags) without brute forcing credentials.
-- Implementation note: Uses Playwright (headless) and enforces explicit timeouts and request throttling.
+- Implementation note: Uses Playwright (headless) and enforces explicit timeouts and request throttling. All tests are rate-limited (300-1000ms) to prevent DoS.
+- Safety guarantees: No exploit chaining, no brute force, no data extraction, no destructive operations. All findings are detection-only.
 
 ### Library Scanner Agent
 - Purpose: Identify known vulnerable dependency versions and outdated packages.
