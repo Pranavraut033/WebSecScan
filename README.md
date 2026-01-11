@@ -36,6 +36,11 @@ WebSecScan is an automated, lightweight security scanner that identifies common 
 ### 🔍 Comprehensive Testing
 - **Static Analysis**: JavaScript, HTML, dependencies
 - **Dynamic Testing**: XSS, authentication, security headers
+- **Authenticated Scanning** ⚡ NEW: Test security behind login barriers
+  - Playwright-based automated login
+  - Session-aware security testing
+  - Cookie security analysis (Secure, HttpOnly, SameSite)
+  - Weak session token detection
 - **Security Headers**: HSTS, CSP, X-Frame-Options, X-Content-Type-Options
 - **Cookie Analysis**: Secure, HttpOnly, SameSite attributes
 - **CSP Deep Dive**: 10 detailed Content Security Policy checks
