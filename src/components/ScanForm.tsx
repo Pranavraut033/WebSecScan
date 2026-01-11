@@ -15,6 +15,17 @@ interface ScanFormProps {
   onScanComplete?: () => void
 }
 
+interface AuthConfig {
+  enabled: boolean
+  loginUrl: string
+  usernameSelector: string
+  passwordSelector: string
+  submitSelector: string
+  username: string
+  password: string
+  successSelector?: string
+}
+
 export default function ScanForm({ onScanComplete }: ScanFormProps) {
   const router = useRouter()
   const [scanUrl, setScanUrl] = useState('')
@@ -22,6 +33,18 @@ export default function ScanForm({ onScanComplete }: ScanFormProps) {
   const [scanning, setScanning] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [consent, setConsent] = useState(false)
+  const [authConsent, setAuthConsent] = useState(false)
+  const [showAuthConfig, setShowAuthConfig] = useState(false)
+  const [authConfig, setAuthConfig] = useState<AuthConfig>({
+    enabled: false,
+    loginUrl: '',
+    usernameSelector: '#username',
+    passwordSelector: '#password',
+    submitSelector: 'button[type="submit"]',
+    username: '',
+    password: '',
+    successSelector: ''
+  })
   const [urlInfo, setUrlInfo] = useState<{
     protocol: string
     warnings: string[]
@@ -40,19 +63,45 @@ export default function ScanForm({ onScanComplete }: ScanFormProps) {
       return
     }
 
+    if (authConfig.enabled && !authConsent) {
+      setError('You must confirm authorization for authenticated scanning')
+      return
+    }
+
     setError(null)
     setScanning(true)
 
     try {
+      const requestBody: any = {
+        targetUrl: scanUrl.trim(),
+        mode: scanMode,
+      }
+
+      // Add auth config if enabled and valid
+      if (authConfig.enabled) {
+        if (!authConfig.loginUrl || !authConfig.username || !authConfig.password) {
+          throw new Error('Authentication requires login URL, username, and password')
+        }
+        
+        requestBody.authConfig = {
+          loginUrl: authConfig.loginUrl,
+          usernameSelector: authConfig.usernameSelector,
+          passwordSelector: authConfig.passwordSelector,
+          submitSelector: authConfig.submitSelector,
+          credentials: {
+            username: authConfig.username,
+            password: authConfig.password
+          },
+          successSelector: authConfig.successSelector || undefined
+        }
+      }
+
       const response = await fetch('/api/scan/start', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          targetUrl: scanUrl.trim(),
-          mode: scanMode,
-        }),
+        body: JSON.stringify(requestBody),
       })
 
       const data = await response.json()
@@ -126,6 +175,115 @@ export default function ScanForm({ onScanComplete }: ScanFormProps) {
           label="I confirm that I own this website or have explicit permission to scan it. Scanning websites without permission may be illegal."
         />
 
+        <div className="border-t border-cyber-gray-700 pt-4">
+          <Checkbox
+            id="enable-auth"
+            checked={showAuthConfig}
+            onChange={(e) => {
+              setShowAuthConfig(e.target.checked)
+              setAuthConfig(prev => ({ ...prev, enabled: e.target.checked }))
+            }}
+            disabled={scanning}
+            label="Enable Authenticated Scanning (Optional)"
+          />
+          <p className="mt-1 text-xs text-cyber-gray-400">
+            Test security of pages behind login barriers. Only use test accounts you own.
+          </p>
+        </div>
+
+        {showAuthConfig && (
+          <div className="space-y-3 border border-cyber-blue-dark/30 rounded-lg p-4 bg-cyber-dark/50">
+            <Alert variant="warning" title="Security Notice">
+              Only use dedicated test accounts. Never use real credentials. All authentication 
+              is performed safely in isolated browser contexts with no credential persistence.
+            </Alert>
+
+            <Input
+              id="loginUrl"
+              type="url"
+              label="Login Page URL"
+              value={authConfig.loginUrl}
+              onChange={(e) => setAuthConfig(prev => ({ ...prev, loginUrl: e.target.value }))}
+              placeholder="https://example.com/login"
+              disabled={scanning}
+            />
+
+            <div className="grid grid-cols-2 gap-3">
+              <Input
+                id="username"
+                type="text"
+                label="Test Username"
+                value={authConfig.username}
+                onChange={(e) => setAuthConfig(prev => ({ ...prev, username: e.target.value }))}
+                placeholder="testuser"
+                disabled={scanning}
+              />
+
+              <Input
+                id="password"
+                type="password"
+                label="Test Password"
+                value={authConfig.password}
+                onChange={(e) => setAuthConfig(prev => ({ ...prev, password: e.target.value }))}
+                placeholder="••••••••"
+                disabled={scanning}
+              />
+            </div>
+
+            <details className="text-sm">
+              <summary className="cursor-pointer text-cyber-blue-light hover:text-cyber-blue mb-2">
+                Advanced: CSS Selectors
+              </summary>
+              <div className="space-y-2 pl-4">
+                <Input
+                  id="usernameSelector"
+                  type="text"
+                  label="Username Field Selector"
+                  value={authConfig.usernameSelector}
+                  onChange={(e) => setAuthConfig(prev => ({ ...prev, usernameSelector: e.target.value }))}
+                  placeholder="#username"
+                  disabled={scanning}
+                />
+                <Input
+                  id="passwordSelector"
+                  type="text"
+                  label="Password Field Selector"
+                  value={authConfig.passwordSelector}
+                  onChange={(e) => setAuthConfig(prev => ({ ...prev, passwordSelector: e.target.value }))}
+                  placeholder="#password"
+                  disabled={scanning}
+                />
+                <Input
+                  id="submitSelector"
+                  type="text"
+                  label="Submit Button Selector"
+                  value={authConfig.submitSelector}
+                  onChange={(e) => setAuthConfig(prev => ({ ...prev, submitSelector: e.target.value }))}
+                  placeholder='button[type="submit"]'
+                  disabled={scanning}
+                />
+                <Input
+                  id="successSelector"
+                  type="text"
+                  label="Success Indicator (Optional)"
+                  value={authConfig.successSelector}
+                  onChange={(e) => setAuthConfig(prev => ({ ...prev, successSelector: e.target.value }))}
+                  placeholder=".dashboard or #welcome"
+                  disabled={scanning}
+                />
+              </div>
+            </details>
+
+            <Checkbox
+              id="auth-consent"
+              checked={authConsent}
+              onChange={(e) => setAuthConsent(e.target.checked)}
+              disabled={scanning}
+              label="I confirm this is a test account I own and authorize automated login testing. No brute force will be attempted."
+            />
+          </div>
+        )}
+
         {error && (
           <Alert variant="danger" title="Error">
             {error}
@@ -154,7 +312,7 @@ export default function ScanForm({ onScanComplete }: ScanFormProps) {
 
         <Button
           onClick={handleScan}
-          disabled={scanning || !scanUrl.trim() || !consent}
+          disabled={scanning || !scanUrl.trim() || !consent || (authConfig.enabled && !authConsent)}
           isLoading={scanning}
           variant="primary"
           size="lg"
@@ -167,7 +325,7 @@ export default function ScanForm({ onScanComplete }: ScanFormProps) {
             )
           }
         >
-          {scanning ? 'Scanning in Progress...' : 'Start Security Scan'}
+          {scanning ? 'Scanning in Progress...' : (authConfig.enabled ? 'Start Authenticated Scan' : 'Start Security Scan')}
         </Button>
 
         {scanning && (
