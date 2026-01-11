@@ -1,20 +1,20 @@
 # WebSecScan vs OWASP ZAP - Comparative Analysis
 
-**Date**: 2026-01-10
-**Target**: https://juice-shop.herokuapp.com
+**Date**: 2026-01-11
+**Target**: http://localhost:3001
 **Scan Modes**: WebSecScan (BOTH) vs ZAP (Baseline)
 
 ## Executive Summary
 
 | Tool | Total Findings | Critical | High | Medium | Low | Duration | URLs Scanned |
 |------|---------------|----------|------|--------|-----|----------|--------------|
-| **WebSecScan** | 8 | 1 | 4 | 2 | 1 | 2.67s | 0 |
-| **OWASP ZAP** | 14 | 0 | 0 | 2 | 6 | 51.23s | 16 |
+| **WebSecScan** | 7 | 1 | 4 | 1 | 1 | 7.63s | 0 |
+| **OWASP ZAP** | 12 | 0 | 0 | 2 | 5 | 53.16s | 17 |
 
 ## Performance Comparison
 
-- **Speed**: WebSecScan is 19.2x faster
-- **Coverage**: ZAP discovered 16.0x more URLs
+- **Speed**: WebSecScan is 7.0x faster
+- **Coverage**: ZAP discovered 17.0x more URLs
 - **Critical Findings**: WebSecScan found 1, ZAP found 0 (baseline limitation)
 
 ## WebSecScan Findings
@@ -23,7 +23,6 @@
 |----------------|-------|
 | A05:2025 - Injection | 5 |
 | A02:2025 - Security Misconfiguration | 2 |
-| A04:2025 - Cryptographic Failures | 1 |
 
 ## OWASP ZAP Alerts
 
@@ -35,12 +34,10 @@
 | Low | Dangerous JS Functions | Security Misconfiguration | 2 |
 | Low | Deprecated Feature Policy Header Set | Security Misconfiguration | 5 |
 | Low | Insufficient Site Isolation Against Spectre Vulnerability | Security Misconfiguration | 10 |
-| Low | Strict-Transport-Security Header Not Set | Security Misconfiguration | 5 |
 | Low | Timestamp Disclosure - Unix | Security Misconfiguration | 5 |
 | Informational | Information Disclosure - Suspicious Comments | Security Misconfiguration | 2 |
 | Informational | Modern Web Application | Security Misconfiguration | 5 |
 | Informational | Non-Storable Content | Security Misconfiguration | 3 |
-| Informational | Re-examine Cache-control Directives | Security Misconfiguration | 5 |
 | Informational | Storable and Cacheable Content | Security Misconfiguration | 1 |
 | Informational | Storable but Non-Cacheable Content | Security Misconfiguration | 5 |
 

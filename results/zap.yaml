@@ -3,7 +3,7 @@ env:
   - excludePaths: []
     name: baseline
     urls:
-    - https://juice-shop.herokuapp.com
+    - http://host.docker.internal:3001
   parameters:
     failOnError: true
     progressToStdout: false
@@ -14,7 +14,7 @@ jobs:
   type: passiveScan-config
 - parameters:
     maxDuration: 2
-    url: https://juice-shop.herokuapp.com
+    url: http://host.docker.internal:3001
   type: spider
 - parameters:
     maxDuration: 5

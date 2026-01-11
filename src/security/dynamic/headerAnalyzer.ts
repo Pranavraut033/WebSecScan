@@ -26,7 +26,8 @@ export interface SecurityHeaders {
 
 export async function analyzeHeaders(
   url: string,
-  headers: Record<string, string>
+  headers: Record<string, string>,
+  htmlContent?: string
 ): Promise<HeaderTestResult[]> {
   const results: HeaderTestResult[] = [];
   const normalizedHeaders: SecurityHeaders = {};
@@ -50,6 +51,20 @@ export async function analyzeHeaders(
 
   // Check X-XSS-Protection (deprecated but still checked)
   results.push(checkXXSSProtection(normalizedHeaders));
+
+  // Check CORS configuration (OWASP A02:2025 - Security Misconfiguration)
+  results.push(checkCORS(normalizedHeaders));
+
+  // Check Permissions-Policy (OWASP A02:2025)
+  results.push(checkPermissionsPolicy(normalizedHeaders));
+
+  // Check Spectre mitigation headers (OWASP A02:2025)
+  results.push(checkSpectreMitigation(normalizedHeaders));
+
+  // Check for cross-origin script inclusions if HTML provided
+  if (htmlContent) {
+    results.push(checkCrossOriginScripts(url, htmlContent));
+  }
 
   return results;
 }
@@ -256,4 +271,306 @@ function checkXXSSProtection(headers: SecurityHeaders): HeaderTestResult {
     reason: `X-XSS-Protection header set to: ${header}. This header is deprecated.`,
     recommendation: 'Consider removing and relying on CSP instead.',
   };
+}
+
+/**
+ * Check CORS configuration for security issues
+ * OWASP A02:2025 - Security Misconfiguration
+ */
+function checkCORS(headers: SecurityHeaders): HeaderTestResult {
+  const acao = headers['access-control-allow-origin'];
+  const acac = headers['access-control-allow-credentials'];
+
+  // No CORS headers is actually safe (restrictive)
+  if (!acao) {
+    return {
+      testName: 'CORS Configuration',
+      passed: true,
+      score: 0,
+      result: 'Info',
+      reason: 'No CORS headers present. Resources are restricted to same-origin only.',
+      recommendation: 'If cross-origin access is needed, configure CORS securely.',
+    };
+  }
+
+  // Check for dangerous wildcard with credentials
+  if (acao === '*' && acac === 'true') {
+    return {
+      testName: 'CORS Configuration',
+      passed: false,
+      score: -25,
+      result: 'Failed',
+      reason: 'CRITICAL: Access-Control-Allow-Origin set to wildcard (*) with credentials enabled. This allows any origin to access sensitive data.',
+      recommendation: 'Never use Access-Control-Allow-Origin: * with Access-Control-Allow-Credentials: true. Specify exact origins instead.',
+      details: {
+        owaspId: 'A02:2025',
+        category: 'Security Misconfiguration',
+        acao,
+        acac
+      }
+    };
+  }
+
+  // Check for overly permissive wildcard
+  if (acao === '*') {
+    return {
+      testName: 'CORS Configuration',
+      passed: false,
+      score: -10,
+      result: 'Failed',
+      reason: 'Access-Control-Allow-Origin set to wildcard (*). Any website can read responses from your API.',
+      recommendation: 'Use specific origins instead of wildcard for better security.',
+      details: {
+        owaspId: 'A02:2025',
+        category: 'Security Misconfiguration',
+        acao
+      }
+    };
+  }
+
+  // Valid CORS configuration
+  return {
+    testName: 'CORS Configuration',
+    passed: true,
+    score: 0,
+    result: 'Passed',
+    reason: `CORS configured with specific origin: ${acao}`,
+    details: { acao, acac }
+  };
+}
+
+/**
+ * Check Permissions-Policy header
+ * OWASP A02:2025 - Security Misconfiguration
+ */
+function checkPermissionsPolicy(headers: SecurityHeaders): HeaderTestResult {
+  const permissionsPolicy = headers['permissions-policy'];
+  const featurePolicy = headers['feature-policy']; // Deprecated predecessor
+
+  if (!permissionsPolicy && !featurePolicy) {
+    return {
+      testName: 'Permissions-Policy',
+      passed: false,
+      score: -5,
+      result: 'Failed',
+      reason: 'Permissions-Policy header not implemented. Browser features like camera, microphone, and geolocation are not restricted.',
+      recommendation: 'Implement Permissions-Policy to control access to sensitive browser features. Example: Permissions-Policy: camera=(), microphone=(), geolocation=()',
+      details: {
+        owaspId: 'A02:2025',
+        category: 'Security Misconfiguration'
+      }
+    };
+  }
+
+  // Parse and check for sensitive features
+  const policy = permissionsPolicy || featurePolicy || '';
+  const sensitiveFeatures = ['camera', 'microphone', 'geolocation', 'payment', 'usb'];
+  const configuredFeatures: string[] = [];
+  const unrestrictedFeatures: string[] = [];
+
+  for (const feature of sensitiveFeatures) {
+    if (policy.includes(feature)) {
+      configuredFeatures.push(feature);
+      // Check if feature allows all origins with *
+      const featureRegex = new RegExp(`${feature}=\\([^)]*\\*[^)]*\\)`, 'i');
+      if (featureRegex.test(policy)) {
+        unrestrictedFeatures.push(feature);
+      }
+    }
+  }
+
+  if (unrestrictedFeatures.length > 0) {
+    return {
+      testName: 'Permissions-Policy',
+      passed: false,
+      score: -10,
+      result: 'Failed',
+      reason: `Permissions-Policy allows unrestricted access to sensitive features: ${unrestrictedFeatures.join(', ')}`,
+      recommendation: 'Restrict sensitive features to specific origins or disable them entirely with feature=()',
+      details: {
+        owaspId: 'A02:2025',
+        category: 'Security Misconfiguration',
+        unrestrictedFeatures,
+        configuredFeatures
+      }
+    };
+  }
+
+  return {
+    testName: 'Permissions-Policy',
+    passed: true,
+    score: 5,
+    result: 'Passed',
+    reason: featurePolicy
+      ? `Feature-Policy (deprecated) configured. Consider migrating to Permissions-Policy.`
+      : `Permissions-Policy properly configured${configuredFeatures.length > 0 ? ` for: ${configuredFeatures.join(', ')}` : ''}`,
+    details: {
+      configuredFeatures,
+      policy: permissionsPolicy || featurePolicy
+    }
+  };
+}
+
+/**
+ * Check Spectre mitigation headers (Cross-Origin-Embedder-Policy, Cross-Origin-Opener-Policy)
+ * OWASP A02:2025 - Security Misconfiguration
+ */
+function checkSpectreMitigation(headers: SecurityHeaders): HeaderTestResult {
+  const coep = headers['cross-origin-embedder-policy'];
+  const coop = headers['cross-origin-opener-policy'];
+
+  if (!coep && !coop) {
+    return {
+      testName: 'Spectre Mitigation Headers',
+      passed: false,
+      score: -5,
+      result: 'Failed',
+      reason: 'Missing Spectre mitigation headers (COEP, COOP). Site may be vulnerable to side-channel timing attacks.',
+      recommendation: 'Implement Cross-Origin-Embedder-Policy: require-corp and Cross-Origin-Opener-Policy: same-origin to enable cross-origin isolation.',
+      details: {
+        owaspId: 'A02:2025',
+        category: 'Security Misconfiguration',
+        vulnerability: 'Spectre side-channel attacks'
+      }
+    };
+  }
+
+  const issues: string[] = [];
+  const implemented: string[] = [];
+
+  // Check COEP
+  if (coep) {
+    implemented.push('COEP');
+    if (coep !== 'require-corp' && coep !== 'credentialless') {
+      issues.push(`COEP has weak value: ${coep}`);
+    }
+  } else {
+    issues.push('Missing Cross-Origin-Embedder-Policy');
+  }
+
+  // Check COOP
+  if (coop) {
+    implemented.push('COOP');
+    if (coop !== 'same-origin' && coop !== 'same-origin-allow-popups') {
+      issues.push(`COOP has weak value: ${coop}`);
+    }
+  } else {
+    issues.push('Missing Cross-Origin-Opener-Policy');
+  }
+
+  if (issues.length > 0) {
+    return {
+      testName: 'Spectre Mitigation Headers',
+      passed: false,
+      score: -5,
+      result: 'Failed',
+      reason: issues.join('. '),
+      recommendation: 'Set Cross-Origin-Embedder-Policy: require-corp and Cross-Origin-Opener-Policy: same-origin for full protection.',
+      details: {
+        owaspId: 'A02:2025',
+        category: 'Security Misconfiguration',
+        coep,
+        coop,
+        implemented
+      }
+    };
+  }
+
+  return {
+    testName: 'Spectre Mitigation Headers',
+    passed: true,
+    score: 5,
+    result: 'Passed',
+    reason: `Spectre mitigation headers properly configured (${implemented.join(', ')})`,
+    details: { coep, coop }
+  };
+}
+
+/**
+ * Check for cross-origin script inclusions in HTML
+ * OWASP A02:2025 - Security Misconfiguration
+ */
+function checkCrossOriginScripts(pageUrl: string, htmlContent: string): HeaderTestResult {
+  try {
+    const pageOrigin = new URL(pageUrl).origin;
+    const scriptRegex = /<script[^>]+src=["']([^"']+)["']/gi;
+    const matches = [...htmlContent.matchAll(scriptRegex)];
+
+    const externalScripts: string[] = [];
+    const cdnScripts: string[] = [];
+
+    for (const match of matches) {
+      const src = match[1];
+
+      // Skip relative URLs and data URIs
+      if (!src.startsWith('http://') && !src.startsWith('https://') && !src.startsWith('//')) {
+        continue;
+      }
+
+      try {
+        const scriptUrl = src.startsWith('//') ? `https:${src}` : src;
+        const scriptOrigin = new URL(scriptUrl).origin;
+
+        if (scriptOrigin !== pageOrigin) {
+          externalScripts.push(scriptUrl);
+
+          // Check if it's a known CDN
+          const hostname = new URL(scriptUrl).hostname.toLowerCase();
+          if (
+            hostname.includes('cdn.') ||
+            hostname.includes('cloudflare') ||
+            hostname.includes('jsdelivr') ||
+            hostname.includes('unpkg') ||
+            hostname.includes('googleapis')
+          ) {
+            cdnScripts.push(scriptUrl);
+          }
+        }
+      } catch {
+        // Invalid URL, skip
+      }
+    }
+
+    if (externalScripts.length === 0) {
+      return {
+        testName: 'Cross-Origin Script Inclusions',
+        passed: true,
+        score: 5,
+        result: 'Passed',
+        reason: 'No external scripts detected. All JavaScript is loaded from same origin.',
+        details: {
+          owaspId: 'A02:2025',
+          category: 'Security Misconfiguration'
+        }
+      };
+    }
+
+    const nonCdnScripts = externalScripts.filter(s => !cdnScripts.includes(s));
+
+    return {
+      testName: 'Cross-Origin Script Inclusions',
+      passed: false,
+      score: -10,
+      result: 'Failed',
+      reason: `Found ${externalScripts.length} cross-origin script(s). External scripts can execute arbitrary code and access sensitive data.`,
+      recommendation: 'Use Subresource Integrity (SRI) for external scripts and implement a strict CSP. Consider hosting critical scripts on your own domain.',
+      details: {
+        owaspId: 'A02:2025',
+        category: 'Security Misconfiguration',
+        externalScriptCount: externalScripts.length,
+        cdnScriptCount: cdnScripts.length,
+        nonCdnScriptCount: nonCdnScripts.length,
+        externalScripts: externalScripts.slice(0, 10), // Limit to first 10
+        nonCdnScripts: nonCdnScripts.slice(0, 5)
+      }
+    };
+  } catch (error) {
+    return {
+      testName: 'Cross-Origin Script Inclusions',
+      passed: true,
+      score: 0,
+      result: 'Info',
+      reason: 'Could not analyze cross-origin scripts due to parsing error.',
+    };
+  }
 }

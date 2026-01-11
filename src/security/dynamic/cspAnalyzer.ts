@@ -54,6 +54,10 @@ export function analyzeCSP(
       reason: 'Content Security Policy (CSP) header not implemented',
       recommendation:
         "Implement one, see MDN's Content Security Policy (CSP) documentation.",
+      details: {
+        owaspId: 'A02:2025',
+        category: 'Security Misconfiguration'
+      }
     };
   }
 
@@ -89,6 +93,8 @@ export function analyzeCSP(
       ? undefined
       : 'Review and fix the failed CSP checks listed in details.',
     details: {
+      owaspId: 'A02:2025',
+      category: 'Security Misconfiguration',
       directives,
       checks,
       failedCount: failedChecks.length,

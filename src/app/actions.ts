@@ -148,11 +148,11 @@ export async function recordProtocolVulnerability(
 ): Promise<void> {
   try {
     // Map to OWASP category
-    let owaspCategory = 'A05:2025-Security Misconfiguration'
-    let owaspId = 'A05:2025'
+    let owaspCategory = 'A02:2025-Security Misconfiguration'
+    let owaspId = 'A02:2025'
     if (threat.type === 'INSECURE_PROTOCOL') {
-      owaspCategory = 'A02:2025-Cryptographic Failures'
-      owaspId = 'A02:2025'
+      owaspCategory = 'A04:2025-Cryptographic Failures'
+      owaspId = 'A04:2025'
     }
 
     await prisma.vulnerability.create({
@@ -323,9 +323,20 @@ export async function runDynamicAnalysis(scanId: string): Promise<void> {
       headers[key] = value
     })
 
-    // Analyze security headers
+    // Fetch HTML content for cross-origin script analysis
+    let htmlContent: string | undefined;
+    try {
+      const htmlResponse = await fetch(scan.targetUrl, {
+        headers: { 'User-Agent': 'WebSecScan/1.0 (Educational Security Scanner)' }
+      });
+      htmlContent = await htmlResponse.text();
+    } catch (error) {
+      ScanLogger.warning(scanId, 'Could not fetch HTML content for analysis', 'DYNAMIC');
+    }
+
+    // Analyze security headers (with HTML for cross-origin script detection)
     ScanLogger.info(scanId, 'Analyzing security headers...', 'DYNAMIC')
-    const headerTests = await analyzeHeaders(scan.targetUrl, headers)
+    const headerTests = await analyzeHeaders(scan.targetUrl, headers, htmlContent)
     securityTests.push(...headerTests)
 
     // Analyze CSP separately for detailed checks
@@ -357,21 +368,21 @@ export async function runDynamicAnalysis(scanId: string): Promise<void> {
 
     // Check for authenticated scan configuration
     const authConfig = global.scanAuthConfig && global.scanAuthConfig[scanId];
-    
+
     // Perform authenticated scan if config provided
     if (authConfig) {
       ScanLogger.info(scanId, 'Performing authenticated scan with Playwright...', 'DYNAMIC')
-      
+
       try {
         const authScanResult = await performAuthenticatedScan(authConfig);
-        
+
         if (authScanResult.authResult.success) {
           ScanLogger.success(
             scanId,
             `Authentication successful. Found ${authScanResult.authResult.cookies.length} cookies`,
             'DYNAMIC'
           );
-          
+
           // Add auth warnings as vulnerabilities
           if (authScanResult.authResult.warnings && authScanResult.authResult.warnings.length > 0) {
             ScanLogger.warning(
@@ -380,10 +391,10 @@ export async function runDynamicAnalysis(scanId: string): Promise<void> {
               'DYNAMIC'
             );
           }
-          
+
           // Add session vulnerabilities to results
           allVulnerabilities.push(...authScanResult.scanResult.vulnerabilities);
-          
+
           // Use session credentials for crawling (cast to avoid type issues with optional property)
           (crawlerOptions as CrawlerOptions).sessionCredentials = {
             headers: authScanResult.authResult.sessionHeaders,
@@ -392,7 +403,7 @@ export async function runDynamicAnalysis(scanId: string): Promise<void> {
               value: c.value
             }))
           };
-          
+
           ScanLogger.info(
             scanId,
             `Crawling with authenticated session (${authScanResult.scanResult.sessionAnalysis.cookieCount} cookies)`,
@@ -406,7 +417,7 @@ export async function runDynamicAnalysis(scanId: string): Promise<void> {
           );
           // Continue with unauthenticated scan
         }
-        
+
         // Clean up auth config from memory (security: never persist credentials)
         if (global.scanAuthConfig) {
           delete global.scanAuthConfig[scanId];

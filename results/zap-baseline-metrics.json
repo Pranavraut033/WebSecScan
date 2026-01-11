@@ -1,0 +1,114 @@
+{
+  "tool": "OWASP ZAP",
+  "scanType": "baseline",
+  "target": "http://localhost:3001",
+  "startTime": "2026-01-11T15:27:15.027Z",
+  "endTime": "2026-01-11T15:28:08.186Z",
+  "duration": 53159,
+  "totalAlerts": 12,
+  "alertsByRisk": {
+    "informational": 5,
+    "low": 5,
+    "medium": 2,
+    "high": 0
+  },
+  "urlsScanned": 17,
+  "alerts": [
+    {
+      "id": "10038",
+      "name": "Content Security Policy (CSP) Header Not Set",
+      "risk": "Medium",
+      "confidence": "3",
+      "category": "Security Misconfiguration",
+      "instances": 5
+    },
+    {
+      "id": "10098",
+      "name": "Cross-Domain Misconfiguration",
+      "risk": "Medium",
+      "confidence": "2",
+      "category": "Security Misconfiguration",
+      "instances": 5
+    },
+    {
+      "id": "10017",
+      "name": "Cross-Domain JavaScript Source File Inclusion",
+      "risk": "Low",
+      "confidence": "2",
+      "category": "Security Misconfiguration",
+      "instances": 5
+    },
+    {
+      "id": "10110",
+      "name": "Dangerous JS Functions",
+      "risk": "Low",
+      "confidence": "1",
+      "category": "Security Misconfiguration",
+      "instances": 2
+    },
+    {
+      "id": "10063",
+      "name": "Deprecated Feature Policy Header Set",
+      "risk": "Low",
+      "confidence": "2",
+      "category": "Security Misconfiguration",
+      "instances": 5
+    },
+    {
+      "id": "90004",
+      "name": "Insufficient Site Isolation Against Spectre Vulnerability",
+      "risk": "Low",
+      "confidence": "2",
+      "category": "Security Misconfiguration",
+      "instances": 10
+    },
+    {
+      "id": "10096",
+      "name": "Timestamp Disclosure - Unix",
+      "risk": "Low",
+      "confidence": "1",
+      "category": "Security Misconfiguration",
+      "instances": 5
+    },
+    {
+      "id": "10027",
+      "name": "Information Disclosure - Suspicious Comments",
+      "risk": "Informational",
+      "confidence": "1",
+      "category": "Security Misconfiguration",
+      "instances": 2
+    },
+    {
+      "id": "10109",
+      "name": "Modern Web Application",
+      "risk": "Informational",
+      "confidence": "2",
+      "category": "Security Misconfiguration",
+      "instances": 5
+    },
+    {
+      "id": "10049",
+      "name": "Non-Storable Content",
+      "risk": "Informational",
+      "confidence": "2",
+      "category": "Security Misconfiguration",
+      "instances": 3
+    },
+    {
+      "id": "10049",
+      "name": "Storable and Cacheable Content",
+      "risk": "Informational",
+      "confidence": "2",
+      "category": "Security Misconfiguration",
+      "instances": 1
+    },
+    {
+      "id": "10049",
+      "name": "Storable but Non-Cacheable Content",
+      "risk": "Informational",
+      "confidence": "2",
+      "category": "Security Misconfiguration",
+      "instances": 5
+    }
+  ]
+}

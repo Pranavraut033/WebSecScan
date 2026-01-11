@@ -235,6 +235,7 @@ export async function runZapBaselineScan(
 
 /**
  * Parse ZAP JSON results into standardized metrics
+ * Also validates and re-saves the JSON for manual verification
  */
 async function parseZapResults(
   jsonPath: string,
@@ -245,6 +246,10 @@ async function parseZapResults(
   try {
     const jsonContent = await fs.readFile(jsonPath, 'utf-8');
     const zapResult: ZapScanResult = JSON.parse(jsonContent);
+
+    // Verify JSON is valid and re-save for consistency
+    const validatedJson = JSON.stringify(zapResult, null, 2);
+    await fs.writeFile(jsonPath, validatedJson, 'utf-8');
 
     const alerts: ZapAlert[] = zapResult.site?.[0]?.alerts || [];
 

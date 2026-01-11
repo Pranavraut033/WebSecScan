@@ -1,22 +1,22 @@
 # Benchmark Report
 
-**Scan ID**: cmk8tj5vg000hfejtgf1u6isk
-**Target**: https://juice-shop.herokuapp.com
+**Scan ID**: cmk9w0kva000j4mjtvutjiwtu
+**Target**: http://localhost:3001
 **Mode**: BOTH
-**Duration**: 2.67s
+**Duration**: 7.63s
 
 ## Findings Summary
 
-- **Total**: 8
+- **Total**: 7
 - **Critical**: 1
 - **High**: 4
-- **Medium**: 2
+- **Medium**: 1
 - **Low**: 1
 - **Info**: 0
 
 ## Security Score
 
-**Score**: 55/100 (**High** Risk)
+**Score**: 65/100 (**Medium** Risk)
 
 ## OWASP Coverage
 
@@ -24,5 +24,4 @@
 |----------|----------|
 | A05:2025 - Injection | 5 |
 | A02:2025 - Security Misconfiguration | 2 |
-| A04:2025 - Cryptographic Failures | 1 |
 

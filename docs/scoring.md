@@ -311,7 +311,8 @@ See [`__tests__/scoring.test.ts`](..//__tests__/scoring.test.ts) for full test s
 
 ### Industry Standards
 
-- [OWASP Top 10 (2021)](https://owasp.org/Top10/)
+- [OWASP Top 10 (2025)](https://owasp.org/Top10/) - WebSecScan uses OWASP 2025 taxonomy
+- [OWASP 2021→2025 Migration Guide](owasp-mapping.md) - Complete mapping specification
 - [CVSS v3.1 Specification](https://www.first.org/cvss/v3.1/specification-document)
 - [NIST SP 800-53 Rev. 5](https://csrc.nist.gov/publications/detail/sp/800-53/rev-5/final)
 - [Mozilla Observatory](https://observatory.mozilla.org/)

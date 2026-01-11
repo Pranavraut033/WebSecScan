@@ -28,7 +28,7 @@ export interface CrawlResult {
 export interface SessionCredentials {
   /** HTTP headers to include in requests (e.g., Cookie, Authorization) */
   headers?: Record<string, string>;
-  
+
   /** Cookies to send with requests */
   cookies?: Array<{ name: string; value: string }>;
 }
@@ -156,13 +156,26 @@ export async function crawlWebsite(
   };
 
   const visited = new Set<string>();
-  const queue: Array<{ url: string; depth: number }> = [{ url: startUrl, depth: 0 }];
+  const queue: Array<{ url: string; depth: number }> = [{ url: normalizeUrlForCrawl(startUrl), depth: 0 }];
   const baseUrl = new URL(startUrl);
 
   // Check robots.txt if required
   let disallowedPaths: string[] = [];
   if (opts.respectRobotsTxt) {
     disallowedPaths = await fetchRobotsTxt(baseUrl.origin);
+  }
+
+  // Parse sitemap.xml to discover additional URLs
+  try {
+    const sitemapUrls = await parseSitemap(baseUrl.origin);
+    for (const url of sitemapUrls) {
+      const normalized = normalizeUrlForCrawl(url);
+      if (!visited.has(normalized)) {
+        queue.push({ url: normalized, depth: 0 });
+      }
+    }
+  } catch {
+    // Sitemap parsing failed - continue without it
   }
 
   while (queue.length > 0 && visited.size < opts.maxPages) {
@@ -180,8 +193,10 @@ export async function crawlWebsite(
       continue;
     }
 
-    visited.add(url);
-    result.urls.push(url);
+    // Normalize URL before processing
+    const normalizedUrl = normalizeUrlForCrawl(url);
+    visited.add(normalizedUrl);
+    result.urls.push(normalizedUrl);
 
     try {
       // Rate limiting
@@ -204,7 +219,7 @@ export async function crawlWebsite(
         const cookieString = opts.sessionCredentials.cookies
           .map(c => `${c.name}=${c.value}`)
           .join('; ');
-        
+
         if (headers['Cookie']) {
           headers['Cookie'] = `${headers['Cookie']}; ${cookieString}`;
         } else {
@@ -213,13 +228,13 @@ export async function crawlWebsite(
       }
 
       // Fetch page
-      const response = await fetch(url, {
+      const response = await fetch(normalizedUrl, {
         headers,
         signal: AbortSignal.timeout(opts.timeout)
       });
 
       if (!response.ok) {
-        result.errors.push(`Failed to fetch ${url}: ${response.status}`);
+        result.errors.push(`Failed to fetch ${normalizedUrl}: ${response.status}`);
         continue;
       }
 
@@ -230,11 +245,12 @@ export async function crawlWebsite(
 
       const html = await response.text();
 
-      // Extract links
-      const links = extractLinks(html, url, baseUrl.origin, opts.allowExternalLinks);
+      // Extract links (already normalized inside extractLinks)
+      const links = extractLinks(html, normalizedUrl, baseUrl.origin, opts.allowExternalLinks);
       for (const link of links) {
-        if (!visited.has(link)) {
-          queue.push({ url: link, depth: depth + 1 });
+        const normalizedLink = normalizeUrlForCrawl(link);
+        if (!visited.has(normalizedLink)) {
+          queue.push({ url: normalizedLink, depth: depth + 1 });
         }
       }
 
@@ -243,12 +259,12 @@ export async function crawlWebsite(
       result.endpoints.push(...apiEndpoints);
 
       // Extract forms
-      const forms = extractForms(html, url);
+      const forms = extractForms(html, normalizedUrl);
       result.forms.push(...forms);
 
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      result.errors.push(`Error crawling ${url}: ${message}`);
+      result.errors.push(`Error crawling ${normalizedUrl}: ${message}`);
     }
   }
 
@@ -256,6 +272,40 @@ export async function crawlWebsite(
   result.endpoints = [...new Set(result.endpoints)];
 
   return result;
+}
+
+/**
+ * Parse sitemap.xml and extract URLs
+ */
+async function parseSitemap(origin: string): Promise<string[]> {
+  try {
+    const sitemapUrl = `${origin}/sitemap.xml`;
+    const response = await fetch(sitemapUrl, {
+      headers: { 'User-Agent': 'WebSecScan/1.0' },
+      signal: AbortSignal.timeout(5000)
+    });
+
+    if (!response.ok) {
+      return []; // No sitemap - not an error
+    }
+
+    const xml = await response.text();
+    const urls: string[] = [];
+
+    // Simple XML parsing for <loc> tags
+    const locPattern = /<loc>\s*([^<]+)\s*<\/loc>/g;
+    let match;
+    while ((match = locPattern.exec(xml)) !== null) {
+      const url = match[1].trim();
+      if (url) {
+        urls.push(url);
+      }
+    }
+
+    return urls;
+  } catch {
+    return []; // On error, return empty array
+  }
 }
 
 /**
@@ -301,6 +351,9 @@ async function fetchRobotsTxt(origin: string): Promise<string[]> {
  * Check if URL is disallowed by robots.txt
  */
 function isDisallowedByRobots(url: string, origin: string, disallowedPaths: string[]): boolean {
+  // `origin` is intentionally accepted for future multi-origin robots.txt handling
+  // and additional validation, but does not currently affect the decision logic.
+  void origin;
   const urlObj = new URL(url);
   const path = urlObj.pathname;
 
@@ -314,41 +367,173 @@ function isDisallowedByRobots(url: string, origin: string, disallowedPaths: stri
 }
 
 /**
- * Extract links from HTML
+ * Normalize URL for consistent comparison
+ * Removes fragments, sorts query params, removes trailing slashes
+ */
+function normalizeUrlForCrawl(url: string): string {
+  try {
+    const urlObj = new URL(url);
+
+    // Remove fragment
+    urlObj.hash = '';
+
+    // Sort query parameters for consistency
+    const params = Array.from(urlObj.searchParams.entries());
+    params.sort((a, b) => a[0].localeCompare(b[0]));
+    urlObj.search = '';
+    params.forEach(([key, value]) => urlObj.searchParams.append(key, value));
+
+    // Remove trailing slash from pathname (except root)
+    if (urlObj.pathname !== '/' && urlObj.pathname.endsWith('/')) {
+      urlObj.pathname = urlObj.pathname.slice(0, -1);
+    }
+
+    return urlObj.toString();
+  } catch {
+    return url;
+  }
+}
+
+/**
+ * Extract links from HTML - enhanced to support multiple link types
  */
 function extractLinks(html: string, currentUrl: string, baseOrigin: string, allowExternal: boolean): string[] {
   const links: string[] = [];
   const $ = cheerio.load(html);
 
+  // Extract from <a href>
   $('a[href]').each((_, elem) => {
     const href = $(elem).attr('href');
-    if (!href) return;
-
-    try {
-      // Resolve relative URLs
-      const absoluteUrl = new URL(href, currentUrl);
-
-      // Skip non-HTTP(S) protocols
-      if (!absoluteUrl.protocol.startsWith('http')) {
-        return;
-      }
-
-      // Check if external
-      if (!allowExternal && absoluteUrl.origin !== baseOrigin) {
-        return;
-      }
-
-      // Remove fragment
-      absoluteUrl.hash = '';
-
-      links.push(absoluteUrl.toString());
-    } catch {
-      // Invalid URL, skip
-      return;
+    if (href) {
+      const normalized = resolveAndNormalizeUrl(href, currentUrl, baseOrigin, allowExternal);
+      if (normalized) links.push(normalized);
     }
   });
 
-  return links;
+  // Extract from <link href> (stylesheets, prefetch, etc.)
+  $('link[href]').each((_, elem) => {
+    const href = $(elem).attr('href');
+    if (href) {
+      const normalized = resolveAndNormalizeUrl(href, currentUrl, baseOrigin, allowExternal);
+      if (normalized) links.push(normalized);
+    }
+  });
+
+  // Extract from <script src>
+  $('script[src]').each((_, elem) => {
+    const src = $(elem).attr('src');
+    if (src) {
+      const normalized = resolveAndNormalizeUrl(src, currentUrl, baseOrigin, allowExternal);
+      if (normalized) links.push(normalized);
+    }
+  });
+
+  // Extract from <img src>
+  $('img[src]').each((_, elem) => {
+    const src = $(elem).attr('src');
+    if (src) {
+      const normalized = resolveAndNormalizeUrl(src, currentUrl, baseOrigin, allowExternal);
+      if (normalized) links.push(normalized);
+    }
+  });
+
+  // Extract from <form action>
+  $('form[action]').each((_, elem) => {
+    const action = $(elem).attr('action');
+    if (action) {
+      const normalized = resolveAndNormalizeUrl(action, currentUrl, baseOrigin, allowExternal);
+      if (normalized) links.push(normalized);
+    }
+  });
+
+  // Extract from <iframe src>
+  $('iframe[src]').each((_, elem) => {
+    const src = $(elem).attr('src');
+    if (src) {
+      const normalized = resolveAndNormalizeUrl(src, currentUrl, baseOrigin, allowExternal);
+      if (normalized) links.push(normalized);
+    }
+  });
+
+  // Extract URLs from inline JavaScript (window.location, etc.)
+  const jsUrls = extractUrlsFromJavaScript(html, currentUrl, baseOrigin, allowExternal);
+  links.push(...jsUrls);
+
+  // Deduplicate
+  return Array.from(new Set(links));
+}
+
+/**
+ * Resolve and normalize a URL
+ */
+function resolveAndNormalizeUrl(
+  href: string,
+  currentUrl: string,
+  baseOrigin: string,
+  allowExternal: boolean
+): string | null {
+  try {
+    // Resolve relative URLs
+    const absoluteUrl = new URL(href, currentUrl);
+
+    // Skip non-HTTP(S) protocols
+    if (!absoluteUrl.protocol.startsWith('http')) {
+      return null;
+    }
+
+    // Check if external
+    if (!allowExternal && absoluteUrl.origin !== baseOrigin) {
+      return null;
+    }
+
+    return normalizeUrlForCrawl(absoluteUrl.toString());
+  } catch {
+    // Invalid URL, skip
+    return null;
+  }
+}
+
+/**
+ * Extract URLs from JavaScript code patterns
+ */
+function extractUrlsFromJavaScript(
+  html: string,
+  currentUrl: string,
+  baseOrigin: string,
+  allowExternal: boolean
+): string[] {
+  const urls: string[] = [];
+  const $ = cheerio.load(html);
+
+  // Get all script content
+  $('script').each((_, elem) => {
+    const content = $(elem).html();
+    if (!content) return;
+
+    // Pattern: window.location = "..." or window.location.href = "..."
+    const locationPattern = /window\.location(?:\.href)?\s*=\s*['"]([^'"]+)['"]/g;
+    let match;
+    while ((match = locationPattern.exec(content)) !== null) {
+      const url = resolveAndNormalizeUrl(match[1], currentUrl, baseOrigin, allowExternal);
+      if (url) urls.push(url);
+    }
+
+    // Pattern: router.push("/path") or router.navigate("/path")
+    const routerPattern = /(?:router|navigate|push)\s*\(['"]([^'"]+)['"]/g;
+    while ((match = routerPattern.exec(content)) !== null) {
+      const url = resolveAndNormalizeUrl(match[1], currentUrl, baseOrigin, allowExternal);
+      if (url) urls.push(url);
+    }
+
+    // Pattern: href: "/path" in objects
+    const hrefPattern = /href\s*:\s*['"]([^'"]+)['"]/g;
+    while ((match = hrefPattern.exec(content)) !== null) {
+      const url = resolveAndNormalizeUrl(match[1], currentUrl, baseOrigin, allowExternal);
+      if (url) urls.push(url);
+    }
+  });
+
+  return urls;
 }
 
 /**

@@ -179,6 +179,12 @@ async function runComparison(config: ComparisonConfig) {
           console.log(`   URLs Scanned: ${zapMetrics.urlsScanned}`);
           console.log(`   Duration: ${(zapMetrics.duration / 1000).toFixed(2)}s`);
 
+          // Save ZAP metrics as JSON for manual verification
+          const zapMetricsJson = JSON.stringify(zapMetrics, null, 2);
+          const zapMetricsPath = path.join(config.outputDir, 'zap-baseline-metrics.json');
+          await fs.writeFile(zapMetricsPath, zapMetricsJson, 'utf-8');
+          console.log(`   Metrics saved: zap-baseline-metrics.json`);
+
           // Generate WebSecScan vs ZAP comparison report
           if (scanMetrics.length > 0) {
             const webSecScanMetrics = scanMetrics.find(m => m.mode === 'BOTH') || scanMetrics[scanMetrics.length - 1];
@@ -255,18 +261,122 @@ async function runComparison(config: ComparisonConfig) {
       'utf-8'
     );
 
-    console.log('\n=== Comparison Complete ===');
-    console.log(`Reports saved to: ${config.outputDir}`);
-    console.log('- *-raw.json: Raw benchmark results');
-    console.log('- *-report.md: Detailed scan reports');
+    // Generate verification manifest documenting all artifacts
+    let verificationManifest = `# Scan Results Verification Manifest\n\n`;
+    verificationManifest += `**Generated**: ${new Date().toISOString()}\n`;
+    verificationManifest += `**Target**: ${target}\n`;
+    verificationManifest += `**Output Directory**: ${config.outputDir}\n\n`;
+
+    verificationManifest += `## Raw Result Files (For Manual Verification)\n\n`;
+    verificationManifest += `These files contain complete, unprocessed scan data for independent verification.\n\n`;
+
+    if (results.static) {
+      verificationManifest += `### WebSecScan STATIC Scan\n`;
+      verificationManifest += `- **File**: \`static-raw.json\`\n`;
+      verificationManifest += `- **Scan ID**: ${results.static.scanId}\n`;
+      verificationManifest += `- **Content**: Complete benchmark metrics including all findings\n`;
+      verificationManifest += `- **Verification**: Compare findings array against database records\n\n`;
+    }
+
+    if (results.dynamic) {
+      verificationManifest += `### WebSecScan DYNAMIC Scan\n`;
+      verificationManifest += `- **File**: \`dynamic-raw.json\`\n`;
+      verificationManifest += `- **Scan ID**: ${results.dynamic.scanId}\n`;
+      verificationManifest += `- **Content**: Complete benchmark metrics including crawler results\n`;
+      verificationManifest += `- **Verification**: Verify endpoints discovered match against crawl logs\n\n`;
+    }
+
+    if (results.both) {
+      verificationManifest += `### WebSecScan BOTH (Combined) Scan\n`;
+      verificationManifest += `- **File**: \`both-raw.json\`\n`;
+      verificationManifest += `- **Scan ID**: ${results.both.scanId}\n`;
+      verificationManifest += `- **Content**: Combined static + dynamic results\n`;
+      verificationManifest += `- **Verification**: Should be superset of STATIC and DYNAMIC findings\n\n`;
+    }
+
+    if (zapMetrics) {
+      verificationManifest += `### OWASP ZAP Baseline Scan\n`;
+      verificationManifest += `- **Files**: \`zap-baseline.json\`, \`zap-baseline.xml\`, \`zap-baseline-report.html\`\n`;
+      verificationManifest += `- **Metrics**: \`zap-baseline-metrics.json\` (parsed metrics)\n`;
+      verificationManifest += `- **Content**: ZAP alerts and security findings\n`;
+      verificationManifest += `- **Verification**: Compare alerts against HTML report and XML export\n\n`;
+    }
+
+    verificationManifest += `## Report Files (Generated From Raw Data)\n\n`;
+    if (results.static) {
+      verificationManifest += `- \`static-report.md\` - Detailed report generated from static-raw.json\n`;
+    }
+    if (results.dynamic) {
+      verificationManifest += `- \`dynamic-report.md\` - Detailed report generated from dynamic-raw.json\n`;
+    }
+    if (results.both) {
+      verificationManifest += `- \`both-report.md\` - Detailed report generated from both-raw.json\n`;
+    }
     if (scanMetrics.length >= 2) {
-      console.log('- comparison-report.md: WebSecScan mode comparison');
+      verificationManifest += `- \`comparison-report.md\` - WebSecScan mode comparison (category-based overlap detection)\n`;
     }
     if (zapMetrics) {
-      console.log('- ZAP-COMPARISON.md: WebSecScan vs OWASP ZAP');
-      console.log('- zap-baseline.json: ZAP raw results');
+      verificationManifest += `- \`ZAP-COMPARISON.md\` - WebSecScan vs OWASP ZAP analysis\n`;
     }
-    console.log('- metrics-summary.csv: CSV export for analysis');
+
+    verificationManifest += `\n## Summary Data\n\n`;
+    verificationManifest += `- \`metrics-summary.csv\` - Tabular export of all scan metrics\n`;
+
+    verificationManifest += `\n## Data Integrity Notes\n\n`;
+    verificationManifest += `1. **Raw JSON files** contain complete, unmodified benchmark results\n`;
+    verificationManifest += `2. **Markdown reports** are generated from raw JSON and database records\n`;
+    verificationManifest += `3. **Overlap calculations** use category-based matching (see metrics.ts for logic)\n`;
+    verificationManifest += `4. **ZAP metrics** are extracted from official ZAP JSON output and re-validated\n`;
+    verificationManifest += `5. **All timestamps** are preserved from scan execution\n\n`;
+
+    verificationManifest += `## How to Verify Results\n\n`;
+    verificationManifest += `### Verify WebSecScan Raw Data:\n`;
+    verificationManifest += `\`\`\`bash\n`;
+    verificationManifest += `# Check scan data in database\n`;
+    verificationManifest += `npx prisma studio\n`;
+    verificationManifest += `# Query scans table and compare with *-raw.json files\n`;
+    verificationManifest += `\`\`\`\n\n`;
+
+    verificationManifest += `### Verify ZAP Results:\n`;
+    verificationManifest += `\`\`\`bash\n`;
+    verificationManifest += `# Compare JSON, XML, and HTML outputs\n`;
+    verificationManifest += `jq . results/zap-baseline.json | head -50\n`;
+    verificationManifest += `# Open HTML report in browser\n`;
+    verificationManifest += `open results/zap-baseline-report.html\n`;
+    verificationManifest += `\`\`\`\n\n`;
+
+    verificationManifest += `### Verify Comparison Logic:\n`;
+    verificationManifest += `\`\`\`bash\n`;
+    verificationManifest += `# Compare raw JSON findings\n`;
+    verificationManifest += `jq '.findings | length' results/static-raw.json\n`;
+    verificationManifest += `jq '.findings | length' results/dynamic-raw.json\n`;
+    verificationManifest += `jq '.findings | length' results/both-raw.json\n`;
+    verificationManifest += `# Results in comparison-report.md should reflect these counts\n`;
+    verificationManifest += `\`\`\`\n\n`;
+
+    await fs.writeFile(
+      path.join(config.outputDir, 'VERIFICATION-MANIFEST.md'),
+      verificationManifest,
+      'utf-8'
+    );
+
+    console.log('\n=== Comparison Complete ===');
+    console.log(`Reports saved to: ${config.outputDir}`);
+    console.log('\n📊 Raw Data Files (For Manual Verification):');
+    if (results.static) console.log('  - static-raw.json');
+    if (results.dynamic) console.log('  - dynamic-raw.json');
+    if (results.both) console.log('  - both-raw.json');
+    if (zapMetrics) console.log('  - zap-baseline.json, zap-baseline.xml, zap-baseline-report.html');
+    console.log('\n📋 Generated Reports:');
+    if (results.static) console.log('  - static-report.md');
+    if (results.dynamic) console.log('  - dynamic-report.md');
+    if (results.both) console.log('  - both-report.md');
+    if (scanMetrics.length >= 2) console.log('  - comparison-report.md');
+    if (zapMetrics) console.log('  - ZAP-COMPARISON.md');
+    console.log('\n📈 Summary Data:');
+    console.log('  - metrics-summary.csv: CSV export for analysis');
+    console.log('  - VERIFICATION-MANIFEST.md: Complete artifact manifest with verification steps');
+    console.log('\n✅ All results can be manually verified using the VERIFICATION-MANIFEST.md guide');
 
   } catch (error) {
     console.error('Comparison failed:', error);

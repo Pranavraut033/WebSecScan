@@ -1,9 +1,9 @@
 # Benchmark Report
 
-**Scan ID**: cmk8tj2qy0000fejt5g4pbmg3
-**Target**: https://juice-shop.herokuapp.com
+**Scan ID**: cmk9w0emn00004mjtgh7ik0om
+**Target**: http://localhost:3001
 **Mode**: STATIC
-**Duration**: 1.05s
+**Duration**: 0.23s
 
 ## Findings Summary
 

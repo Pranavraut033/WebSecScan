@@ -19,7 +19,20 @@
     "compare": "tsx scripts/compare.ts",
     "docker:juice-shop": "docker-compose up -d juice-shop",
     "docker:zap": "docker-compose up -d zap",
-    "docker:down": "docker-compose down"
+    "docker:fixtures": "docker-compose up -d test-fixtures",
+    "docker:all": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:build-fixtures": "bash scripts/build-fixtures.sh",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "tsc --noEmit"
+    ],
+    "*.{ts,tsx,json,md}": [
+      "prettier --write"
+    ]
   },
   "dependencies": {
     "@prisma/adapter-better-sqlite3": "^7.2.0",
@@ -45,6 +58,8 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.1.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
     "typescript": "^5"

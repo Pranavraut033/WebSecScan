@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
-<OWASPZAPReport programName="ZAP" version="2.17.0" generated="Sat, 10 Jan 2026 21:30:35" created="2026-01-10T21:30:35.673909417Z">
+<OWASPZAPReport programName="ZAP" version="2.17.0" generated="Sun, 11 Jan 2026 15:28:00" created="2026-01-11T15:28:00.266837716Z">
 	
-		<site name="https://juice-shop.herokuapp.com" host="juice-shop.herokuapp.com" port="443" ssl="true">
+		<site name="http://host.docker.internal:3001" host="host.docker.internal" port="3001" ssl="false">
 			<alerts>
 				
 					<alertitem>
@@ -17,8 +17,8 @@
 						<instances>
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com</uri>
-									<nodeName>https://juice-shop.herokuapp.com</nodeName>
+									<uri>http://host.docker.internal:3001</uri>
+									<nodeName>http://host.docker.internal:3001</nodeName>
 									<method>GET</method>
 									<param></param>
 									<attack></attack>
@@ -28,8 +28,8 @@
 							
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/ftp/coupons_2013.md.bak</uri>
-									<nodeName>https://juice-shop.herokuapp.com/ftp/coupons_2013.md.bak</nodeName>
+									<uri>http://host.docker.internal:3001/ftp/coupons_2013.md.bak</uri>
+									<nodeName>http://host.docker.internal:3001/ftp/coupons_2013.md.bak</nodeName>
 									<method>GET</method>
 									<param></param>
 									<attack></attack>
@@ -39,8 +39,8 @@
 							
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/ftp/eastere.gg</uri>
-									<nodeName>https://juice-shop.herokuapp.com/ftp/eastere.gg</nodeName>
+									<uri>http://host.docker.internal:3001/ftp/eastere.gg</uri>
+									<nodeName>http://host.docker.internal:3001/ftp/eastere.gg</nodeName>
 									<method>GET</method>
 									<param></param>
 									<attack></attack>
@@ -50,8 +50,8 @@
 							
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/ftp/encrypt.pyc</uri>
-									<nodeName>https://juice-shop.herokuapp.com/ftp/encrypt.pyc</nodeName>
+									<uri>http://host.docker.internal:3001/ftp/encrypt.pyc</uri>
+									<nodeName>http://host.docker.internal:3001/ftp/encrypt.pyc</nodeName>
 									<method>GET</method>
 									<param></param>
 									<attack></attack>
@@ -61,8 +61,8 @@
 							
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/sitemap.xml</uri>
-									<nodeName>https://juice-shop.herokuapp.com/sitemap.xml</nodeName>
+									<uri>http://host.docker.internal:3001/sitemap.xml</uri>
+									<nodeName>http://host.docker.internal:3001/sitemap.xml</nodeName>
 									<method>GET</method>
 									<param></param>
 									<attack></attack>
@@ -78,7 +78,7 @@
 						<reference>&lt;p&gt;https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP&lt;/p&gt;&lt;p&gt;https://cheatsheetseries.owasp.org/cheatsheets/Content_Security_Policy_Cheat_Sheet.html&lt;/p&gt;&lt;p&gt;https://www.w3.org/TR/CSP/&lt;/p&gt;&lt;p&gt;https://w3c.github.io/webappsec-csp/&lt;/p&gt;&lt;p&gt;https://web.dev/articles/csp&lt;/p&gt;&lt;p&gt;https://caniuse.com/#feat=contentsecuritypolicy&lt;/p&gt;&lt;p&gt;https://content-security-policy.com/&lt;/p&gt;</reference>
 						<cweid>693</cweid>
 						<wascid>15</wascid>
-						<sourceid>6</sourceid>
+						<sourceid>1</sourceid>
 					</alertitem>
 				
 				
@@ -95,8 +95,8 @@
 						<instances>
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/assets/public/favicon_js.ico</uri>
-									<nodeName>https://juice-shop.herokuapp.com/assets/public/favicon_js.ico</nodeName>
+									<uri>http://host.docker.internal:3001/assets/public/favicon_js.ico</uri>
+									<nodeName>http://host.docker.internal:3001/assets/public/favicon_js.ico</nodeName>
 									<method>GET</method>
 									<param></param>
 									<attack></attack>
@@ -106,8 +106,8 @@
 							
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/main.js</uri>
-									<nodeName>https://juice-shop.herokuapp.com/main.js</nodeName>
+									<uri>http://host.docker.internal:3001/polyfills.js</uri>
+									<nodeName>http://host.docker.internal:3001/polyfills.js</nodeName>
 									<method>GET</method>
 									<param></param>
 									<attack></attack>
@@ -117,8 +117,8 @@
 							
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/polyfills.js</uri>
-									<nodeName>https://juice-shop.herokuapp.com/polyfills.js</nodeName>
+									<uri>http://host.docker.internal:3001/robots.txt</uri>
+									<nodeName>http://host.docker.internal:3001/robots.txt</nodeName>
 									<method>GET</method>
 									<param></param>
 									<attack></attack>
@@ -128,8 +128,8 @@
 							
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/robots.txt</uri>
-									<nodeName>https://juice-shop.herokuapp.com/robots.txt</nodeName>
+									<uri>http://host.docker.internal:3001/runtime.js</uri>
+									<nodeName>http://host.docker.internal:3001/runtime.js</nodeName>
 									<method>GET</method>
 									<param></param>
 									<attack></attack>
@@ -139,8 +139,8 @@
 							
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/runtime.js</uri>
-									<nodeName>https://juice-shop.herokuapp.com/runtime.js</nodeName>
+									<uri>http://host.docker.internal:3001/styles.css</uri>
+									<nodeName>http://host.docker.internal:3001/styles.css</nodeName>
 									<method>GET</method>
 									<param></param>
 									<attack></attack>
@@ -156,7 +156,7 @@
 						<reference>&lt;p&gt;https://vulncat.fortify.com/en/detail?category=HTML5&amp;subcategory=Overly%20Permissive%20CORS%20Policy&lt;/p&gt;</reference>
 						<cweid>264</cweid>
 						<wascid>14</wascid>
-						<sourceid>13</sourceid>
+						<sourceid>12</sourceid>
 					</alertitem>
 				
 				
@@ -173,8 +173,8 @@
 						<instances>
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com</uri>
-									<nodeName>https://juice-shop.herokuapp.com</nodeName>
+									<uri>http://host.docker.internal:3001</uri>
+									<nodeName>http://host.docker.internal:3001</nodeName>
 									<method>GET</method>
 									<param>//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.1.0/cookieconsent.min.js</param>
 									<attack></attack>
@@ -184,8 +184,8 @@
 							
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com</uri>
-									<nodeName>https://juice-shop.herokuapp.com</nodeName>
+									<uri>http://host.docker.internal:3001</uri>
+									<nodeName>http://host.docker.internal:3001</nodeName>
 									<method>GET</method>
 									<param>//cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js</param>
 									<attack></attack>
@@ -195,8 +195,8 @@
 							
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/</uri>
-									<nodeName>https://juice-shop.herokuapp.com/</nodeName>
+									<uri>http://host.docker.internal:3001/</uri>
+									<nodeName>http://host.docker.internal:3001/</nodeName>
 									<method>GET</method>
 									<param>//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.1.0/cookieconsent.min.js</param>
 									<attack></attack>
@@ -206,8 +206,8 @@
 							
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/sitemap.xml</uri>
-									<nodeName>https://juice-shop.herokuapp.com/sitemap.xml</nodeName>
+									<uri>http://host.docker.internal:3001/sitemap.xml</uri>
+									<nodeName>http://host.docker.internal:3001/sitemap.xml</nodeName>
 									<method>GET</method>
 									<param>//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.1.0/cookieconsent.min.js</param>
 									<attack></attack>
@@ -217,8 +217,8 @@
 							
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/sitemap.xml</uri>
-									<nodeName>https://juice-shop.herokuapp.com/sitemap.xml</nodeName>
+									<uri>http://host.docker.internal:3001/sitemap.xml</uri>
+									<nodeName>http://host.docker.internal:3001/sitemap.xml</nodeName>
 									<method>GET</method>
 									<param>//cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js</param>
 									<attack></attack>
@@ -234,7 +234,7 @@
 						<reference></reference>
 						<cweid>829</cweid>
 						<wascid>15</wascid>
-						<sourceid>6</sourceid>
+						<sourceid>8</sourceid>
 					</alertitem>
 				
 				
@@ -251,8 +251,8 @@
 						<instances>
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/main.js</uri>
-									<nodeName>https://juice-shop.herokuapp.com/main.js</nodeName>
+									<uri>http://host.docker.internal:3001/main.js</uri>
+									<nodeName>http://host.docker.internal:3001/main.js</nodeName>
 									<method>GET</method>
 									<param></param>
 									<attack></attack>
@@ -262,8 +262,8 @@
 							
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/vendor.js</uri>
-									<nodeName>https://juice-shop.herokuapp.com/vendor.js</nodeName>
+									<uri>http://host.docker.internal:3001/vendor.js</uri>
+									<nodeName>http://host.docker.internal:3001/vendor.js</nodeName>
 									<method>GET</method>
 									<param></param>
 									<attack></attack>
@@ -279,7 +279,7 @@
 						<reference>&lt;p&gt;https://v17.angular.io/guide/security&lt;/p&gt;</reference>
 						<cweid>749</cweid>
 						<wascid>-1</wascid>
-						<sourceid>21</sourceid>
+						<sourceid>22</sourceid>
 					</alertitem>
 				
 				
@@ -296,8 +296,8 @@
 						<instances>
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com</uri>
-									<nodeName>https://juice-shop.herokuapp.com</nodeName>
+									<uri>http://host.docker.internal:3001</uri>
+									<nodeName>http://host.docker.internal:3001</nodeName>
 									<method>GET</method>
 									<param></param>
 									<attack></attack>
@@ -307,8 +307,8 @@
 							
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/main.js</uri>
-									<nodeName>https://juice-shop.herokuapp.com/main.js</nodeName>
+									<uri>http://host.docker.internal:3001/main.js</uri>
+									<nodeName>http://host.docker.internal:3001/main.js</nodeName>
 									<method>GET</method>
 									<param></param>
 									<attack></attack>
@@ -318,8 +318,8 @@
 							
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/polyfills.js</uri>
-									<nodeName>https://juice-shop.herokuapp.com/polyfills.js</nodeName>
+									<uri>http://host.docker.internal:3001/polyfills.js</uri>
+									<nodeName>http://host.docker.internal:3001/polyfills.js</nodeName>
 									<method>GET</method>
 									<param></param>
 									<attack></attack>
@@ -329,8 +329,8 @@
 							
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/runtime.js</uri>
-									<nodeName>https://juice-shop.herokuapp.com/runtime.js</nodeName>
+									<uri>http://host.docker.internal:3001/runtime.js</uri>
+									<nodeName>http://host.docker.internal:3001/runtime.js</nodeName>
 									<method>GET</method>
 									<param></param>
 									<attack></attack>
@@ -340,8 +340,8 @@
 							
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/sitemap.xml</uri>
-									<nodeName>https://juice-shop.herokuapp.com/sitemap.xml</nodeName>
+									<uri>http://host.docker.internal:3001/sitemap.xml</uri>
+									<nodeName>http://host.docker.internal:3001/sitemap.xml</nodeName>
 									<method>GET</method>
 									<param></param>
 									<attack></attack>
@@ -374,8 +374,8 @@
 						<instances>
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com</uri>
-									<nodeName>https://juice-shop.herokuapp.com</nodeName>
+									<uri>http://host.docker.internal:3001</uri>
+									<nodeName>http://host.docker.internal:3001</nodeName>
 									<method>GET</method>
 									<param>Cross-Origin-Embedder-Policy</param>
 									<attack></attack>
@@ -385,8 +385,8 @@
 							
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/</uri>
-									<nodeName>https://juice-shop.herokuapp.com/</nodeName>
+									<uri>http://host.docker.internal:3001/</uri>
+									<nodeName>http://host.docker.internal:3001/</nodeName>
 									<method>GET</method>
 									<param>Cross-Origin-Embedder-Policy</param>
 									<attack></attack>
@@ -396,8 +396,8 @@
 							
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/app/build/routes/fileServer.js:59:18</uri>
-									<nodeName>https://juice-shop.herokuapp.com/app/build/routes/fileServer.js:59:18</nodeName>
+									<uri>http://host.docker.internal:3001/ftp</uri>
+									<nodeName>http://host.docker.internal:3001/ftp</nodeName>
 									<method>GET</method>
 									<param>Cross-Origin-Embedder-Policy</param>
 									<attack></attack>
@@ -407,8 +407,8 @@
 							
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/ftp</uri>
-									<nodeName>https://juice-shop.herokuapp.com/ftp</nodeName>
+									<uri>http://host.docker.internal:3001/juice-shop/node_modules/express/lib/router/index.js:376:14</uri>
+									<nodeName>http://host.docker.internal:3001/juice-shop/node_modules/express/lib/router/index.js:376:14</nodeName>
 									<method>GET</method>
 									<param>Cross-Origin-Embedder-Policy</param>
 									<attack></attack>
@@ -418,8 +418,8 @@
 							
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/sitemap.xml</uri>
-									<nodeName>https://juice-shop.herokuapp.com/sitemap.xml</nodeName>
+									<uri>http://host.docker.internal:3001/sitemap.xml</uri>
+									<nodeName>http://host.docker.internal:3001/sitemap.xml</nodeName>
 									<method>GET</method>
 									<param>Cross-Origin-Embedder-Policy</param>
 									<attack></attack>
@@ -429,8 +429,8 @@
 							
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com</uri>
-									<nodeName>https://juice-shop.herokuapp.com</nodeName>
+									<uri>http://host.docker.internal:3001</uri>
+									<nodeName>http://host.docker.internal:3001</nodeName>
 									<method>GET</method>
 									<param>Cross-Origin-Opener-Policy</param>
 									<attack></attack>
@@ -440,8 +440,8 @@
 							
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/</uri>
-									<nodeName>https://juice-shop.herokuapp.com/</nodeName>
+									<uri>http://host.docker.internal:3001/</uri>
+									<nodeName>http://host.docker.internal:3001/</nodeName>
 									<method>GET</method>
 									<param>Cross-Origin-Opener-Policy</param>
 									<attack></attack>
@@ -451,8 +451,8 @@
 							
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/app/build/routes/fileServer.js:59:18</uri>
-									<nodeName>https://juice-shop.herokuapp.com/app/build/routes/fileServer.js:59:18</nodeName>
+									<uri>http://host.docker.internal:3001/ftp</uri>
+									<nodeName>http://host.docker.internal:3001/ftp</nodeName>
 									<method>GET</method>
 									<param>Cross-Origin-Opener-Policy</param>
 									<attack></attack>
@@ -462,8 +462,8 @@
 							
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/ftp</uri>
-									<nodeName>https://juice-shop.herokuapp.com/ftp</nodeName>
+									<uri>http://host.docker.internal:3001/juice-shop/node_modules/express/lib/router/index.js:376:14</uri>
+									<nodeName>http://host.docker.internal:3001/juice-shop/node_modules/express/lib/router/index.js:376:14</nodeName>
 									<method>GET</method>
 									<param>Cross-Origin-Opener-Policy</param>
 									<attack></attack>
@@ -473,8 +473,8 @@
 							
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/sitemap.xml</uri>
-									<nodeName>https://juice-shop.herokuapp.com/sitemap.xml</nodeName>
+									<uri>http://host.docker.internal:3001/sitemap.xml</uri>
+									<nodeName>http://host.docker.internal:3001/sitemap.xml</nodeName>
 									<method>GET</method>
 									<param>Cross-Origin-Opener-Policy</param>
 									<attack></attack>
@@ -495,84 +495,6 @@
 				
 				
 					<alertitem>
-						<pluginid>10035</pluginid>
-						<alertRef>10035-1</alertRef>
-						<alert>Strict-Transport-Security Header Not Set</alert>
-						<name>Strict-Transport-Security Header Not Set</name>
-						<riskcode>1</riskcode>
-						<confidence>3</confidence>
-						<riskdesc>Low (High)</riskdesc>
-						<confidencedesc>High</confidencedesc>
-						<desc>&lt;p&gt;HTTP Strict Transport Security (HSTS) is a web security policy mechanism whereby a web server declares that complying user agents (such as a web browser) are to interact with it using only secure HTTPS connections (i.e. HTTP layered over TLS/SSL). HSTS is an IETF standards track protocol and is specified in RFC 6797.&lt;/p&gt;</desc>
-						<instances>
-							
-								<instance>
-									<uri>https://juice-shop.herokuapp.com/assets/public/favicon_js.ico</uri>
-									<nodeName>https://juice-shop.herokuapp.com/assets/public/favicon_js.ico</nodeName>
-									<method>GET</method>
-									<param></param>
-									<attack></attack>
-									<evidence></evidence>
-									<otherinfo></otherinfo>
-								</instance>
-							
-							
-								<instance>
-									<uri>https://juice-shop.herokuapp.com/main.js</uri>
-									<nodeName>https://juice-shop.herokuapp.com/main.js</nodeName>
-									<method>GET</method>
-									<param></param>
-									<attack></attack>
-									<evidence></evidence>
-									<otherinfo></otherinfo>
-								</instance>
-							
-							
-								<instance>
-									<uri>https://juice-shop.herokuapp.com/polyfills.js</uri>
-									<nodeName>https://juice-shop.herokuapp.com/polyfills.js</nodeName>
-									<method>GET</method>
-									<param></param>
-									<attack></attack>
-									<evidence></evidence>
-									<otherinfo></otherinfo>
-								</instance>
-							
-							
-								<instance>
-									<uri>https://juice-shop.herokuapp.com/robots.txt</uri>
-									<nodeName>https://juice-shop.herokuapp.com/robots.txt</nodeName>
-									<method>GET</method>
-									<param></param>
-									<attack></attack>
-									<evidence></evidence>
-									<otherinfo></otherinfo>
-								</instance>
-							
-							
-								<instance>
-									<uri>https://juice-shop.herokuapp.com/runtime.js</uri>
-									<nodeName>https://juice-shop.herokuapp.com/runtime.js</nodeName>
-									<method>GET</method>
-									<param></param>
-									<attack></attack>
-									<evidence></evidence>
-									<otherinfo></otherinfo>
-								</instance>
-							
-						</instances>
-						<count>5</count>
-						<systemic>true</systemic>
-						<solution>&lt;p&gt;Ensure that your web server, application server, load balancer, etc. is configured to enforce Strict-Transport-Security.&lt;/p&gt;</solution>
-						<otherinfo></otherinfo>
-						<reference>&lt;p&gt;https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Strict_Transport_Security_Cheat_Sheet.html&lt;/p&gt;&lt;p&gt;https://owasp.org/www-community/Security_Headers&lt;/p&gt;&lt;p&gt;https://en.wikipedia.org/wiki/HTTP_Strict_Transport_Security&lt;/p&gt;&lt;p&gt;https://caniuse.com/stricttransportsecurity&lt;/p&gt;&lt;p&gt;https://datatracker.ietf.org/doc/html/rfc6797&lt;/p&gt;</reference>
-						<cweid>319</cweid>
-						<wascid>15</wascid>
-						<sourceid>13</sourceid>
-					</alertitem>
-				
-				
-					<alertitem>
 						<pluginid>10096</pluginid>
 						<alertRef>10096</alertRef>
 						<alert>Timestamp Disclosure - Unix</alert>
@@ -585,68 +507,68 @@
 						<instances>
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/assets/public/favicon_js.ico</uri>
-									<nodeName>https://juice-shop.herokuapp.com/assets/public/favicon_js.ico</nodeName>
+									<uri>http://host.docker.internal:3001/styles.css</uri>
+									<nodeName>http://host.docker.internal:3001/styles.css</nodeName>
 									<method>GET</method>
-									<param>Reporting-Endpoints</param>
+									<param></param>
 									<attack></attack>
-									<evidence>1768080615</evidence>
-									<otherinfo>1768080615, which evaluates to: 2026-01-10 21:30:15.</otherinfo>
+									<evidence>1680327869</evidence>
+									<otherinfo>1680327869, which evaluates to: 2023-04-01 05:44:29.</otherinfo>
 								</instance>
 							
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/main.js</uri>
-									<nodeName>https://juice-shop.herokuapp.com/main.js</nodeName>
+									<uri>http://host.docker.internal:3001/styles.css</uri>
+									<nodeName>http://host.docker.internal:3001/styles.css</nodeName>
 									<method>GET</method>
-									<param>Reporting-Endpoints</param>
+									<param></param>
 									<attack></attack>
-									<evidence>1768080615</evidence>
-									<otherinfo>1768080615, which evaluates to: 2026-01-10 21:30:15.</otherinfo>
+									<evidence>1701244813</evidence>
+									<otherinfo>1701244813, which evaluates to: 2023-11-29 08:00:13.</otherinfo>
 								</instance>
 							
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/polyfills.js</uri>
-									<nodeName>https://juice-shop.herokuapp.com/polyfills.js</nodeName>
+									<uri>http://host.docker.internal:3001/styles.css</uri>
+									<nodeName>http://host.docker.internal:3001/styles.css</nodeName>
 									<method>GET</method>
-									<param>Reporting-Endpoints</param>
+									<param></param>
 									<attack></attack>
-									<evidence>1768080615</evidence>
-									<otherinfo>1768080615, which evaluates to: 2026-01-10 21:30:15.</otherinfo>
+									<evidence>1839622642</evidence>
+									<otherinfo>1839622642, which evaluates to: 2028-04-17 22:17:22.</otherinfo>
 								</instance>
 							
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/robots.txt</uri>
-									<nodeName>https://juice-shop.herokuapp.com/robots.txt</nodeName>
+									<uri>http://host.docker.internal:3001/styles.css</uri>
+									<nodeName>http://host.docker.internal:3001/styles.css</nodeName>
 									<method>GET</method>
-									<param>Reporting-Endpoints</param>
+									<param></param>
 									<attack></attack>
-									<evidence>1768080615</evidence>
-									<otherinfo>1768080615, which evaluates to: 2026-01-10 21:30:15.</otherinfo>
+									<evidence>1863874346</evidence>
+									<otherinfo>1863874346, which evaluates to: 2029-01-23 14:52:26.</otherinfo>
 								</instance>
 							
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/runtime.js</uri>
-									<nodeName>https://juice-shop.herokuapp.com/runtime.js</nodeName>
+									<uri>http://host.docker.internal:3001/styles.css</uri>
+									<nodeName>http://host.docker.internal:3001/styles.css</nodeName>
 									<method>GET</method>
-									<param>Reporting-Endpoints</param>
+									<param></param>
 									<attack></attack>
-									<evidence>1768080615</evidence>
-									<otherinfo>1768080615, which evaluates to: 2026-01-10 21:30:15.</otherinfo>
+									<evidence>2033195021</evidence>
+									<otherinfo>2033195021, which evaluates to: 2034-06-06 08:23:41.</otherinfo>
 								</instance>
 							
 						</instances>
 						<count>5</count>
 						<systemic>true</systemic>
 						<solution>&lt;p&gt;Manually confirm that the timestamp data is not sensitive, and that the data cannot be aggregated to disclose exploitable patterns.&lt;/p&gt;</solution>
-						<otherinfo>&lt;p&gt;1768080615, which evaluates to: 2026-01-10 21:30:15.&lt;/p&gt;</otherinfo>
+						<otherinfo>&lt;p&gt;1680327869, which evaluates to: 2023-04-01 05:44:29.&lt;/p&gt;</otherinfo>
 						<reference>&lt;p&gt;https://cwe.mitre.org/data/definitions/200.html&lt;/p&gt;</reference>
 						<cweid>497</cweid>
 						<wascid>13</wascid>
-						<sourceid>13</sourceid>
+						<sourceid>15</sourceid>
 					</alertitem>
 				
 				
@@ -663,8 +585,8 @@
 						<instances>
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/main.js</uri>
-									<nodeName>https://juice-shop.herokuapp.com/main.js</nodeName>
+									<uri>http://host.docker.internal:3001/main.js</uri>
+									<nodeName>http://host.docker.internal:3001/main.js</nodeName>
 									<method>GET</method>
 									<param></param>
 									<attack></attack>
@@ -674,8 +596,8 @@
 							
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/vendor.js</uri>
-									<nodeName>https://juice-shop.herokuapp.com/vendor.js</nodeName>
+									<uri>http://host.docker.internal:3001/vendor.js</uri>
+									<nodeName>http://host.docker.internal:3001/vendor.js</nodeName>
 									<method>GET</method>
 									<param></param>
 									<attack></attack>
@@ -691,7 +613,7 @@
 						<reference></reference>
 						<cweid>615</cweid>
 						<wascid>13</wascid>
-						<sourceid>21</sourceid>
+						<sourceid>22</sourceid>
 					</alertitem>
 				
 				
@@ -708,8 +630,8 @@
 						<instances>
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com</uri>
-									<nodeName>https://juice-shop.herokuapp.com</nodeName>
+									<uri>http://host.docker.internal:3001</uri>
+									<nodeName>http://host.docker.internal:3001</nodeName>
 									<method>GET</method>
 									<param></param>
 									<attack></attack>
@@ -719,8 +641,8 @@
 							
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/</uri>
-									<nodeName>https://juice-shop.herokuapp.com/</nodeName>
+									<uri>http://host.docker.internal:3001/</uri>
+									<nodeName>http://host.docker.internal:3001/</nodeName>
 									<method>GET</method>
 									<param></param>
 									<attack></attack>
@@ -730,8 +652,8 @@
 							
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/app/build/routes/fileServer.js:59:18</uri>
-									<nodeName>https://juice-shop.herokuapp.com/app/build/routes/fileServer.js:59:18</nodeName>
+									<uri>http://host.docker.internal:3001/juice-shop/node_modules/express/lib/router/index.js:328:13</uri>
+									<nodeName>http://host.docker.internal:3001/juice-shop/node_modules/express/lib/router/index.js:328:13</nodeName>
 									<method>GET</method>
 									<param></param>
 									<attack></attack>
@@ -741,8 +663,8 @@
 							
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/app/node_modules/express/lib/router/layer.js:95:5</uri>
-									<nodeName>https://juice-shop.herokuapp.com/app/node_modules/express/lib/router/layer.js:95:5</nodeName>
+									<uri>http://host.docker.internal:3001/juice-shop/node_modules/express/lib/router/index.js:376:14</uri>
+									<nodeName>http://host.docker.internal:3001/juice-shop/node_modules/express/lib/router/index.js:376:14</nodeName>
 									<method>GET</method>
 									<param></param>
 									<attack></attack>
@@ -752,8 +674,8 @@
 							
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/sitemap.xml</uri>
-									<nodeName>https://juice-shop.herokuapp.com/sitemap.xml</nodeName>
+									<uri>http://host.docker.internal:3001/sitemap.xml</uri>
+									<nodeName>http://host.docker.internal:3001/sitemap.xml</nodeName>
 									<method>GET</method>
 									<param></param>
 									<attack></attack>
@@ -786,8 +708,8 @@
 						<instances>
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/ftp/coupons_2013.md.bak</uri>
-									<nodeName>https://juice-shop.herokuapp.com/ftp/coupons_2013.md.bak</nodeName>
+									<uri>http://host.docker.internal:3001/ftp/eastere.gg</uri>
+									<nodeName>http://host.docker.internal:3001/ftp/eastere.gg</nodeName>
 									<method>GET</method>
 									<param></param>
 									<attack></attack>
@@ -797,8 +719,8 @@
 							
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/ftp/eastere.gg</uri>
-									<nodeName>https://juice-shop.herokuapp.com/ftp/eastere.gg</nodeName>
+									<uri>http://host.docker.internal:3001/ftp/encrypt.pyc</uri>
+									<nodeName>http://host.docker.internal:3001/ftp/encrypt.pyc</nodeName>
 									<method>GET</method>
 									<param></param>
 									<attack></attack>
@@ -808,8 +730,8 @@
 							
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/ftp/encrypt.pyc</uri>
-									<nodeName>https://juice-shop.herokuapp.com/ftp/encrypt.pyc</nodeName>
+									<uri>http://host.docker.internal:3001/ftp/package-lock.json.bak</uri>
+									<nodeName>http://host.docker.internal:3001/ftp/package-lock.json.bak</nodeName>
 									<method>GET</method>
 									<param></param>
 									<attack></attack>
@@ -825,85 +747,7 @@
 						<reference>&lt;p&gt;https://datatracker.ietf.org/doc/html/rfc7234&lt;/p&gt;&lt;p&gt;https://datatracker.ietf.org/doc/html/rfc7231&lt;/p&gt;&lt;p&gt;https://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html&lt;/p&gt;</reference>
 						<cweid>524</cweid>
 						<wascid>13</wascid>
-						<sourceid>44</sourceid>
-					</alertitem>
-				
-				
-					<alertitem>
-						<pluginid>10015</pluginid>
-						<alertRef>10015</alertRef>
-						<alert>Re-examine Cache-control Directives</alert>
-						<name>Re-examine Cache-control Directives</name>
-						<riskcode>0</riskcode>
-						<confidence>1</confidence>
-						<riskdesc>Informational (Low)</riskdesc>
-						<confidencedesc>Low</confidencedesc>
-						<desc>&lt;p&gt;The cache-control header has not been set properly or is missing, allowing the browser and proxies to cache content. For static assets like css, js, or image files this might be intended, however, the resources should be reviewed to ensure that no sensitive content will be cached.&lt;/p&gt;</desc>
-						<instances>
-							
-								<instance>
-									<uri>https://juice-shop.herokuapp.com</uri>
-									<nodeName>https://juice-shop.herokuapp.com</nodeName>
-									<method>GET</method>
-									<param>cache-control</param>
-									<attack></attack>
-									<evidence>public, max-age=0</evidence>
-									<otherinfo></otherinfo>
-								</instance>
-							
-							
-								<instance>
-									<uri>https://juice-shop.herokuapp.com/ftp</uri>
-									<nodeName>https://juice-shop.herokuapp.com/ftp</nodeName>
-									<method>GET</method>
-									<param>cache-control</param>
-									<attack></attack>
-									<evidence></evidence>
-									<otherinfo></otherinfo>
-								</instance>
-							
-							
-								<instance>
-									<uri>https://juice-shop.herokuapp.com/ftp/legal.md</uri>
-									<nodeName>https://juice-shop.herokuapp.com/ftp/legal.md</nodeName>
-									<method>GET</method>
-									<param>cache-control</param>
-									<attack></attack>
-									<evidence>public, max-age=0</evidence>
-									<otherinfo></otherinfo>
-								</instance>
-							
-							
-								<instance>
-									<uri>https://juice-shop.herokuapp.com/robots.txt</uri>
-									<nodeName>https://juice-shop.herokuapp.com/robots.txt</nodeName>
-									<method>GET</method>
-									<param>cache-control</param>
-									<attack></attack>
-									<evidence></evidence>
-									<otherinfo></otherinfo>
-								</instance>
-							
-							
-								<instance>
-									<uri>https://juice-shop.herokuapp.com/sitemap.xml</uri>
-									<nodeName>https://juice-shop.herokuapp.com/sitemap.xml</nodeName>
-									<method>GET</method>
-									<param>cache-control</param>
-									<attack></attack>
-									<evidence>public, max-age=0</evidence>
-									<otherinfo></otherinfo>
-								</instance>
-							
-						</instances>
-						<count>5</count>
-						<systemic>true</systemic>
-						<solution>&lt;p&gt;For secure content, ensure the cache-control HTTP header is set with &quot;no-cache, no-store, must-revalidate&quot;. If an asset should be cached consider setting the directives &quot;public, max-age, immutable&quot;.&lt;/p&gt;</solution>
-						<otherinfo></otherinfo>
-						<reference>&lt;p&gt;https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html#web-content-caching&lt;/p&gt;&lt;p&gt;https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cache-Control&lt;/p&gt;&lt;p&gt;https://grayduck.mn/2021/09/13/cache-control-recommendations/&lt;/p&gt;</reference>
-						<cweid>525</cweid>
-						<wascid>13</wascid>
-						<sourceid>6</sourceid>
+						<sourceid>42</sourceid>
 					</alertitem>
 				
 				
@@ -920,8 +764,8 @@
 						<instances>
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/robots.txt</uri>
-									<nodeName>https://juice-shop.herokuapp.com/robots.txt</nodeName>
+									<uri>http://host.docker.internal:3001/robots.txt</uri>
+									<nodeName>http://host.docker.internal:3001/robots.txt</nodeName>
 									<method>GET</method>
 									<param></param>
 									<attack></attack>
@@ -937,7 +781,7 @@
 						<reference>&lt;p&gt;https://datatracker.ietf.org/doc/html/rfc7234&lt;/p&gt;&lt;p&gt;https://datatracker.ietf.org/doc/html/rfc7231&lt;/p&gt;&lt;p&gt;https://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html&lt;/p&gt;</reference>
 						<cweid>524</cweid>
 						<wascid>13</wascid>
-						<sourceid>16</sourceid>
+						<sourceid>6</sourceid>
 					</alertitem>
 				
 				
@@ -954,8 +798,8 @@
 						<instances>
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com</uri>
-									<nodeName>https://juice-shop.herokuapp.com</nodeName>
+									<uri>http://host.docker.internal:3001</uri>
+									<nodeName>http://host.docker.internal:3001</nodeName>
 									<method>GET</method>
 									<param></param>
 									<attack></attack>
@@ -965,8 +809,8 @@
 							
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/assets/public/favicon_js.ico</uri>
-									<nodeName>https://juice-shop.herokuapp.com/assets/public/favicon_js.ico</nodeName>
+									<uri>http://host.docker.internal:3001/assets/public/favicon_js.ico</uri>
+									<nodeName>http://host.docker.internal:3001/assets/public/favicon_js.ico</nodeName>
 									<method>GET</method>
 									<param></param>
 									<attack></attack>
@@ -976,8 +820,8 @@
 							
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/polyfills.js</uri>
-									<nodeName>https://juice-shop.herokuapp.com/polyfills.js</nodeName>
+									<uri>http://host.docker.internal:3001/polyfills.js</uri>
+									<nodeName>http://host.docker.internal:3001/polyfills.js</nodeName>
 									<method>GET</method>
 									<param></param>
 									<attack></attack>
@@ -987,8 +831,8 @@
 							
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/runtime.js</uri>
-									<nodeName>https://juice-shop.herokuapp.com/runtime.js</nodeName>
+									<uri>http://host.docker.internal:3001/runtime.js</uri>
+									<nodeName>http://host.docker.internal:3001/runtime.js</nodeName>
 									<method>GET</method>
 									<param></param>
 									<attack></attack>
@@ -998,8 +842,8 @@
 							
 							
 								<instance>
-									<uri>https://juice-shop.herokuapp.com/sitemap.xml</uri>
-									<nodeName>https://juice-shop.herokuapp.com/sitemap.xml</nodeName>
+									<uri>http://host.docker.internal:3001/sitemap.xml</uri>
+									<nodeName>http://host.docker.internal:3001/sitemap.xml</nodeName>
 									<method>GET</method>
 									<param></param>
 									<attack></attack>
@@ -1027,27 +871,27 @@
 				<insight>
 					<level>Info</level>
 					<reason>Informational</reason>
-					<site>https://juice-shop.herokuapp.com</site>
+					<site>http://host.docker.internal:3001</site>
 					<key>insight.code.2xx</key>
 					<description>Percentage of responses with status code 2xx</description>
-					<statistic>92</statistic>
+					<statistic>91</statistic>
 				</insight>
 			
 			
 				<insight>
 					<level>Info</level>
 					<reason>Informational</reason>
-					<site>https://juice-shop.herokuapp.com</site>
+					<site>http://host.docker.internal:3001</site>
 					<key>insight.code.4xx</key>
 					<description>Percentage of responses with status code 4xx</description>
-					<statistic>7</statistic>
+					<statistic>8</statistic>
 				</insight>
 			
 			
 				<insight>
 					<level>Info</level>
 					<reason>Informational</reason>
-					<site>https://juice-shop.herokuapp.com</site>
+					<site>http://host.docker.internal:3001</site>
 					<key>insight.endpoint.ctype.application/javascript</key>
 					<description>Percentage of endpoints with content type application/javascript</description>
 					<statistic>5</statistic>
@@ -1057,7 +901,7 @@
 				<insight>
 					<level>Info</level>
 					<reason>Informational</reason>
-					<site>https://juice-shop.herokuapp.com</site>
+					<site>http://host.docker.internal:3001</site>
 					<key>insight.endpoint.ctype.application/octet-stream</key>
 					<description>Percentage of endpoints with content type application/octet-stream</description>
 					<statistic>6</statistic>
@@ -1067,17 +911,7 @@
 				<insight>
 					<level>Info</level>
 					<reason>Informational</reason>
-					<site>https://juice-shop.herokuapp.com</site>
-					<key>insight.endpoint.ctype.application/pdf</key>
-					<description>Percentage of endpoints with content type application/pdf</description>
-					<statistic>5</statistic>
-				</insight>
-			
-			
-				<insight>
-					<level>Info</level>
-					<reason>Informational</reason>
-					<site>https://juice-shop.herokuapp.com</site>
+					<site>http://host.docker.internal:3001</site>
 					<key>insight.endpoint.ctype.image/x-icon</key>
 					<description>Percentage of endpoints with content type image/x-icon</description>
 					<statistic>1</statistic>
@@ -1087,7 +921,7 @@
 				<insight>
 					<level>Info</level>
 					<reason>Informational</reason>
-					<site>https://juice-shop.herokuapp.com</site>
+					<site>http://host.docker.internal:3001</site>
 					<key>insight.endpoint.ctype.text/css</key>
 					<description>Percentage of endpoints with content type text/css</description>
 					<statistic>1</statistic>
@@ -1097,27 +931,27 @@
 				<insight>
 					<level>Info</level>
 					<reason>Informational</reason>
-					<site>https://juice-shop.herokuapp.com</site>
+					<site>http://host.docker.internal:3001</site>
 					<key>insight.endpoint.ctype.text/html</key>
 					<description>Percentage of endpoints with content type text/html</description>
-					<statistic>75</statistic>
+					<statistic>79</statistic>
 				</insight>
 			
 			
 				<insight>
 					<level>Info</level>
 					<reason>Informational</reason>
-					<site>https://juice-shop.herokuapp.com</site>
+					<site>http://host.docker.internal:3001</site>
 					<key>insight.endpoint.ctype.text/markdown</key>
 					<description>Percentage of endpoints with content type text/markdown</description>
-					<statistic>3</statistic>
+					<statistic>4</statistic>
 				</insight>
 			
 			
 				<insight>
 					<level>Info</level>
 					<reason>Informational</reason>
-					<site>https://juice-shop.herokuapp.com</site>
+					<site>http://host.docker.internal:3001</site>
 					<key>insight.endpoint.ctype.text/plain</key>
 					<description>Percentage of endpoints with content type text/plain</description>
 					<statistic>1</statistic>
@@ -1127,7 +961,7 @@
 				<insight>
 					<level>Info</level>
 					<reason>Informational</reason>
-					<site>https://juice-shop.herokuapp.com</site>
+					<site>http://host.docker.internal:3001</site>
 					<key>insight.endpoint.method.GET</key>
 					<description>Percentage of endpoints with method GET</description>
 					<statistic>100</statistic>
@@ -1137,20 +971,20 @@
 				<insight>
 					<level>Info</level>
 					<reason>Informational</reason>
-					<site>https://juice-shop.herokuapp.com</site>
+					<site>http://host.docker.internal:3001</site>
 					<key>insight.endpoint.total</key>
 					<description>Count of total endpoints</description>
-					<statistic>76</statistic>
+					<statistic>72</statistic>
 				</insight>
 			
 			
 				<insight>
 					<level>Info</level>
 					<reason>Informational</reason>
-					<site>https://juice-shop.herokuapp.com</site>
+					<site>http://host.docker.internal:3001</site>
 					<key>insight.response.slow</key>
 					<description>Percentage of slow responses</description>
-					<statistic>55</statistic>
+					<statistic>36</statistic>
 				</insight>
 			
 		</insights>

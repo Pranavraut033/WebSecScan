@@ -6,15 +6,16 @@ This document provides a comprehensive list of academic references, standards, a
 
 ## OWASP Standards & Guidelines
 
-1. **OWASP Top 10 - 2021**  
+1. **OWASP Top 10 - 2025** (PRIMARY)  
+   OWASP Foundation. (2025). *OWASP Top 10:2025 - The Ten Most Critical Web Application Security Risks*.  
+   https://owasp.org/Top10/  
+   *WebSecScan uses OWASP 2025 taxonomy for all vulnerability classifications.*  
+   *See [owasp-mapping.md](owasp-mapping.md) for 2021→2025 migration details.*
+
+2. **OWASP Top 10 - 2021** (Historical Reference)  
    OWASP Foundation. (2021). *OWASP Top 10:2021 - The Ten Most Critical Web Application Security Risks*.  
    https://owasp.org/Top10/  
-   *Cited for: Vulnerability categorization, severity mapping, security testing priorities*
-
-2. **OWASP Top 10 - 2025 (Draft)**  
-   OWASP Foundation. (2024). *OWASP Top 10:2025 - Draft Release*.  
-   https://owasp.org/www-project-top-ten/  
-   *Cited for: Updated threat landscape, cryptographic failures, insecure design patterns*
+   *Cited for: Historical comparison, migration mapping, academic context*
 
 3. **OWASP Application Security Verification Standard (ASVS) v4.0**  
    OWASP Foundation. (2019). *Application Security Verification Standard 4.0.3*.  

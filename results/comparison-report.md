@@ -1,65 +1,65 @@
 # WebSecScan Mode Comparison
 
-**Target**: https://juice-shop.herokuapp.com
-**Date**: 2026-01-10T21:30:43.340Z
+**Target**: http://localhost:3001
+**Date**: 2026-01-11T15:28:08.191Z
 
 ## STATIC vs DYNAMIC
 
-- **Common Findings** (estimated): 2
-- **Unique to STATIC**: 3
+- **Common Findings** (estimated): 1
+- **Unique to STATIC**: 4
 - **Unique to DYNAMIC**: 1
-- **Duration Ratio**: 0.35x
+- **Duration Ratio**: 0.03x
 - **Category Overlap**: 0 categories
 
 ### Finding Distribution
 
 | Metric | STATIC | DYNAMIC |
 |--------|--------|---------|
-| Total | 5 | 3 |
+| Total | 5 | 2 |
 | Critical | 1 | 0 |
 | High | 4 | 0 |
-| Medium | 0 | 2 |
+| Medium | 0 | 1 |
 | Low | 0 | 1 |
-| Score | 20/100 | 55/100 |
-| Risk | Critical | High |
+| Score | 20/100 | 65/100 |
+| Risk | Critical | Medium |
 
 ## STATIC vs BOTH
 
-- **Common Findings** (estimated): 3
-- **Unique to STATIC**: 2
-- **Unique to BOTH**: 5
-- **Duration Ratio**: 0.39x
+- **Common Findings** (estimated): 5
+- **Unique to STATIC**: 0
+- **Unique to BOTH**: 2
+- **Duration Ratio**: 0.03x
 - **Category Overlap**: 1 categories
 
 ### Finding Distribution
 
 | Metric | STATIC | BOTH |
 |--------|--------|------|
-| Total | 5 | 8 |
+| Total | 5 | 7 |
 | Critical | 1 | 1 |
 | High | 4 | 4 |
-| Medium | 0 | 2 |
+| Medium | 0 | 1 |
 | Low | 0 | 1 |
-| Score | 20/100 | 55/100 |
-| Risk | Critical | High |
+| Score | 20/100 | 65/100 |
+| Risk | Critical | Medium |
 
 ## DYNAMIC vs BOTH
 
 - **Common Findings** (estimated): 2
-- **Unique to DYNAMIC**: 1
-- **Unique to BOTH**: 6
-- **Duration Ratio**: 1.12x
-- **Category Overlap**: 2 categories
+- **Unique to DYNAMIC**: 0
+- **Unique to BOTH**: 5
+- **Duration Ratio**: 1.02x
+- **Category Overlap**: 1 categories
 
 ### Finding Distribution
 
 | Metric | DYNAMIC | BOTH |
 |--------|---------|------|
-| Total | 3 | 8 |
+| Total | 2 | 7 |
 | Critical | 0 | 1 |
 | High | 0 | 4 |
-| Medium | 2 | 2 |
+| Medium | 1 | 1 |
 | Low | 1 | 1 |
-| Score | 55/100 | 55/100 |
-| Risk | High | High |
+| Score | 65/100 | 65/100 |
+| Risk | Medium | Medium |
 

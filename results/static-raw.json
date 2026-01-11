@@ -1,10 +1,10 @@
 {
-  "scanId": "cmk8tj2qy0000fejt5g4pbmg3",
-  "target": "https://juice-shop.herokuapp.com",
+  "scanId": "cmk9w0emn00004mjtgh7ik0om",
+  "target": "http://localhost:3001",
   "mode": "STATIC",
-  "startTime": "2026-01-10T21:29:45.075Z",
-  "endTime": "2026-01-10T21:29:46.182Z",
-  "duration": 1107,
+  "startTime": "2026-01-11T15:26:59.028Z",
+  "endTime": "2026-01-11T15:26:59.325Z",
+  "duration": 297,
   "totalFindings": 5,
   "findingsBySeverity": {
     "critical": 1,
@@ -21,9 +21,9 @@
   "scriptsAnalyzed": 6,
   "dependenciesChecked": 0,
   "memoryUsage": {
-    "heapUsed": 2689072,
-    "heapTotal": 9797632,
-    "external": 14995097
+    "heapUsed": 8938400,
+    "heapTotal": 42303488,
+    "external": 15014105
   },
   "score": 20,
   "riskLevel": "CRITICAL",

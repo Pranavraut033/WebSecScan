@@ -48,6 +48,14 @@ site/
 # Python virtual environment
 venv/
 env/
+
+# Test fixtures (available via Docker image)
+test-fixtures/*.html
+test-fixtures/*.js
+test-fixtures/*.json
+!test-fixtures/README.md
+!test-fixtures/Dockerfile
+!test-fixtures/.dockerignore
 ENV/
 .venv/
 

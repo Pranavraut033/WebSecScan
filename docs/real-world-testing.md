@@ -328,7 +328,7 @@ npm run benchmark -- \
 ```markdown
 ## Finding Validation: WSS-XXX-YYYY
 
-**Category**: A03:2021 - Injection  
+**Category**: A05:2025 - Injection  
 **Severity**: HIGH  
 **Confidence**: 0.85
 

@@ -377,7 +377,7 @@ async function testAuthenticatedHeaders(
           confidence: 'HIGH',
           description: `The authenticated endpoint ${url} is missing the ${header} security header.`,
           remediation: `Add ${header} header to all authenticated responses.`,
-          owaspCategory: 'A05:2021-Security Misconfiguration',
+          owaspCategory: 'A02:2025-Security Misconfiguration',
           cweId: 'CWE-693',
           evidence: `URL: ${url}\nMissing Header: ${header}`
         });
@@ -418,7 +418,7 @@ async function validateSessionCookies(cookieHeader: string | undefined): Promise
           confidence: 'HIGH',
           description: `Session cookie "${name}" does not have the Secure flag set.`,
           remediation: 'Set the Secure flag on all session cookies to prevent transmission over unencrypted connections.',
-          owaspCategory: 'A02:2021-Cryptographic Failures',
+          owaspCategory: 'A04:2025-Cryptographic Failures',
           cweId: 'CWE-614',
           evidence: `Cookie: ${name}`
         });
@@ -433,7 +433,7 @@ async function validateSessionCookies(cookieHeader: string | undefined): Promise
           confidence: 'HIGH',
           description: `Session cookie "${name}" does not have the HttpOnly flag set.`,
           remediation: 'Set the HttpOnly flag on all session cookies to prevent XSS-based theft.',
-          owaspCategory: 'A05:2021-Security Misconfiguration',
+          owaspCategory: 'A02:2025-Security Misconfiguration',
           cweId: 'CWE-1004',
           evidence: `Cookie: ${name}`
         });
@@ -472,7 +472,7 @@ async function checkCsrfTokens(
           confidence: 'MEDIUM',
           description: `Forms on ${url} may lack CSRF protection tokens.`,
           remediation: 'Implement CSRF tokens for all state-changing operations.',
-          owaspCategory: 'A01:2021-Broken Access Control',
+          owaspCategory: 'A01:2025-Broken Access Control',
           cweId: 'CWE-352',
           evidence: `URL: ${url}\nForms Found: ${formMatches.length}`
         });

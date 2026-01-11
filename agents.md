@@ -2,6 +2,29 @@
 
 WebSecScan uses specialized, modular agents that each perform a focused set of deterministic security checks (no ML). Agents are configured centrally and run in isolated worker environments (processes, containers, or dedicated threads) to limit blast radius and allow safe resource management.
 
+## 🚨 Critical Rule: OWASP 2025 Taxonomy Only
+
+**ALL vulnerability detections MUST use OWASP Top 10 2025 taxonomy.**
+
+- ✅ **Correct:** `owaspId: 'A02:2025'`, `owaspCategory: 'A02:2025 - Security Misconfiguration'`
+- ❌ **WRONG:** `owaspId: 'A05:2021'` or any 2021 categories
+
+**Before adding new rules:**
+1. Consult [docs/owasp-mapping.md](docs/owasp-mapping.md) for correct 2025 categories
+2. Import mapping utilities from [src/lib/owaspMapping.ts](src/lib/owaspMapping.ts)
+3. Never guess category numbers — the order changed significantly from 2021 to 2025
+
+**Key Changes to Remember:**
+- Security Misconfiguration: A05:2021 → **A02:2025** (NOT A05:2025!)
+- Cryptographic Failures: A02:2021 → **A04:2025**
+- Injection: A03:2021 → **A05:2025**
+- SSRF: A10:2021 → **A01:2025** (merged into Broken Access Control, use subtype)
+- Exception Handling: **A10:2025** (NEW category)
+
+See [docs/MIGRATION-SUMMARY.md](docs/MIGRATION-SUMMARY.md) for complete migration details.
+
+---
+
 ## Scanning Agents
 
 ### Static Analysis Agent

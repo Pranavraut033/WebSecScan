@@ -1,13 +1,4 @@
-version: "3.8"
-
 services:
-  websecscan:
-    build: .
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=production
-
   # OWASP Juice Shop - Intentionally vulnerable web application for testing
   juice-shop:
     image: bkimminich/juice-shop:latest
@@ -40,3 +31,13 @@ services:
       - ZAP_PORT=8080
     volumes:
       - ./results/zap:/zap/wrk:rw
+
+  # Test Fixtures - Intentionally vulnerable files for testing
+  test-fixtures:
+    image: ghcr.io/pranavraut033/websecscan-test-fixtures:latest
+    ports:
+      - "8081:80"
+    # Fallback to local build if image not available
+    build:
+      context: ./test-fixtures
+      dockerfile: Dockerfile

@@ -273,6 +273,107 @@ export const VULNERABILITY_RULES: Record<string, VulnerabilityRule> = {
     references: [
       'https://cheatsheetseries.owasp.org/cheatsheets/Transport_Layer_Protection_Cheat_Sheet.html'
     ]
+  },
+
+  // Exception Handling (A10:2025 - NEW)
+  'WSS-EXC-001': {
+    id: 'WSS-EXC-001',
+    name: 'Stack Trace Disclosure',
+    owaspCategory: OWASP_CATEGORIES.A10_EXCEPTIONAL_CONDITIONS,
+    owaspId: 'A10:2025',
+    description: 'Application exposes stack traces in responses, revealing internal code structure and file paths.',
+    severity: 'MEDIUM',
+    confidence: 'HIGH',
+    remediation: 'Configure production error handling to show generic error messages. Log detailed errors server-side only. Disable debug mode in production.',
+    references: [
+      'https://owasp.org/www-community/Improper_Error_Handling',
+      'https://cwe.mitre.org/data/definitions/209.html'
+    ]
+  },
+
+  'WSS-EXC-002': {
+    id: 'WSS-EXC-002',
+    name: 'Debug Mode Enabled',
+    owaspCategory: OWASP_CATEGORIES.A10_EXCEPTIONAL_CONDITIONS,
+    owaspId: 'A10:2025',
+    description: 'Application is running in debug or development mode, exposing sensitive diagnostic information.',
+    severity: 'HIGH',
+    confidence: 'HIGH',
+    remediation: 'Disable debug mode in production. Set NODE_ENV=production or equivalent. Remove development-only code paths.',
+    references: [
+      'https://cheatsheetseries.owasp.org/cheatsheets/Error_Handling_Cheat_Sheet.html'
+    ]
+  },
+
+  'WSS-EXC-003': {
+    id: 'WSS-EXC-003',
+    name: 'Sensitive Information in Error Messages',
+    owaspCategory: OWASP_CATEGORIES.A10_EXCEPTIONAL_CONDITIONS,
+    owaspId: 'A10:2025',
+    description: 'Error messages disclose sensitive information such as database details, file paths, or internal system state.',
+    severity: 'MEDIUM',
+    confidence: 'HIGH',
+    remediation: 'Use generic error messages for users. Log detailed errors securely on the server. Sanitize error output to remove sensitive data.',
+    references: [
+      'https://owasp.org/www-community/Improper_Error_Handling',
+      'https://cwe.mitre.org/data/definitions/209.html'
+    ]
+  },
+
+  'WSS-EXC-004': {
+    id: 'WSS-EXC-004',
+    name: 'Verbose Server Error Response',
+    owaspCategory: OWASP_CATEGORIES.A10_EXCEPTIONAL_CONDITIONS,
+    owaspId: 'A10:2025',
+    description: 'HTTP 500-series error returns verbose technical details that could aid attackers in reconnaissance.',
+    severity: 'MEDIUM',
+    confidence: 'MEDIUM',
+    remediation: 'Configure custom error pages with minimal information. Return generic "Internal Server Error" messages to clients.',
+    references: [
+      'https://cheatsheetseries.owasp.org/cheatsheets/Error_Handling_Cheat_Sheet.html'
+    ]
+  },
+
+  'WSS-EXC-005': {
+    id: 'WSS-EXC-005',
+    name: 'Empty Exception Handler',
+    owaspCategory: OWASP_CATEGORIES.A10_EXCEPTIONAL_CONDITIONS,
+    owaspId: 'A10:2025',
+    description: 'Exception caught but not handled (empty catch block), potentially hiding security-critical errors.',
+    severity: 'LOW',
+    confidence: 'MEDIUM',
+    remediation: 'Implement proper exception handling. Log errors, alert on security-critical failures, and fail securely.',
+    references: [
+      'https://cwe.mitre.org/data/definitions/391.html'
+    ]
+  },
+
+  'WSS-EXC-006': {
+    id: 'WSS-EXC-006',
+    name: 'Fail-Open Exception Handling',
+    owaspCategory: OWASP_CATEGORIES.A10_EXCEPTIONAL_CONDITIONS,
+    owaspId: 'A10:2025',
+    description: 'Exception handler only logs error without failing safely, potentially allowing unauthorized access or operations.',
+    severity: 'MEDIUM',
+    confidence: 'MEDIUM',
+    remediation: 'Fail securely on exceptions. For authentication/authorization errors, deny access. For critical operations, abort and alert.',
+    references: [
+      'https://cwe.mitre.org/data/definitions/755.html'
+    ]
+  },
+
+  'WSS-EXC-007': {
+    id: 'WSS-EXC-007',
+    name: 'Technical Details in Custom Error Page',
+    owaspCategory: OWASP_CATEGORIES.A10_EXCEPTIONAL_CONDITIONS,
+    owaspId: 'A10:2025',
+    description: 'Custom error page displays technical details about the application stack, database, or internal paths.',
+    severity: 'MEDIUM',
+    confidence: 'HIGH',
+    remediation: 'Simplify error pages to show only user-friendly messages. Remove all technical diagnostics from production error pages.',
+    references: [
+      'https://owasp.org/www-community/Improper_Error_Handling'
+    ]
   }
 };
 
