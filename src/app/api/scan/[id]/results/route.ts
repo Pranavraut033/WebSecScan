@@ -37,11 +37,19 @@ export async function GET(
       medium: scan.results.filter(v => v.severity === 'MEDIUM').length,
       low: scan.results.filter(v => v.severity === 'LOW').length,
     }
+    
+    // Extract metadata from scanSummary
+    const scanSummary = scan.scanSummary as any;
+    const metadata = scanSummary?.metadata || {};
 
     return NextResponse.json({
       scan,
       summary,
       vulnerabilities: scan.results,
+      metadata: {
+        crawl: metadata.crawl || null,
+        codeContext: metadata.codeContext || null,
+      }
     })
   } catch (error) {
     console.error('Error fetching scan results:', error)

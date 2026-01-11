@@ -1,9 +1,44 @@
 'use server'
 
 import { prisma } from '@/lib/db'
-import { ScanMode, ScanStatus, Vulnerability } from '@prisma/client'
+import { ScanMode, ScanStatus, Vulnerability, Severity, Confidence, Prisma } from '@prisma/client'
 import { revalidatePath } from 'next/cache'
 import { ScanLogger } from '@/lib/scanLogger'
+import type { CodeContext } from '@/security/static/jsAnalyzer'
+import type { CrawlMetadata } from '@/security/dynamic/crawler'
+
+// Shared vulnerability finding type
+interface VulnerabilityFinding {
+  type: string;
+  severity: string;
+  confidence: string;
+  description: string;
+  location: string;
+  remediation: string;
+  owaspCategory?: string;
+  owaspId?: string;
+  ruleId?: string;
+  evidence?: string;
+  occurrences?: number;
+}
+
+// Scan summary metadata structure
+interface ScanSummaryMetadata {
+  crawl?: CrawlMetadata;
+  codeContext?: CodeContext;
+}
+
+interface ScanSummary {
+  totalTests: number;
+  passedTests: number;
+  failedTests: number;
+  vulnerabilityCount: number;
+  rawHeaders?: Record<string, string>;
+  setCookieHeaders?: string[];
+  csp?: string | null;
+  metadata?: ScanSummaryMetadata;
+  [key: string]: unknown;
+}
 
 // Import modular security analyzers
 import { analyzeJavaScript } from '@/security/static/jsAnalyzer'
@@ -31,8 +66,8 @@ declare global {
  * Deduplicate vulnerabilities by grouping same ruleId/type together
  * and merging their locations into a single finding
  */
-function deduplicateVulnerabilities(vulnerabilities: any[]): any[] {
-  const grouped = new Map<string, any>()
+function deduplicateVulnerabilities(vulnerabilities: VulnerabilityFinding[]): VulnerabilityFinding[] {
+  const grouped = new Map<string, VulnerabilityFinding>()
 
   for (const vuln of vulnerabilities) {
     // Use ruleId as primary key, fallback to type
@@ -197,8 +232,10 @@ export async function runStaticAnalysis(scanId: string): Promise<void> {
     })
     const html = await response.text()
 
-    // Use any[] to allow flexibility with vulnerability object structure
-    const allVulnerabilities: any[] = []
+    const allVulnerabilities: VulnerabilityFinding[] = []
+    
+    // Track code context metadata from first analysis
+    let codeContext: CodeContext | null = null;
 
     // 1. Analyze HTML for security issues
     ScanLogger.info(scanId, 'Analyzing HTML content...', 'STATIC')
@@ -217,6 +254,10 @@ export async function runStaticAnalysis(scanId: string): Promise<void> {
         scriptCount++
         const jsAnalysis = await analyzeJavaScript(scriptContent, `${scan.targetUrl} (inline script)`)
         allVulnerabilities.push(...jsAnalysis.vulnerabilities)
+        // Capture code context from first script analysis
+        if (!codeContext && jsAnalysis.codeContext) {
+          codeContext = jsAnalysis.codeContext;
+        }
       }
     }
 
@@ -237,6 +278,10 @@ export async function runStaticAnalysis(scanId: string): Promise<void> {
           const scriptCode = await scriptResponse.text()
           const jsAnalysis = await analyzeJavaScript(scriptCode, absoluteUrl)
           allVulnerabilities.push(...jsAnalysis.vulnerabilities)
+          // Capture code context from first script analysis
+          if (!codeContext && jsAnalysis.codeContext) {
+            codeContext = jsAnalysis.codeContext;
+          }
         }
       } catch {
         // Skip failed script fetches
@@ -259,8 +304,8 @@ export async function runStaticAnalysis(scanId: string): Promise<void> {
       await prisma.vulnerability.create({
         data: {
           type: vuln.type,
-          severity: vuln.severity as any, // Cast from string to enum
-          confidence: vuln.confidence as any, // Cast from string to enum
+          severity: vuln.severity as Severity,
+          confidence: vuln.confidence as Confidence,
           description: vuln.description,
           location: vuln.location,
           remediation: vuln.remediation,
@@ -273,9 +318,27 @@ export async function runStaticAnalysis(scanId: string): Promise<void> {
     }
 
     // Update scan status to COMPLETED
+    const scanSummary: ScanSummary = {
+      totalTests: 0,
+      passedTests: 0,
+      failedTests: 0,
+      vulnerabilityCount: deduplicatedVulns.length,
+      metadata: {
+        codeContext: codeContext || {
+          isFramework: false,
+          isMinified: false,
+          hasCSP: false,
+        }
+      }
+    };
+    
     await prisma.scan.update({
       where: { id: scanId },
-      data: { status: ScanStatus.COMPLETED },
+      data: { 
+        status: ScanStatus.COMPLETED,
+        completedAt: new Date(),
+        scanSummary: scanSummary as Prisma.InputJsonValue
+      },
     })
 
     ScanLogger.success(scanId, 'Static analysis completed successfully', 'STATIC')
@@ -307,8 +370,7 @@ export async function runDynamicAnalysis(scanId: string): Promise<void> {
     })
     if (!scan) throw new Error('Scan not found')
 
-    // Use any[] to allow flexibility with vulnerability object structure
-    const allVulnerabilities: any[] = []
+    const allVulnerabilities: VulnerabilityFinding[] = []
     const securityTests: HeaderTestResult[] = []
 
     // 0. Fetch and analyze HTTP headers first
@@ -392,8 +454,20 @@ export async function runDynamicAnalysis(scanId: string): Promise<void> {
             );
           }
 
-          // Add session vulnerabilities to results
-          allVulnerabilities.push(...authScanResult.scanResult.vulnerabilities);
+          // Add session vulnerabilities to results (map to VulnerabilityFinding)
+          const mappedAuthVulns: VulnerabilityFinding[] = authScanResult.scanResult.vulnerabilities.map(v => ({
+            type: v.type,
+            severity: v.severity,
+            confidence: 'MEDIUM',
+            description: v.description,
+            location: 'Authentication Flow',
+            remediation: v.remediation,
+            evidence: v.evidence,
+            owaspCategory: 'A07:2025-Identification and Authentication Failures',
+            owaspId: 'A07:2025',
+            ruleId: 'WSS-AUTH-001',
+          }));
+          allVulnerabilities.push(...mappedAuthVulns);
 
           // Use session credentials for crawling (cast to avoid type issues with optional property)
           (crawlerOptions as CrawlerOptions).sessionCredentials = {
@@ -461,6 +535,34 @@ export async function runDynamicAnalysis(scanId: string): Promise<void> {
       allVulnerabilities.push(...formXssResult.vulnerabilities)
     }
 
+    // 6. Test for SQL injection vulnerabilities
+    ScanLogger.info(scanId, 'Testing for SQL injection vulnerabilities...', 'DYNAMIC')
+    const { testSqlInjection, testFormSql } = await import('@/security/dynamic/sqlTester')
+    const sqlResult = await testSqlInjection(scan.targetUrl, crawlResult.endpoints)
+    allVulnerabilities.push(...sqlResult.vulnerabilities)
+
+    // 7. Test forms for SQL injection
+    if (crawlResult.forms.length > 0) {
+      ScanLogger.info(scanId, `Testing ${crawlResult.forms.length} forms for SQL injection...`, 'DYNAMIC')
+      const formSqlResult = await testFormSql(crawlResult.forms)
+      allVulnerabilities.push(...formSqlResult.vulnerabilities)
+    }
+
+    // 8. Test for path traversal vulnerabilities
+    ScanLogger.info(scanId, 'Testing for path traversal vulnerabilities...', 'DYNAMIC')
+    const { testPathTraversal } = await import('@/security/dynamic/pathTraversalTester')
+    const pathResult = await testPathTraversal(scan.targetUrl, crawlResult.endpoints)
+    allVulnerabilities.push(...pathResult.vulnerabilities)
+
+    // 9. Test for CSRF protection
+    ScanLogger.info(scanId, 'Testing CSRF protection...', 'DYNAMIC')
+    const { testCsrfProtection, checkSameSiteCookies } = await import('@/security/dynamic/csrfTester')
+    const csrfResult = await testCsrfProtection(scan.targetUrl, crawlResult.forms)
+    allVulnerabilities.push(...csrfResult.vulnerabilities)
+
+    const sameSiteResult = await checkSameSiteCookies(scan.targetUrl)
+    allVulnerabilities.push(...sameSiteResult)
+
     // Deduplicate vulnerabilities: merge same type/ruleId with multiple locations
     const deduplicatedVulns = deduplicateVulnerabilities(allVulnerabilities)
 
@@ -499,12 +601,25 @@ export async function runDynamicAnalysis(scanId: string): Promise<void> {
           result: test.result,
           reason: test.reason,
           recommendation: test.recommendation || null,
-          details: test.details ? (test.details as any) : undefined,
+          details: test.details as Prisma.InputJsonValue,
         },
       })
     }
 
     // Update scan status to COMPLETED with score and grade
+    const scanSummary: ScanSummary = {
+      totalTests: securityTests.length,
+      passedTests: securityTests.filter(t => t.passed).length,
+      failedTests: securityTests.filter(t => !t.passed).length,
+      vulnerabilityCount: allVulnerabilities.length,
+      rawHeaders: headers,
+      setCookieHeaders,
+      csp: cspHeader || null,
+      metadata: {
+        crawl: crawlResult.metadata,
+      }
+    };
+    
     await prisma.scan.update({
       where: { id: scanId },
       data: {
@@ -512,15 +627,7 @@ export async function runDynamicAnalysis(scanId: string): Promise<void> {
         score: scoringResult.score,
         grade: scoringResult.grade,
         completedAt: new Date(),
-        scanSummary: {
-          totalTests: securityTests.length,
-          passedTests: securityTests.filter(t => t.passed).length,
-          failedTests: securityTests.filter(t => !t.passed).length,
-          vulnerabilityCount: allVulnerabilities.length,
-          rawHeaders: headers,
-          setCookieHeaders,
-          csp: cspHeader || null,
-        }
+        scanSummary: scanSummary as Prisma.InputJsonValue
       },
     })
 

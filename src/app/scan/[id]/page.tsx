@@ -5,7 +5,26 @@ import { use } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import type { Scan, Vulnerability, SecurityTest } from '@prisma/client'
+import type { CodeContext } from '@/security/static/jsAnalyzer'
+import type { CrawlMetadata } from '@/security/dynamic/crawler'
 import VulnerabilityCard from '@/components/VulnerabilityCard'
+
+// Scan summary metadata structure
+interface ScanSummaryMetadata {
+  crawl?: CrawlMetadata;
+  codeContext?: CodeContext;
+}
+
+interface ScanSummary {
+  totalTests: number;
+  passedTests: number;
+  failedTests: number;
+  vulnerabilityCount: number;
+  rawHeaders?: Record<string, string>;
+  setCookieHeaders?: string[];
+  csp?: string | null;
+  metadata?: ScanSummaryMetadata;
+}
 import { ScoreCard } from '@/components/ScoreCard'
 import { SecurityTestCard } from '@/components/SecurityTestCard'
 import { createScan } from '@/app/actions'
@@ -25,7 +44,7 @@ export default function ScanDetailPage({ params }: { params: Promise<{ id: strin
   const [loading, setLoading] = useState(true)
   const [rescanning, setRescanning] = useState(false)
   const [filter, setFilter] = useState<'ALL' | 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'>('ALL')
-  const [activeTab, setActiveTab] = useState<'overview' | 'vulnerabilities' | 'security-tests'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'vulnerabilities' | 'security-tests' | 'metrics'>('overview')
 
   useEffect(() => {
     loadScanDetails()
@@ -113,9 +132,11 @@ export default function ScanDetailPage({ params }: { params: Promise<{ id: strin
 
   const passedTests = scan.securityTests?.filter(t => t.passed).length || 0
   const totalTests = scan.securityTests?.length || 0
-  const rawHeaders = (scan.scanSummary as any)?.rawHeaders || null
-  const setCookieHeaders = (scan.scanSummary as any)?.setCookieHeaders || []
-  const cspValue = (scan.scanSummary as any)?.csp || null
+  const scanSummary = scan.scanSummary as ScanSummary | null
+  const rawHeaders = scanSummary?.rawHeaders || null
+  const setCookieHeaders = scanSummary?.setCookieHeaders || []
+  const cspValue = scanSummary?.csp || null
+  const metadata = scanSummary?.metadata || {}
 
   return (
     <AppLayout showBackButton backButtonLabel="Back to Results" backButtonHref="/">
@@ -237,6 +258,17 @@ export default function ScanDetailPage({ params }: { params: Promise<{ id: strin
             >
               Vulnerabilities ({scan.results.length})
             </button>
+            {(metadata.crawl || metadata.codeContext) && (
+              <button
+                onClick={() => setActiveTab('metrics')}
+                className={`py-2 px-4 border-b-2 font-medium text-sm ${activeTab === 'metrics'
+                  ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                  : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600'
+                  }`}
+              >
+                Scan Metrics
+              </button>
+            )}
           </nav>
         </div>
 
@@ -367,10 +399,10 @@ export default function ScanDetailPage({ params }: { params: Promise<{ id: strin
                   testName={test.testName}
                   passed={test.passed}
                   score={test.score}
-                  result={test.result as any}
+                  result={test.result as 'Passed' | 'Failed' | 'Info' | 'N/A'}
                   reason={test.reason || ''}
                   recommendation={test.recommendation || undefined}
-                  details={test.details as any}
+                  details={test.details as { checks?: Array<{ name: string; passed: boolean; description: string; severity: 'high' | 'medium' | 'low' | 'info' }>; [key: string]: unknown } | undefined}
                 />
               ))
             ) : (
@@ -418,6 +450,171 @@ export default function ScanDetailPage({ params }: { params: Promise<{ id: strin
                 {filteredVulnerabilities.map((vulnerability) => (
                   <VulnerabilityCard key={vulnerability.id} vulnerability={vulnerability} />
                 ))}
+              </div>
+            )}
+          </div>
+        )}
+        
+        {/* Metrics Tab */}
+        {activeTab === 'metrics' && (
+          <div className="space-y-6">
+            {/* Crawl Metadata */}
+            {metadata.crawl && (
+              <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-800 px-6 py-4 border-b border-gray-200 dark:border-gray-600">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                    </svg>
+                    Crawl Statistics
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    Performance and coverage metrics from website crawl
+                  </p>
+                </div>
+                <div className="p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {/* Pages & Requests */}
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Pages Scanned</span>
+                        <span className="text-lg font-semibold text-gray-900 dark:text-white">{metadata.crawl.pagesScanned}</span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Total Requests</span>
+                        <span className="text-lg font-semibold text-gray-900 dark:text-white">{metadata.crawl.totalRequests}</span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Failed Requests</span>
+                        <span className="text-lg font-semibold text-gray-900 dark:text-white">{metadata.crawl.failedRequests}</span>
+                      </div>
+                    </div>
+                    
+                    {/* Performance */}
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Duration</span>
+                        <span className="text-lg font-semibold text-gray-900 dark:text-white">{(metadata.crawl.duration / 1000).toFixed(1)}s</span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Avg Response Time</span>
+                        <span className="text-lg font-semibold text-gray-900 dark:text-white">{metadata.crawl.averageResponseTime}ms</span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Crawl Speed</span>
+                        <span className="text-lg font-semibold text-gray-900 dark:text-white">{metadata.crawl.crawlSpeed} pages/s</span>
+                      </div>
+                    </div>
+                    
+                    {/* Discovery */}
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Data Transferred</span>
+                        <span className="text-lg font-semibold text-gray-900 dark:text-white">{(metadata.crawl.totalSize / 1024).toFixed(1)} KB</span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Unique Endpoints</span>
+                        <span className="text-lg font-semibold text-gray-900 dark:text-white">{metadata.crawl.uniqueEndpoints}</span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Forms Discovered</span>
+                        <span className="text-lg font-semibold text-gray-900 dark:text-white">{metadata.crawl.formsDiscovered}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Additional Details */}
+                  <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-600 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-3 h-3 rounded-full ${metadata.crawl.robotsTxtRespected ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">
+                        Robots.txt {metadata.crawl.robotsTxtRespected ? 'Respected' : 'Not Checked'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">Skipped by robots.txt:</span>
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">{metadata.crawl.skippedByRobots}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">Max depth reached:</span>
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">{metadata.crawl.maxDepthReached}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">Time range:</span>
+                      <span className="text-sm font-medium text-gray-900 dark:text-white">
+                        {new Date(metadata.crawl.startTime).toLocaleTimeString()} - {new Date(metadata.crawl.endTime).toLocaleTimeString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Code Context */}
+            {metadata.codeContext && (
+              <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-gray-700 dark:to-gray-800 px-6 py-4 border-b border-gray-200 dark:border-gray-600">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    <svg className="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                    </svg>
+                    JavaScript Analysis
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    Code context and framework detection
+                  </p>
+                </div>
+                <div className="p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                        <div className={`w-3 h-3 rounded-full ${metadata.codeContext.isFramework ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                        <div className="flex-1">
+                          <div className="text-sm text-gray-600 dark:text-gray-400">Framework Detected</div>
+                          <div className="text-lg font-semibold text-gray-900 dark:text-white">
+                            {metadata.codeContext.isFramework ? metadata.codeContext.frameworkName || 'Yes' : 'None'}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                        <div className={`w-3 h-3 rounded-full ${metadata.codeContext.isMinified ? 'bg-yellow-500' : 'bg-green-500'}`}></div>
+                        <div className="flex-1">
+                          <div className="text-sm text-gray-600 dark:text-gray-400">Code Minified</div>
+                          <div className="text-lg font-semibold text-gray-900 dark:text-white">
+                            {metadata.codeContext.isMinified ? 'Yes' : 'No'}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                        <div className={`w-3 h-3 rounded-full ${metadata.codeContext.hasCSP ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                        <div className="flex-1">
+                          <div className="text-sm text-gray-600 dark:text-gray-400">CSP Present</div>
+                          <div className="text-lg font-semibold text-gray-900 dark:text-white">
+                            {metadata.codeContext.hasCSP ? 'Yes' : 'No'}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {metadata.codeContext.isMinified && (
+                        <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                          <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                            ⚠️ Minified code may reduce vulnerability detection accuracy
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {!metadata.crawl && !metadata.codeContext && (
+              <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-12 text-center">
+                <p className="text-gray-600 dark:text-gray-400">No scan metrics available for this scan.</p>
               </div>
             )}
           </div>
