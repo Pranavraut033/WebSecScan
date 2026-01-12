@@ -7,6 +7,7 @@ repo_name: WebSecScan
 repo_url: https://github.com/pranavraut/WebSecScan
 
 exclude_docs: |
+  _temp/
   README.md
 
 theme:
@@ -42,31 +43,37 @@ theme:
     repo: fontawesome/brands/github
 
 nav:
-  - Home: index.md
-  - Getting Started: getting-started.md
-  - Features: features.md
-  - What We Test: testing-coverage.md
-  - Architecture: architecture.md
-  - Scanning Agents: agents.md
-  - Security Scoring: scoring.md
+  - Home:
+      - Welcome: index.md
+      - Getting Started: getting-started.md
+      - Features: features.md
+  - Architecture:
+      - System Design: architecture.md
+      - Scanning Agents: agents.md
+      - API Reference: api.md
+  - Security:
+      - OWASP 2025 Mapping: security/owasp-mapping.md
+      - Authenticated Scans: security/authenticated-scans.md
+      - CSRF Protection: security/csrf-protection.md
+      - Header Security: security/header-security-enhancements.md
+      - URL Normalization: security/url-normalization.md
+      - Context-Aware Confidence: security/context-aware-confidence.md
+      - False Positive Analysis: security/false-positive-analysis.md
+      - Security Scoring: security/scoring.md
+      - Ethics & Guidelines: security/security-ethics.md
+  - Crawler:
+      - Design: crawler/crawler-design.md
+      - Improvements: crawler/crawler-improvements.md
+      - Real-time Logging: crawler/real-time-logging.md
+  - Testing & Evaluation:
+      - Testing Guide: evaluation/testing.md
+      - Test Coverage: evaluation/testing-coverage.md
+      - Benchmarking: evaluation/benchmarking.md
+      - Real-World Testing: evaluation/real-world-testing.md
   - Development:
-      - Setup & Guide: development.md
-      - Testing: testing.md
-      - Crawler Design: crawler-design.md
-      - Authenticated Scans: authenticated-scans.md
-      - CSRF Protection: csrf-protection.md
-      - URL Normalization: url-normalization.md
-      - Real-time Logging: real-time-logging.md
-      - Design System: design-system.md
-  - Evaluation:
-      - Benchmarking: benchmarking.md
-      - False-Positive Analysis: false-positive-analysis.md
-      - Real-World Testing: real-world-testing.md
-      - Implementation Summary: IMPLEMENTATION-SUMMARY.md
+      - Setup & Contributing: development.md
+      - Deployment: deployment.md
   - References: references.md
-  - API Reference: api.md
-  - Deployment: deployment.md
-  - Security & Ethics: security-ethics.md
 
 markdown_extensions:
   - pymdownx.highlight:

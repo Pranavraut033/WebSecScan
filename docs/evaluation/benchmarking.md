@@ -204,10 +204,10 @@ Compare findings by OWASP Top 10 category:
 
 | Metric | WebSecScan (BOTH) | OWASP ZAP (Baseline) | Winner |
 |--------|------------------|----------------------|--------|
-| **Scan Duration** | 7.63s | 53.16s | ⚡ WebSecScan (7x faster) |
-| **Pages Crawled** | 7 | 17 | 🕷️ ZAP (2.4x more coverage) |
+| **Scan Duration** | 7.54s | 62.25s | ⚡ WebSecScan (8.3x faster) |
+| **Pages Crawled** | 7 | 15 | 🕷️ ZAP (2.1x more coverage) |
 | **Scripts Analyzed** | 6 | Unknown | ⚡ WebSecScan (static analysis) |
-| **Memory Usage** | ~15.8 MB heap | Unknown | ⚡ WebSecScan (lighter) |
+| **Memory Usage** | ~14.8 MB heap | Unknown | ⚡ WebSecScan (lighter) |
 | **Setup Complexity** | NPM package | Docker required | ⚡ WebSecScan (simpler) |
 | **Total Findings** | 7 | 12 | 📋 ZAP (more alerts) |
 | **Critical Findings** | 1 | 0 | 🎯 WebSecScan (deeper analysis) |
@@ -230,7 +230,7 @@ False-positive rates are critical for tool usability. We manually validate a sta
 ### False-Positive Rates by Category
 
 **Analysis Date**: January 11, 2026  
-**Scan ID**: cmk9w0emn00004mjtgh7ik0om  
+**Scan ID**: cmka3jh4r000jibjtciby2uks  
 **Target**: OWASP Juice Shop (http://localhost:3001)  
 **Methodology**: Manual validation of 20% sample (1 finding) + cursory review of all findings
 
@@ -431,17 +431,17 @@ The comparison script automatically:
 **Scan Configuration:**
 - Target: `http://localhost:3001`
 - Mode: `BOTH` (STATIC + DYNAMIC)
-- Scan ID: `cmk9w0kva000j4mjtvutjiwtu`
-- Execution Date: `2026-01-11T15:27:07.173Z`
+- Scan ID: `cmka3jh4r000jibjtciby2uks`
+- Execution Date: `2026-01-11T18:57:46.106Z`
 
 **Results:**
 - Total Findings: **7**
 - Critical: **1** | High: **4** | Medium: **1** | Low: **1** | Info: **0**
 - Score: **65/100** (Risk Level: **MEDIUM**)
-- Duration: **7.63 seconds**
+- Duration: **7.54 seconds**
 - Pages Scanned: **7**
 - Scripts Analyzed: **6** (inline + external)
-- Memory Usage: **15.81 MB heap** (1.43 MB heap total, 7.85 MB external)
+- Memory Usage: **14.77 MB heap** (0.61 MB heap total, 7.46 MB external)
 
 **Findings by Category:**
 - **A05:2025 - Injection**: 5 findings (1 Critical, 4 High)
@@ -458,7 +458,7 @@ The comparison script automatically:
 **Scan Configuration:**
 - Target: `http://localhost:3001`
 - Scan Type: **Baseline** (passive + spider)
-- Execution Date: `2026-01-11T15:27:15.027Z`
+- Execution Date: `2026-01-11T18:57:53.974Z`
 - Active Scan: Not performed (baseline mode)
 
 **Automated by `npm run compare --all`:**
@@ -470,14 +470,14 @@ The comparison script automatically:
 **Results:**
 - Total Alerts: **12**
 - Medium Risk: **2** | Low Risk: **5** | Informational: **5**
-- Duration: **53.16 seconds**
-- URLs Scanned: **17**
+- Duration: **62.25 seconds**
+- URLs Scanned: **15**
 
 **Alerts by Risk Level:**
 
 **Medium (2):**
 1. **Content Security Policy (CSP) Header Not Set** [10038] - 5 instances
-2. **Cross-Domain Misconfiguration** [10098] - 5 instances
+2. **Cross-Domain Misconfiguration** [10098] - 4 instances
 
 **Low (5):**
 3. **Cross-Domain JavaScript Source File Inclusion** [10017] - 5 instances
@@ -501,27 +501,19 @@ The comparison script automatically:
 - Overlap: **2 findings** detected by both tools (dangerous JS functions, missing CSP)
 
 **Strengths of WebSecScan:**
-- ⚡ **7x faster** - Scans complete in ~7.6 seconds vs 53 seconds
+- ⚡ **8.3x faster** - Scans complete in ~7.5 seconds vs 62 seconds
 - 🎯 **Code-level depth** - Deep static analysis of JavaScript/HTML source
 - 🔴 **Critical finding detection** - Identified eval() as CRITICAL (ZAP: LOW)
 - 📊 **Actionable scoring** - Risk score (65/100) with clear severity classification
 
 **Strengths of OWASP ZAP:**
-- 🕷️ **Superior crawling** - Discovered 17 URLs vs 7 pages
+- 🕷️ **Superior crawling** - Discovered 15 URLs vs 7 pages
 - 🛡️ **Comprehensive passive checks** - 12 different alert types
 - 🏭 **Industry-standard** - Mature, widely-trusted tooling
 - 📋 **Broad coverage** - Detects infrastructure, configuration, and disclosure issues
 - 📊 **Clear OWASP mapping** - All findings mapped to OWASP Top 10 2021/2025
 - ⚖️ **Deterministic** - Rule-based, reproducible results
-- 🪶 **Lightweight** - Minimal memory footprint (~4 MB)
-
-**Strengths of OWASP ZAP:**
-- 🕷️ **Excellent crawler** - Discovered 95 URLs vs WebSecScan's 1
-- 📋 **Comprehensive checks** - 67 rules (57 passed + 10 warnings)
-- 🏭 **Industry standard** - Mature, battle-tested, widely trusted
-- 🔍 **Diverse findings** - Information disclosure, cross-domain, modern web app issues
-- 🛡️ **Positive validation** - 57 passed checks confirm security controls
-- 🎛️ **Active scanning capable** - (Not tested in baseline mode)
+- 🪶 **Lightweight** - Minimal memory footprint
 
 **False Positive Comparison:**
 - WebSecScan FP Rate: **0%** (0/5 findings validated - see [false-positive-analysis.md](false-positive-analysis.md))

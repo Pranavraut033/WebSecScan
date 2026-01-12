@@ -1,113 +1,170 @@
 # WebSecScan Documentation
 
-This directory contains the complete documentation for WebSecScan, built with [MkDocs Material](https://squidfunk.github.io/mkdocs-material/).
+WebSecScan is an open-source, modular web security scanner designed for academic research, security education, and vulnerability assessment. Built on Next.js with TypeScript, it provides deterministic, rule-based detection of common web vulnerabilities aligned with OWASP Top 10 2025.
+
+## 🎯 Purpose
+
+This project serves as:
+
+- **Academic Research Tool**: A foundation for studying web security scanning methodologies and vulnerability detection
+- **Educational Resource**: A clear, well-documented codebase for students learning security engineering
+- **Research Prototype**: An extensible platform for experimenting with security testing approaches
+- **Ethical Testing Framework**: A safe, permission-based scanner for authorized security assessments
+
+## 👥 Target Audience
+
+- **Graduate Students**: Building or extending security tools for thesis projects
+- **Security Researchers**: Investigating web vulnerability detection techniques
+- **Educators**: Teaching practical web security concepts
+- **Developers**: Learning secure coding practices through real-world examples
 
 ## 📚 Documentation Structure
 
-- **[index.md](index.md)** - Home page with project overview
-- **[getting-started.md](getting-started.md)** - Installation and quick start guide
-- **[features.md](features.md)** - Detailed feature descriptions
-- **[testing-coverage.md](testing-coverage.md)** - What vulnerabilities we test for
-- **[architecture.md](architecture.md)** - System design and technical architecture
-- **[agents.md](agents.md)** - Deep dive into scanning agents
-- **[development.md](development.md)** - Development setup and contribution guide
-- **[testing.md](testing.md)** - Testing guide with unit and integration tests
-- **[api.md](api.md)** - REST API and Server Actions documentation
-- **[deployment.md](deployment.md)** - Production deployment guide
-- **[security-ethics.md](security-ethics.md)** - Ethical scanning practices
+### Core Documentation
 
-## 🚀 Building Locally
+| Document | Purpose |
+|----------|---------|
+| [getting-started.md](getting-started.md) | Installation, setup, and first scan |
+| [features.md](features.md) | Complete feature overview |
+| [architecture.md](architecture.md) | System design and technical details |
+| [agents.md](agents.md) | Security scanning agents deep-dive |
+| [api.md](api.md) | REST API and Server Actions reference |
+| [deployment.md](deployment.md) | Production deployment guide |
+| [development.md](development.md) | Contributing and development setup |
+| [references.md](references.md) | Academic papers, standards, and resources |
 
-### Prerequisites
+### Security Topics
 
-**Option 1: Virtual Environment (Recommended)**
+| Document | Purpose |
+|----------|---------|
+| [security/owasp-mapping.md](security/owasp-mapping.md) | OWASP Top 10 2025 category mapping |
+| [security/authenticated-scans.md](security/authenticated-scans.md) | Session-based and authenticated scanning |
+| [security/csrf-protection.md](security/csrf-protection.md) | CSRF token detection and validation |
+| [security/header-security-enhancements.md](security/header-security-enhancements.md) | HTTP security header analysis |
+| [security/url-normalization.md](security/url-normalization.md) | URL validation and canonicalization |
+| [security/context-aware-confidence.md](security/context-aware-confidence.md) | Vulnerability confidence scoring |
+| [security/false-positive-analysis.md](security/false-positive-analysis.md) | Reducing false positives |
+| [security/scoring.md](security/scoring.md) | Security score calculation |
+| [security/security-ethics.md](security/security-ethics.md) | Ethical scanning guidelines |
+
+### Crawler System
+
+| Document | Purpose |
+|----------|---------|
+| [crawler/crawler-design.md](crawler/crawler-design.md) | Crawler architecture and algorithms |
+| [crawler/crawler-improvements.md](crawler/crawler-improvements.md) | Recent enhancements and roadmap |
+| [crawler/real-time-logging.md](crawler/real-time-logging.md) | Live scan progress reporting |
+
+### Testing & Evaluation
+
+| Document | Purpose |
+|----------|---------|
+| [evaluation/testing.md](evaluation/testing.md) | Unit and integration test guide |
+| [evaluation/testing-coverage.md](evaluation/testing-coverage.md) | Vulnerability detection coverage |
+| [evaluation/benchmarking.md](evaluation/benchmarking.md) | Performance benchmarks and metrics |
+| [evaluation/real-world-testing.md](evaluation/real-world-testing.md) | Testing against real applications |
+
+## 🚀 Quick Start
+
+If you're new to WebSecScan, start here:
+
+1. **[Installation & Setup](getting-started.md)** - Get the scanner running locally
+2. **[Features Overview](features.md)** - Understand what the scanner can do
+3. **[Architecture Guide](architecture.md)** - Learn how the system works
+4. **[Running Your First Scan](getting-started.md#running-your-first-scan)** - Execute a basic security test
+
+## 🔬 For Researchers
+
+If you're conducting research or building upon this project:
+
+- **[Agents Documentation](agents.md)** - Understand scanning methodologies
+- **[OWASP 2025 Mapping](security/owasp-mapping.md)** - Vulnerability categorization
+- **[Benchmarking Guide](evaluation/benchmarking.md)** - Measure performance and accuracy
+- **[Testing Coverage](evaluation/testing-coverage.md)** - Validate detection capabilities
+
+## 🛠️ For Contributors
+
+Contributing to the project:
+
+- **[Development Setup](development.md)** - Configure your environment
+- **[Testing Guide](evaluation/testing.md)** - Write and run tests
+- **[API Reference](api.md)** - Understand internal interfaces
+- **[Security Ethics](security/security-ethics.md)** - Ethical scanning principles
+
+## 📖 Building Documentation Locally
+
+This documentation is built with [MkDocs Material](https://squidfunk.github.io/mkdocs-material/).
+
+### Setup
+
 ```bash
-# Create and activate virtual environment
-python3 -m venv venv
-source venv/bin/activate  # macOS/Linux
-# OR: venv\Scripts\activate  # Windows
-
 # Install dependencies
-pip install mkdocs-material mkdocs-minify-plugin
-```
+pip install -r requirements.txt
 
-**Option 2: pipx (macOS/Linux)**
-```bash
-# Install pipx first
-brew install pipx  # macOS
-# OR: apt install pipx  # Ubuntu/Debian
-
-# Install mkdocs with extensions
-pipx install mkdocs
-pipx inject mkdocs mkdocs-material mkdocs-minify-plugin
-```
-
-### Build and Serve
-
-```bash
-# Serve with live reload (for development)
+# Serve with live reload
 mkdocs serve
 
 # Build static site
 mkdocs build
-
-# Deploy to GitHub Pages (if you have permissions)
-mkdocs gh-deploy
 ```
 
-The documentation will be available at http://localhost:8000
+Documentation will be available at http://localhost:8000
+
+### Contributing to Docs
+
+1. Edit Markdown files in the `docs/` directory
+2. Test locally with `mkdocs serve`
+3. Update `mkdocs.yml` navigation if adding new pages
+4. Submit a pull request
+
+**Guidelines:**
+- Use clear, technical language appropriate for academic work
+- Include code examples with proper syntax highlighting
+- Add diagrams using Mermaid where helpful
+- Reference OWASP standards and academic sources
+- Keep content focused and avoid marketing language
 
 ## 🌐 Live Documentation
 
-Once deployed, the documentation will be available at:
-https://pranavraut.github.io/WebSecScan/
+Production documentation: **https://pranavraut.github.io/WebSecScan/**
 
-## 📝 Contributing to Documentation
+## 📝 Project Context
 
-### Adding a New Page
+WebSecScan was developed as an academic project to explore deterministic web vulnerability detection without machine learning. It emphasizes:
 
-1. Create a new Markdown file in the `docs/` directory
-2. Add it to the `nav` section in `mkdocs.yml`
-3. Test locally with `mkdocs serve`
-4. Submit a pull request
+- **Transparency**: All detection logic is rule-based and auditable
+- **Reproducibility**: Tests produce consistent results across runs
+- **Extensibility**: Modular architecture for adding new detection rules
+- **Safety**: Non-destructive testing with explicit permission checks
 
-### Documentation Guidelines
+This is a research tool, not a commercial product. It prioritizes clarity and correctness over speed or comprehensiveness.
 
-- Use clear, concise language
-- Include code examples where appropriate
-- Add appropriate admonitions (tip, warning, note)
-- Keep formatting consistent with existing pages
-- Test all links and code snippets
+## ⚠️ Legal & Ethical Notice
 
-### Markdown Extensions
+**Only scan systems you own or have explicit written permission to test.**
 
-We use several MkDocs extensions:
+WebSecScan is designed for:
+- Testing your own applications
+- Academic research on authorized targets
+- Security education in controlled environments
 
-- **Code highlighting**: Syntax highlighting for code blocks
-- **Admonitions**: Info boxes (note, tip, warning, etc.)
-- **Tables**: Enhanced table support
-- **Tabs**: Tabbed content for multiple options
+Unauthorized scanning may be illegal. See [security/security-ethics.md](security/security-ethics.md) for detailed guidelines.
 
-Example:
+## 📞 Support & Community
 
-```markdown
-!!! tip "Pro Tip"
-    Use the search feature to quickly find what you need.
+- **Issues**: [GitHub Issues](https://github.com/Pranavraut033/WebSecScan/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/Pranavraut033/WebSecScan/discussions)
+- **Contributing**: See [development.md](development.md)
 
-!!! warning "Important"
-    Always get authorization before scanning.
-```
+## 📄 License
 
-## 🔄 Automatic Deployment
+This project is open-source. See the root [LICENSE](../LICENSE) file for details.
 
-Documentation is automatically deployed to GitHub Pages when:
+---
 
-- Changes are pushed to the `main` branch
-- Changes are made to files in the `docs/` directory
-- `mkdocs.yml` is modified
-- The workflow can also be triggered manually
-
-See [`.github/workflows/docs.yml`](../.github/workflows/docs.yml) for the deployment workflow.
+**Last Updated**: January 2026  
+**Documentation Version**: 1.0.0  
+**Project Status**: Active Development
 
 ## 📦 Dependencies
 
