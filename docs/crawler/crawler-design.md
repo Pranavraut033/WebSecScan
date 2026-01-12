@@ -284,4 +284,4 @@ User-Agent: WebSecScan/1.0 (Educational Security Scanner)
 **Related Documentation:**
 - [Authenticated Scans](../security/authenticated-scans.md) - Phase 3 login flow design
 - [Benchmarking](../evaluation/benchmarking.md) - Comparison with OWASP ZAP crawler
-- [Real-World Testing](real-world-testing.md) - Ethical guidelines
+- [Real-World Testing](../evaluation/real-world-testing.md) - Ethical guidelines
