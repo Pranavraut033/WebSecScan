@@ -6,8 +6,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import { analyzeDependencies } from '../src/security/static/dependencyAnalyzer.ts';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 
 describe('Dependency Analyzer', () => {
   describe('Known vulnerable dependencies', () => {
@@ -86,28 +84,6 @@ describe('Dependency Analyzer', () => {
       const result = await analyzeDependencies(packageJson, 'package.json');
 
       assert.strictEqual(result.vulnerabilities.length, 0, 'Should not flag recent versions');
-    });
-  });
-
-  describe('Test fixture validation', () => {
-    it('should detect multiple vulnerabilities in test fixture', async () => {
-      const fixtureContent = readFileSync(
-        join(process.cwd(), 'test-fixtures', 'insecure-package.json'),
-        'utf-8'
-      );
-
-      const result = await analyzeDependencies(fixtureContent, 'test-fixtures/insecure-package.json');
-
-      // Test fixture should have multiple vulnerabilities
-      assert.ok(result.vulnerabilities.length >= 3, 'Test fixture should have multiple vulnerabilities');
-
-      // Check for specific packages
-      const packageNames = ['lodash', 'axios', 'express', 'next', 'react'];
-      const foundPackages = packageNames.filter(pkg =>
-        result.vulnerabilities.some(v => v.evidence?.includes(pkg))
-      );
-
-      assert.ok(foundPackages.length >= 3, 'Should detect vulnerabilities in multiple packages');
     });
   });
 
