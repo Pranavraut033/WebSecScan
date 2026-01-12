@@ -152,7 +152,7 @@ This is acceptable for security testing but slower than aggressive scanners.
 / (public) → /login (public) → /dashboard (401 Unauthorized)
 ```
 
-**Mitigation**: See [Authenticated Scans](authenticated-scans.md) for Phase 3 login flow implementation.
+**Mitigation**: See [Authenticated Scans](../security/authenticated-scans.md) for Phase 3 login flow implementation.
 
 ### 4. Robots.txt Strictness
 
@@ -208,7 +208,7 @@ Expose configuration via scan request payload:
 
 ### Typical Crawl Statistics
 
-Based on Juice Shop benchmark (see [benchmarking.md](benchmarking.md)):
+Based on Juice Shop benchmark (see [benchmarking.md](../evaluation/benchmarking.md)):
 
 | Metric | Value | Notes |
 |--------|-------|-------|
@@ -258,7 +258,7 @@ User-Agent: WebSecScan/1.0 (Educational Security Scanner)
 ### Phase 3 Roadmap
 
 1. **Configurable Options**: Expose via API with validation
-2. **Authenticated Crawling**: Integrate Playwright login flows (see [authenticated-scans.md](authenticated-scans.md))
+2. **Authenticated Crawling**: Integrate Playwright login flows (see [authenticated-scans.md](../security/authenticated-scans.md))
 3. **JavaScript Rendering**: Full browser crawling for SPAs
 4. **Smart Depth**: Adaptive `maxDepth` based on site size
 5. **Form Interaction**: Basic form filling for deeper navigation
@@ -282,6 +282,6 @@ User-Agent: WebSecScan/1.0 (Educational Security Scanner)
 ---
 
 **Related Documentation:**
-- [Authenticated Scans](authenticated-scans.md) - Phase 3 login flow design
-- [Benchmarking](benchmarking.md) - Comparison with OWASP ZAP crawler
+- [Authenticated Scans](../security/authenticated-scans.md) - Phase 3 login flow design
+- [Benchmarking](../evaluation/benchmarking.md) - Comparison with OWASP ZAP crawler
 - [Real-World Testing](real-world-testing.md) - Ethical guidelines

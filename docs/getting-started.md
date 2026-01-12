@@ -155,7 +155,7 @@ npm test
 npm run test:watch
 ```
 
-See the [Testing Guide](testing.md) for detailed information.
+See the [Testing Guide](evaluation/testing.md) for detailed information.
 
 ---
 
@@ -235,7 +235,7 @@ npx playwright install chromium
 ## Next Steps
 
 - **[Explore Features](features.md)**: Learn about all scanning capabilities
-- **[Understand Testing Coverage](testing-coverage.md)**: See what vulnerabilities we detect
+- **[Understand Testing Coverage](evaluation/testing-coverage.md)**: See what vulnerabilities we detect
 - **[Read API Documentation](api.md)**: Integrate scanning into your workflow
 - **[Contribute](development.md)**: Help improve WebSecScan
 

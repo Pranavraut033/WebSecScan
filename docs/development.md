@@ -405,7 +405,7 @@ describe('New check', () => {
 ```
 
 **4. Update documentation:**
-- Add to [testing-coverage.md](testing-coverage.md)
+- Add to [testing-coverage.md](evaluation/testing-coverage.md)
 - Update feature count in [features.md](features.md)
 
 ---
@@ -495,7 +495,7 @@ import ScanLogs from '@/components/ScanLogs';
 )}
 ```
 
-See [Real-time Logging Documentation](real-time-logging.md) for full details.
+See [Real-time Logging Documentation](crawler/real-time-logging.md) for full details.
 
 ---
 

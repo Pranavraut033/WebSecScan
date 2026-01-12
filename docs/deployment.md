@@ -559,6 +559,6 @@ npm run build
 
 ## Next Steps
 
-- **[Security & Ethics](security-ethics.md)**: Production security considerations
+- **[Security & Ethics](security/security-ethics.md)**: Production security considerations
 - **[Development Guide](development.md)**: Local development setup
 - **[API Reference](api.md)**: API integration for custom deployments
