@@ -734,6 +734,6 @@ npm run lint          # Check code style
 
 ## Next Steps
 
-- **[Development Guide](development.md)**: Set up development environment
-- **[Architecture](architecture.md)**: Understand system design
-- **[Contributing](development.md#contributing)**: Submit improvements
+- **[Development Setup](../development/setup.md)**: Set up development environment
+- **[Architecture](../architecture/overview.md)**: Understand system design
+- **[Contributing](../development/contributing.md)**: Submit improvements

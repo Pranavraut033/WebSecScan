@@ -676,8 +676,8 @@ graph TB
 
 ## 13. Next Steps
 
-- **[View Scanning Agents](agents.md):** Detailed agent architecture
-- **[API Reference](api.md):** API endpoint specifications
-- **[Development Guide](development.md):** Contributing to the architecture
+- **[Scanning Agents](../architecture/components.md):** Detailed agent architecture
+- **[API Reference](../api/overview.md):** API endpoint specifications
+- **[Development Guide](../development/contributing.md):** Contributing to the architecture
 
 ---

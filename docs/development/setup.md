@@ -298,6 +298,6 @@ Likely a timing issue. Check:
 
 ## Next Steps
 
-- **[Testing Guide](testing.md)** — Detailed testing documentation
+- **[Testing Guide](./testing.md)** — Detailed testing documentation
 - **[Contributing](contributing.md)** — PR guidelines
 - **[Architecture](../architecture/overview.md)** — System design

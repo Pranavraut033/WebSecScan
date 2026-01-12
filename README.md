@@ -2,6 +2,8 @@
 
 An Automated Security Scanner for Web Application Vulnerabilities with Risk-Based Assessment
 
+> **📚 Documentation Notice**: The documentation has been rebuilt and reorganized (January 12, 2026). See [DOCS_REBUILD_COMPLETE.md](DOCS_REBUILD_COMPLETE.md) for a complete overview of the new 22-document structure. **[Start here](docs/index.md)** for guided navigation.
+
 ## Problem Statement
 
 As web applications proliferate, they increasingly become targets for cyberattacks that exploit vulnerabilities such as SQL injection, Cross-Site Scripting (XSS), insecure authentication, and outdated libraries. While large organizations can afford dedicated security resources, small to mid-sized development teams often lack the expertise or tools to conduct comprehensive security evaluations. This gap results in widespread exposure of web applications to preventable attacks, posing risks to both users and businesses.
@@ -244,27 +246,47 @@ WebSecScan/
 
 ---
 
-## Documentation
+## 📚 Documentation
 
-Comprehensive documentation is available in the `/docs` directory:
+**Comprehensive documentation** is available in the `/docs` directory and organized for different audiences:
 
-- **[Features Guide](docs/features.md)** - Complete feature list with security scoring details
-- **[Architecture](docs/architecture.md)** - System design and data models
-- **[API Reference](docs/api.md)** - REST API and Server Actions documentation
-- **[Testing Guide](docs/testing.md)** - Test coverage and methodology
-- **[URL Normalization](docs/url-normalization.md)** - Automatic HTTPS upgrade and HTTP threat detection
-- **[Scoring Implementation](SCORING_IMPLEMENTATION.md)** - Detailed scoring system documentation
+### Quick Navigation by Role
 
-### Key Documentation Updates
+**👤 [For Users](docs/index.md#for-users)** — How to use WebSecScan
+- [Getting Started](docs/getting-started.md) - Installation & first scan
+- [Features Overview](docs/features.md) - Complete feature guide
+- [Deployment Guide](docs/deployment.md) - Production setup
+- [FAQ](docs/faq.md) - Common questions
 
-**New in this release**:
-- Security scoring system (0-100 scale)
-- Mozilla Observatory-style testing
-- CSP analysis with 10 detailed checks
-- Cookie security validation
-- Raw HTTP header capture
-- Scan history tracking
-- Rescan functionality
+**👨‍💻 [For Developers](docs/index.md#for-developers)** — How to extend & contribute
+- [System Architecture](docs/architecture/overview.md) - Design & components
+- [Scanning Agents](docs/architecture/components.md) - Agent specifications
+- [Static Analysis](docs/scanning/static-analysis.md) - Code analysis rules
+- [Dynamic Testing](docs/scanning/dynamic-testing.md) - Runtime testing methodology
+- [API Reference](docs/api/overview.md) - REST API & Server Actions
+- [Development Setup](docs/development/setup.md) - Configure your environment
+- [Testing Guide](docs/development/testing.md) - Test organization & running
+- [Contributing](docs/development/contributing.md) - Contribution guidelines
+
+**📚 [For Researchers](docs/index.md#for-researchers)** — Academic & theory
+- [OWASP 2025 Mapping](docs/security/owasp-2025.md) - Vulnerability taxonomy
+- [Dynamic Testing Methodology](docs/scanning/dynamic-testing.md) - Safe testing approach
+- [Reducing False Positives](docs/security/reducing-false-positives.md) - Accuracy improvements
+- [Benchmarking](docs/evaluation/benchmarking.md) - Performance metrics
+- [Academic References](docs/references.md) - Standards & research papers
+
+**🔧 [For Ops](docs/deployment.md)** — Production & infrastructure
+- [Deployment Guide](docs/deployment.md) - Docker, Docker Compose, manual setup
+- [Security & Ethics](docs/security/ethics-and-authorization.md) - Authorization & audit logging
+- [FAQ](docs/faq.md) - Operational questions
+
+### Key Documentation
+
+- **[Getting Started](docs/getting-started.md)** - Installation, setup, and first scan
+- **[Architecture Overview](docs/architecture/overview.md)** - System design and layers
+- **[Scanning Guide](docs/scanning/overview.md)** - Scan modes and methodology
+- **[Security Features](docs/security/owasp-2025.md)** - OWASP 2025 vulnerability categories
+- **[API Documentation](docs/api/overview.md)** - REST API and Server Actions
 
 ## Acceptance Criteria
 - ✅ Detects vulnerabilities in intentionally insecure fixtures

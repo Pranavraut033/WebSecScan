@@ -178,7 +178,7 @@ Or open an issue labeled `enhancement`.
 - ✅ Mock external boundaries (network, filesystem)
 - ✅ Deterministic inputs/outputs
 
-See [Testing Guide](testing.md) for details.
+See [Testing Guide](development/testing.md) for details.
 
 ### Q: Why TypeScript strict mode?
 

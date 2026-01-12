@@ -169,7 +169,7 @@ curl "http://localhost:8080/JSON/core/view/alerts/?baseurl=http://host.docker.in
 ### Findings Coverage Comparison
 
 > **Note:** Results based on latest scan against http://localhost:3001 (2026-01-11)  
-> **WebSecScan uses OWASP 2025 taxonomy.** See [owasp-mapping.md](owasp-mapping.md) for category mappings.
+> **WebSecScan uses OWASP 2025 taxonomy.** See [OWASP 2025 Mapping](../security/owasp-2025.md) for category mappings.
 
 Compare findings by OWASP Top 10 category:
 
@@ -252,7 +252,7 @@ False-positive rates are critical for tool usability. We manually validate a sta
 - ✅ **100% Precision**: All validated findings are legitimate security concerns
 - ✅ **Zero False Positives**: No phantom vulnerabilities or incorrect rule matches
 - ⚠️ **Context Sensitivity Needed**: Framework code (Angular, jQuery) requires confidence adjustment
-- 📊 **Detailed Analysis**: See [false-positive-analysis.md](false-positive-analysis.md)
+- 📊 **Detailed Analysis**: See [Reducing False Positives](../security/reducing-false-positives.md)
 
 ### Validation Procedure Details
 
@@ -516,7 +516,7 @@ The comparison script automatically:
 - 🪶 **Lightweight** - Minimal memory footprint
 
 **False Positive Comparison:**
-- WebSecScan FP Rate: **0%** (0/5 findings validated - see [false-positive-analysis.md](false-positive-analysis.md))
+- WebSecScan FP Rate: **0%** (0/5 findings validated - see [Reducing False Positives](../security/reducing-false-positives.md))
 - OWASP ZAP FP Rate: **TBD** (manual validation pending)
 - Note: ZAP's WARN level means "requires investigation," not confirmed vulnerability
 - **Analysis Details**: All 5 WebSecScan findings represent real dangerous patterns (innerHTML, Function constructor). However, confidence levels should be adjusted for framework/library code (see detailed analysis).

@@ -691,6 +691,6 @@ Adding new agents or checks:
 
 ## Next Steps
 
-- **[View Architecture](architecture.md)**: How agents integrate into the system
-- **[Testing Guide](testing.md)**: Test agent implementations
-- **[API Reference](api.md)**: Trigger agent scans programmatically
+- **[System Architecture](../architecture/overview.md)**: How agents integrate into the system
+- **[Testing Guide](../development/testing.md)**: Test agent implementations
+- **[API Reference](../api/overview.md)**: Trigger agent scans programmatically

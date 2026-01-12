@@ -356,6 +356,6 @@ Located in `test-fixtures/`:
 
 ## Next Steps
 
-- **[Explore Features](features.md)**: Deep dive into scanning capabilities
-- **[Architecture](architecture.md)**: Understand how detection works
-- **[Testing Guide](testing.md)**: Run and understand our tests
+- **[Explore Features](../features.md)**: Deep dive into scanning capabilities
+- **[Architecture](../architecture/overview.md)**: Understand how detection works
+- **[Testing Guide](../development/testing.md)**: Run and understand our tests

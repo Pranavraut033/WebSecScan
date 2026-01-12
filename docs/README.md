@@ -26,11 +26,11 @@ This project serves as:
 |----------|---------|
 | [getting-started.md](getting-started.md) | Installation, setup, and first scan |
 | [features.md](features.md) | Complete feature overview |
-| [architecture.md](architecture.md) | System design and technical details |
-| [agents.md](agents.md) | Security scanning agents deep-dive |
-| [api.md](api.md) | REST API and Server Actions reference |
+| [architecture/overview.md](architecture/overview.md) | System design and technical details |
+| [architecture/components.md](architecture/components.md) | Security scanning agents deep-dive |
+| [api/overview.md](api/overview.md) | REST API and Server Actions reference |
 | [deployment.md](deployment.md) | Production deployment guide |
-| [development.md](development.md) | Contributing and development setup |
+| [development/contributing.md](development/contributing.md) | Contributing and development setup |
 | [references.md](references.md) | Academic papers, standards, and resources |
 
 ### Security Topics
@@ -70,14 +70,14 @@ If you're new to WebSecScan, start here:
 
 1. **[Installation & Setup](getting-started.md)** - Get the scanner running locally
 2. **[Features Overview](features.md)** - Understand what the scanner can do
-3. **[Architecture Guide](architecture.md)** - Learn how the system works
+3. **[Architecture Guide](architecture/overview.md)** - Learn how the system works
 4. **[Running Your First Scan](getting-started.md#running-your-first-scan)** - Execute a basic security test
 
 ## 🔬 For Researchers
 
 If you're conducting research or building upon this project:
 
-- **[Agents Documentation](agents.md)** - Understand scanning methodologies
+- **[Agents Documentation](architecture/components.md)** - Understand scanning methodologies
 - **[OWASP 2025 Mapping](security/owasp-mapping.md)** - Vulnerability categorization
 - **[Benchmarking Guide](evaluation/benchmarking.md)** - Measure performance and accuracy
 - **[Testing Coverage](evaluation/testing-coverage.md)** - Validate detection capabilities
@@ -86,10 +86,10 @@ If you're conducting research or building upon this project:
 
 Contributing to the project:
 
-- **[Development Setup](development.md)** - Configure your environment
-- **[Testing Guide](evaluation/testing.md)** - Write and run tests
-- **[API Reference](api.md)** - Understand internal interfaces
-- **[Security Ethics](security/security-ethics.md)** - Ethical scanning principles
+- **[Development Setup](development/setup.md)** - Configure your environment
+- **[Testing Guide](development/testing.md)** - Write and run tests
+- **[API Reference](api/overview.md)** - Understand internal interfaces
+- **[Security Ethics](security/ethics-and-authorization.md)** - Ethical scanning principles
 
 ## 📖 Building Documentation Locally
 
@@ -148,13 +148,13 @@ WebSecScan is designed for:
 - Academic research on authorized targets
 - Security education in controlled environments
 
-Unauthorized scanning may be illegal. See [security/security-ethics.md](security/security-ethics.md) for detailed guidelines.
+Unauthorized scanning may be illegal. See [security/ethics-and-authorization.md](security/ethics-and-authorization.md) for detailed guidelines.
 
 ## 📞 Support & Community
 
 - **Issues**: [GitHub Issues](https://github.com/Pranavraut033/WebSecScan/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/Pranavraut033/WebSecScan/discussions)
-- **Contributing**: See [development.md](development.md)
+- **Contributing**: See [development/contributing.md](development/contributing.md)
 
 ## 📄 License
 

@@ -385,6 +385,6 @@ No. Scoring measures compliance with best practices but doesn't guarantee absenc
 
 ## Contributing
 
-See [Development Guide](development.md) for information on contributing to the scoring engine.
+See [Contributing Guide](../development/contributing.md) for information on contributing to the scoring engine.
 
 For questions or suggestions about scoring methodology, open an issue on GitHub with the `scoring` label.
