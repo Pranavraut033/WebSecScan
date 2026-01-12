@@ -1,26 +1,24 @@
 # Getting Started
 
-This guide will help you set up and run WebSecScan on your local machine.
+This guide will help you install and run WebSecScan on your local machine.
 
 ---
 
 ## Prerequisites
 
-Before you begin, ensure you have the following installed:
+Before you begin, ensure you have:
 
-- **Node.js** (v18 or higher)
-- **npm** or **yarn**
-- **Git**
-- **(Optional)** Docker for containerized deployment
-
----
+- **Node.js** (v18 or higher) — [Download](https://nodejs.org/)
+- **npm** (v9+) — Comes with Node.js
+- **Git** — [Download](https://git-scm.com/)
+- **(Optional)** **Docker** for containerized setup
 
 ## Installation
 
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/pranavraut/WebSecScan.git
+git clone https://github.com/Pranavraut033/WebSecScan.git
 cd WebSecScan
 ```
 
@@ -30,12 +28,12 @@ cd WebSecScan
 npm install
 ```
 
-This will install all required packages including:
+This will install all required packages:
 
-- Next.js (Framework)
+- Next.js (React framework)
 - Prisma (Database ORM)
-- Playwright (Dynamic testing)
-- Cheerio (HTML parsing)
+- Playwright (Headless browser for dynamic testing)
+- Cheerio (HTML parsing for static analysis)
 - TypeScript and development tools
 
 ### 3. Set Up the Database
@@ -44,15 +42,30 @@ WebSecScan uses Prisma with SQLite by default. Initialize the database:
 
 ```bash
 npx prisma generate
-npx prisma migrate deploy
+npx prisma migrate dev
 ```
 
 ### 4. (Optional) Seed Test Data
 
-To populate the database with sample scan data:
+To populate with sample scan data:
 
 ```bash
 npm run seed
+```
+
+### 5. (Optional) Configure Environment
+
+Create a `.env` file in the project root:
+
+```env
+# Database
+DATABASE_URL="file:./prisma/dev.db"
+
+# Development
+NODE_ENV=development
+
+# Optional: For PostgreSQL instead of SQLite
+# DATABASE_URL="postgresql://user:password@localhost:5432/websecscan"
 ```
 
 ---
@@ -61,13 +74,13 @@ npm run seed
 
 ### Development Mode
 
-Start the development server:
+Start the development server with hot-reloading:
 
 ```bash
 npm run dev
 ```
 
-The application will be available at [http://localhost:3000](http://localhost:3000).
+The application will be available at **[http://localhost:3000](http://localhost:3000)**.
 
 ### Production Build
 
@@ -76,6 +89,14 @@ To create an optimized production build:
 ```bash
 npm run build
 npm start
+```
+
+### Docker Setup
+
+Using Docker Compose:
+
+```bash
+docker-compose up --build
 ```
 
 ---
@@ -88,158 +109,136 @@ Navigate to [http://localhost:3000](http://localhost:3000) in your browser.
 
 ### 2. Configure a New Scan
 
-You'll see the scan configuration form with the following options:
+You'll see the scan configuration form with these options:
 
-- **Target URL** (Required): The website to scan
-- **Scan Mode**: Choose from:
-  - **Static Only**: Analyze source code patterns
-  - **Dynamic Only**: Runtime behavior testing
-  - **Both**: Comprehensive static + dynamic analysis
+| Option | Description |
+|--------|-------------|
+| **Target URL** | The website to scan (required) |
+| **Scan Mode** | Choose `Static`, `Dynamic`, or `Both` |
+| **Scan Mode Explanation** | See [Scanning Overview](scanning/overview.md) |
 
 ### 3. Review Safety Consent
 
-!!! warning "Ethical Scanning"
-    By starting a scan, you confirm that you:
-    
-    - Own the target website or have explicit permission to test it
-    - Understand that unauthorized scanning may be illegal
-    - Accept responsibility for the scan results
+The form includes an authorization check:
 
-Check the consent box to proceed.
+> "I have authorization to test this target"
+
+**Check this box only if you own or have explicit written permission to scan the target.**
 
 ### 4. Start the Scan
 
-Click **Start Scan**. You'll be redirected to the scan progress page.
+Click **"Start Scan"** to begin.
 
-### 5. View Results
+You'll be redirected to the scan progress page, which displays **real-time logs** as the scan runs.
 
-Once the scan completes, you'll see:
+### 5. Review Results
 
-- **Vulnerability Summary**: Count by severity (Critical, High, Medium, Low)
-- **Detailed Findings**: Each vulnerability with:
-  - Severity and confidence level
-  - Affected file/URL location
-  - Evidence snippet
-  - Remediation guidance
+Once complete, you'll see:
 
----
-
-## Understanding Scan Results
-
-### Severity Levels
-
-| Severity | Color | Description |
-|----------|-------|-------------|
-| **Critical** | 🔴 Red | Immediate action required; high exploitability |
-| **High** | 🟠 Orange | Significant risk; should be fixed soon |
-| **Medium** | 🟡 Yellow | Moderate risk; plan remediation |
-| **Low** | 🔵 Blue | Minor issue; address when convenient |
-
-### Confidence Levels
-
-- **High**: Verified finding with strong evidence
-- **Medium**: Likely issue but may require manual validation
-- **Low**: Potential issue; further investigation recommended
+- **Vulnerabilities** found, grouped by severity
+- **Security Score** (0-100, lower = more risk)
+- **OWASP Category** mapping
+- **Remediation Guidance** for each finding
 
 ---
 
-## Running Tests
+## Example Scans
 
-WebSecScan includes comprehensive unit and integration tests:
+### Scan a Public Site (With Permission)
 
-```bash
-# Run all tests
-npm test
+If you have a test environment or own a site:
 
-# Run tests in watch mode
-npm run test:watch
+```
+Target URL: https://your-test-site.com
+Scan Mode: Both (recommended)
 ```
 
-See the [Testing Guide](testing.md) for detailed information.
+### Scan a Local Application
 
----
+If running your own app locally:
 
-## Docker Deployment
-
-For containerized deployment:
-
-```bash
-# Build the Docker image
-docker build -t websecscan .
-
-# Run the container
-docker run -p 3000:3000 websecscan
+```
+Target URL: http://localhost:8080
+Scan Mode: Both
 ```
 
-Or use Docker Compose:
+The scanner will crawl from this URL and test for vulnerabilities.
+
+### Test Fixture (Vulnerable App)
+
+The project includes intentionally vulnerable apps for testing:
 
 ```bash
+# Build and run test fixture
+cd test-fixtures
 docker-compose up
-```
 
-See [Deployment Guide](deployment.md) for production considerations.
-
----
-
-## Quick Command Reference
-
-```bash
-# Development
-npm run dev          # Start development server
-npm run build        # Create production build
-npm start            # Start production server
-
-# Database
-npx prisma generate  # Generate Prisma client
-npx prisma migrate   # Run migrations
-npx prisma studio    # Open Prisma Studio GUI
-
-# Testing
-npm test             # Run tests
-npm run lint         # Run ESLint
-
-# Docker
-docker-compose up    # Start with Docker Compose
+# Then scan
+Target URL: http://localhost:3001
+Scan Mode: Both
 ```
 
 ---
 
 ## Troubleshooting
 
-### Port Already in Use
+### "Cannot find module" Error
 
-If port 3000 is already in use, you can specify a different port:
+If you get module not found errors after installing:
 
 ```bash
+# Regenerate Prisma client
+npx prisma generate
+
+# Reinstall dependencies
+rm -rf node_modules package-lock.json
+npm install
+```
+
+### Database Errors
+
+If database migration fails:
+
+```bash
+# Reset the database (⚠️ clears all data)
+npx prisma migrate reset
+
+# Re-seed if desired
+npm run seed
+```
+
+### Port Already in Use
+
+If port 3000 is in use:
+
+```bash
+# Specify a different port
 PORT=3001 npm run dev
 ```
 
-### Database Connection Issues
+### Scanner Timeout Issues
 
-Ensure the database file has proper permissions:
+Dynamic scans may timeout on slow servers. Adjust in [crawler configuration](scanning/crawler.md):
 
-```bash
-chmod 644 prisma/dev.db
-```
-
-### Playwright Installation
-
-If dynamic testing fails, install Playwright browsers:
-
-```bash
-npx playwright install chromium
+```env
+CRAWLER_TIMEOUT=20000  # 20 seconds
 ```
 
 ---
 
 ## Next Steps
 
-- **[Explore Features](features.md)**: Learn about all scanning capabilities
-- **[Understand Testing Coverage](testing-coverage.md)**: See what vulnerabilities we detect
-- **[Read API Documentation](api.md)**: Integrate scanning into your workflow
-- **[Contribute](development.md)**: Help improve WebSecScan
+Now that WebSecScan is running:
+
+1. **[Learn About Features](features.md)** — Understand what you can do
+2. **[Understanding Scans](scanning/overview.md)** — How static/dynamic modes work
+3. **[API Reference](api/overview.md)** — Programmatic scanning
+4. **[Deployment Guide](deployment.md)** — Setting up in production
 
 ---
 
-!!! tip "Need Help?"
-    Check the [Development Guide](development.md) for detailed setup instructions and troubleshooting tips.
+## Getting Help
+
+- **Issues**: [GitHub Issues](https://github.com/Pranavraut033/WebSecScan/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/Pranavraut033/WebSecScan/discussions)
+- **See Also**: [FAQ](faq.md) for common questions

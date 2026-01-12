@@ -48,32 +48,29 @@ nav:
       - Getting Started: getting-started.md
       - Features: features.md
   - Architecture:
-      - System Design: architecture.md
-      - Scanning Agents: agents.md
-      - API Reference: api.md
+      - System Overview: architecture/overview.md
+      - Scanning Agents: architecture/components.md
+  - Scanning:
+      - Overview: scanning/overview.md
+      - Static Analysis: scanning/static-analysis.md
+      - Dynamic Testing: scanning/dynamic-testing.md
+      - Crawler: scanning/crawler.md
   - Security:
-      - OWASP 2025 Mapping: security/owasp-mapping.md
-      - Authenticated Scans: security/authenticated-scans.md
-      - CSRF Protection: security/csrf-protection.md
-      - Header Security: security/header-security-enhancements.md
-      - URL Normalization: security/url-normalization.md
-      - Context-Aware Confidence: security/context-aware-confidence.md
-      - False Positive Analysis: security/false-positive-analysis.md
-      - Security Scoring: security/scoring.md
-      - Ethics & Guidelines: security/security-ethics.md
-  - Crawler:
-      - Design: crawler/crawler-design.md
-      - Improvements: crawler/crawler-improvements.md
-      - Real-time Logging: crawler/real-time-logging.md
-  - Testing & Evaluation:
-      - Testing Guide: evaluation/testing.md
-      - Test Coverage: evaluation/testing-coverage.md
-      - Benchmarking: evaluation/benchmarking.md
-      - Real-World Testing: evaluation/real-world-testing.md
+      - OWASP 2025: security/owasp-2025.md
+      - Ethics & Authorization: security/ethics-and-authorization.md
+      - Detection Details: security/detection-details.md
+      - Reducing False Positives: security/reducing-false-positives.md
+  - API:
+      - Overview: api/overview.md
+      - Endpoints: api/endpoints.md
+      - Schemas: api/schemas.md
   - Development:
-      - Setup & Contributing: development.md
-      - Deployment: deployment.md
+      - Setup: development/setup.md
+      - Testing: development/testing.md
+      - Contributing: development/contributing.md
+  - Deployment: deployment.md
   - References: references.md
+  - FAQ: faq.md
 
 markdown_extensions:
   - pymdownx.highlight:

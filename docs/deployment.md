@@ -1,39 +1,38 @@
 # Deployment
 
-Guide for deploying WebSecScan to production environments.
+Production deployment guide for WebSecScan.
 
 ---
 
-## 🐳 Docker Deployment
+## Quick Start: Docker Compose
 
-### Quick Start with Docker
-
-The simplest way to deploy WebSecScan is using Docker:
+The easiest way to deploy:
 
 ```bash
-# Build the image
-docker build -t websecscan:latest .
+# Clone
+git clone https://github.com/Pranavraut033/WebSecScan.git
+cd WebSecScan
 
-# Run the container
-docker run -d \
-  -p 3000:3000 \
-  -e DATABASE_URL="file:./prisma/prod.db" \
-  -e NODE_ENV="production" \
-  --name websecscan \
-  websecscan:latest
+# Deploy
+docker-compose up -d
 ```
 
-### Docker Compose
+Application is available at **http://localhost:3000**
 
-For a complete setup with PostgreSQL:
+---
+
+## Docker Compose Setup
+
+`docker-compose.yml`:
 
 ```yaml
-# docker-compose.yml
 version: '3.8'
 
 services:
   web:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "3000:3000"
     environment:
@@ -57,508 +56,396 @@ volumes:
   postgres_data:
 ```
 
-**Deploy**:
+### Configuration
+
+Edit environment variables:
+
+```env
+# Database connection
+DATABASE_URL=postgresql://user:password@db:5432/websecscan
+
+# Security
+NODE_ENV=production
+
+# Optional: API rate limiting
+API_RATE_LIMIT=100  # requests per minute
+MAX_CONCURRENT_SCANS=5
+SCAN_TIMEOUT=300    # seconds
+```
+
+### Deploy
 
 ```bash
+# Build and start
 docker-compose up -d
+
+# View logs
+docker-compose logs -f web
+
+# Stop
+docker-compose down
 ```
 
 ---
 
-## 📦 Manual Deployment
+## Manual Deployment
 
-### Prerequisites
+For non-Docker environments:
 
-- Node.js 18+
-- PostgreSQL 14+ (or SQLite for testing)
-- Reverse proxy (Nginx/Caddy) for HTTPS
-
-### Step 1: Clone and Install
+### 1. Install Dependencies
 
 ```bash
+# Install Node.js 18+ and PostgreSQL
+
 # Clone repository
-git clone https://github.com/pranavraut/WebSecScan.git
+git clone https://github.com/Pranavraut033/WebSecScan.git
 cd WebSecScan
 
-# Install dependencies
-npm ci --production
-
-# Build application
-npm run build
-```
-
-### Step 2: Configure Database
-
-**For PostgreSQL**:
-
-```bash
-# Set database URL
-export DATABASE_URL="postgresql://user:password@localhost:5432/websecscan"
-
-# Run migrations
-npx prisma migrate deploy
+# Install packages
+npm install
 
 # Generate Prisma client
 npx prisma generate
 ```
 
-**For SQLite** (development only):
+### 2. Configure Database
 
-```bash
-export DATABASE_URL="file:./prisma/prod.db"
-npx prisma migrate deploy
-npx prisma generate
+Create PostgreSQL database:
+
+```sql
+CREATE DATABASE websecscan;
+CREATE USER websecscan WITH PASSWORD 'secure_password';
+GRANT ALL PRIVILEGES ON DATABASE websecscan TO websecscan;
 ```
-
-### Step 3: Configure Environment
 
 Create `.env.production`:
 
 ```env
-# Database
-DATABASE_URL=postgresql://user:password@localhost:5432/websecscan
-
-# Application
+DATABASE_URL="postgresql://websecscan:secure_password@localhost:5432/websecscan"
 NODE_ENV=production
-PORT=3000
-
-# Security (recommended)
-NEXT_PUBLIC_API_URL=https://your-domain.com
-
-# Optional: Enable logging
-LOG_LEVEL=info
 ```
 
-### Step 4: Start Application
+### 3. Run Migrations
 
 ```bash
-# Start in production mode
-NODE_ENV=production npm start
+npx prisma migrate deploy
 ```
 
-### Step 5: Set Up Process Manager
-
-Use PM2 for process management:
+### 4. Build Application
 
 ```bash
-# Install PM2 globally
-npm install -g pm2
-
-# Start application
-pm2 start npm --name "websecscan" -- start
-
-# Save PM2 configuration
-pm2 save
-
-# Set up PM2 to start on boot
-pm2 startup
-```
-
----
-
-## 🌐 Reverse Proxy Configuration
-
-### Nginx
-
-```nginx
-# /etc/nginx/sites-available/websecscan
-
-server {
-    listen 80;
-    server_name your-domain.com;
-
-    # Redirect HTTP to HTTPS
-    return 301 https://$server_name$request_uri;
-}
-
-server {
-    listen 443 ssl http2;
-    server_name your-domain.com;
-
-    # SSL Configuration
-    ssl_certificate /etc/letsencrypt/live/your-domain.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/your-domain.com/privkey.pem;
-    ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers HIGH:!aNULL:!MD5;
-
-    # Security Headers
-    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header X-XSS-Protection "1; mode=block" always;
-
-    # Proxy to Next.js
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
-    }
-
-    # Increase timeout for long-running scans
-    proxy_read_timeout 300s;
-    proxy_connect_timeout 300s;
-}
-```
-
-**Enable and restart**:
-
-```bash
-sudo ln -s /etc/nginx/sites-available/websecscan /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl restart nginx
-```
-
-### Caddy (Simpler Alternative)
-
-```caddy
-# Caddyfile
-
-your-domain.com {
-    reverse_proxy localhost:3000
-    
-    header {
-        Strict-Transport-Security "max-age=31536000; includeSubDomains"
-        X-Frame-Options "SAMEORIGIN"
-        X-Content-Type-Options "nosniff"
-    }
-}
-```
-
-**Start Caddy**:
-
-```bash
-caddy run
-```
-
----
-
-## ☁️ Cloud Platform Deployment
-
-### Vercel (Recommended for Next.js)
-
-1. **Connect Repository**:
-   - Go to [vercel.com](https://vercel.com)
-   - Import your GitHub repository
-
-2. **Configure Build**:
-   - Framework Preset: Next.js
-   - Build Command: `npm run build`
-   - Output Directory: `.next`
-
-3. **Set Environment Variables**:
-   ```
-   DATABASE_URL=postgresql://...
-   NODE_ENV=production
-   ```
-
-4. **Deploy**: Automatic on push to main branch
-
-### Railway
-
-1. **Create New Project**: [railway.app](https://railway.app)
-
-2. **Add PostgreSQL Plugin**: From marketplace
-
-3. **Deploy from GitHub**: Connect repository
-
-4. **Configure**:
-   ```bash
-   # Build command
-   npm run build && npx prisma migrate deploy
-   
-   # Start command
-   npm start
-   ```
-
-### Heroku
-
-```bash
-# Create app
-heroku create websecscan
-
-# Add PostgreSQL
-heroku addons:create heroku-postgresql:mini
-
-# Configure buildpack
-heroku buildpacks:set heroku/nodejs
-
-# Deploy
-git push heroku main
-
-# Run migrations
-heroku run npx prisma migrate deploy
-```
-
----
-
-## 🔐 Production Security Checklist
-
-### Database Security
-
-- [ ] Use strong database passwords
-- [ ] Enable SSL/TLS for database connections
-- [ ] Restrict database access to application server only
-- [ ] Regular backups configured
-- [ ] Keep PostgreSQL updated
-
-### Application Security
-
-- [ ] Set `NODE_ENV=production`
-- [ ] Use HTTPS only (no HTTP)
-- [ ] Enable security headers (HSTS, CSP, etc.)
-- [ ] Implement rate limiting
-- [ ] Configure CORS appropriately
-- [ ] Remove development dependencies
-
-### Infrastructure Security
-
-- [ ] Keep OS and packages updated
-- [ ] Configure firewall (only ports 80, 443, 22)
-- [ ] Use SSH keys (disable password auth)
-- [ ] Enable automatic security updates
-- [ ] Set up monitoring and alerting
-- [ ] Regular security audits
-
----
-
-## 📊 Monitoring & Logging
-
-### Application Logging
-
-Configure structured logging:
-
-```typescript
-// src/lib/logger.ts
-import winston from 'winston';
-
-export const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || 'info',
-  format: winston.format.json(),
-  transports: [
-    new winston.transports.File({ filename: 'error.log', level: 'error' }),
-    new winston.transports.File({ filename: 'combined.log' })
-  ]
-});
-
-if (process.env.NODE_ENV !== 'production') {
-  logger.add(new winston.transports.Console({
-    format: winston.format.simple()
-  }));
-}
-```
-
-### Health Check Endpoint
-
-Add a health check endpoint:
-
-```typescript
-// src/app/api/health/route.ts
-import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
-
-export async function GET() {
-  try {
-    // Check database connection
-    await prisma.$queryRaw`SELECT 1`;
-    
-    return NextResponse.json({
-      status: 'healthy',
-      timestamp: new Date().toISOString(),
-      database: 'connected'
-    });
-  } catch (error) {
-    return NextResponse.json({
-      status: 'unhealthy',
-      error: 'Database connection failed'
-    }, { status: 503 });
-  }
-}
-```
-
-### Monitoring Tools
-
-**Recommended**: 
-
-- **Uptime Monitoring**: UptimeRobot, Pingdom
-- **Error Tracking**: Sentry
-- **Performance**: New Relic, DataDog
-- **Logs**: Logtail, Papertrail
-
----
-
-## 🔄 Continuous Deployment
-
-### GitHub Actions
-
-```yaml
-# .github/workflows/deploy.yml
-name: Deploy to Production
-
-on:
-  push:
-    branches:
-      - main
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          
-      - name: Install dependencies
-        run: npm ci
-        
-      - name: Build application
-        run: npm run build
-        
-      - name: Run tests
-        run: npm test
-        
-      - name: Deploy to server
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          SERVER_HOST: ${{ secrets.SERVER_HOST }}
-          SERVER_USER: ${{ secrets.SERVER_USER }}
-        run: |
-          echo "$SSH_PRIVATE_KEY" > deploy_key
-          chmod 600 deploy_key
-          
-          ssh -i deploy_key -o StrictHostKeyChecking=no \
-            $SERVER_USER@$SERVER_HOST \
-            "cd /var/www/websecscan && \
-             git pull origin main && \
-             npm ci --production && \
-             npm run build && \
-             npx prisma migrate deploy && \
-             pm2 restart websecscan"
-```
-
----
-
-## 🔧 Performance Optimization
-
-### Caching Strategy
-
-```typescript
-// next.config.ts
-export default {
-  async headers() {
-    return [
-      {
-        source: '/static/:path*',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable'
-          }
-        ]
-      }
-    ];
-  }
-};
-```
-
-### Database Connection Pooling
-
-```typescript
-// prisma/schema.prisma
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-  
-  // Connection pooling
-  relationMode = "prisma"
-  pool_timeout = 30
-  connection_limit = 10
-}
-```
-
-### CDN Configuration
-
-Use Vercel Edge Network or Cloudflare for:
-- Static asset delivery
-- DDoS protection
-- Global distribution
-
----
-
-## 📈 Scaling Considerations
-
-### Horizontal Scaling
-
-1. **Load Balancer**: Use Nginx or cloud load balancer
-2. **Session Storage**: Use Redis for session state
-3. **Database**: PostgreSQL with read replicas
-4. **Queue**: Add Redis/RabbitMQ for scan jobs
-
-### Vertical Scaling
-
-**Minimum Requirements**:
-- 1 CPU core
-- 1 GB RAM
-- 10 GB disk
-
-**Recommended Production**:
-- 2+ CPU cores
-- 4+ GB RAM
-- 50+ GB disk (SSD)
-
----
-
-## 🆘 Troubleshooting
-
-### Common Issues
-
-**Database Connection Errors**:
-```bash
-# Check connection
-psql $DATABASE_URL
-
-# Verify Prisma client
-npx prisma generate
-```
-
-**Port Already in Use**:
-```bash
-# Find process using port 3000
-lsof -ti:3000
-
-# Kill process
-kill -9 $(lsof -ti:3000)
-```
-
-**Build Failures**:
-```bash
-# Clear caches
-rm -rf .next node_modules
-npm install
 npm run build
 ```
 
+### 5. Start Application
+
+```bash
+npm start
+```
+
+Application runs on port 3000. Set up reverse proxy (Nginx).
+
 ---
 
-## 📚 Additional Resources
+## HTTPS & Reverse Proxy (Nginx)
 
-- [Next.js Deployment Docs](https://nextjs.org/docs/deployment)
-- [Prisma Deployment Guide](https://www.prisma.io/docs/guides/deployment)
-- [Docker Best Practices](https://docs.docker.com/develop/dev-best-practices/)
+### Nginx Configuration
+
+Create `/etc/nginx/sites-available/websecscan`:
+
+```nginx
+upstream websecscan {
+  server localhost:3000;
+}
+
+server {
+  listen 80;
+  server_name scanner.example.com;
+  return 301 https://$server_name$request_uri;
+}
+
+server {
+  listen 443 ssl http2;
+  server_name scanner.example.com;
+
+  ssl_certificate /path/to/cert.pem;
+  ssl_certificate_key /path/to/key.pem;
+
+  ssl_protocols TLSv1.2 TLSv1.3;
+  ssl_ciphers HIGH:!aNULL:!MD5;
+  ssl_prefer_server_ciphers on;
+
+  location / {
+    proxy_pass http://websecscan;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection 'upgrade';
+    proxy_set_header Host $host;
+    proxy_cache_bypass $http_upgrade;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  }
+
+  # SSE streaming (real-time logs)
+  location /api/scan/*/logs {
+    proxy_pass http://websecscan;
+    proxy_buffering off;
+    proxy_cache off;
+    proxy_set_header Connection '';
+    proxy_http_version 1.1;
+    chunked_transfer_encoding off;
+  }
+}
+```
+
+### Enable & Test
+
+```bash
+# Enable site
+sudo ln -s /etc/nginx/sites-available/websecscan \
+  /etc/nginx/sites-enabled/websecscan
+
+# Test configuration
+sudo nginx -t
+
+# Restart Nginx
+sudo systemctl restart nginx
+```
+
+### Get SSL Certificate (Let's Encrypt)
+
+```bash
+sudo apt install certbot python3-certbot-nginx
+sudo certbot --nginx -d scanner.example.com
+```
+
+---
+
+## Security Hardening
+
+### 1. Add API Authentication
+
+Implement API key validation in `src/api/middleware/auth.ts`:
+
+```typescript
+export function validateApiKey(request: Request): boolean {
+  const apiKey = request.headers.get('X-API-Key');
+  return apiKey === process.env.API_KEY;
+}
+```
+
+Update `.env.production`:
+
+```env
+API_KEY=your_secure_random_key_here
+```
+
+### 2. Enable Rate Limiting
+
+```typescript
+import rateLimit from 'express-rate-limit';
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,  // 15 minutes
+  max: 100,                   // 100 requests per window
+  message: 'Too many requests'
+});
+
+app.use('/api/', limiter);
+```
+
+### 3. Database Security
+
+```sql
+-- Create restricted user for app
+CREATE USER app_user WITH PASSWORD 'secure_password';
+GRANT CONNECT ON DATABASE websecscan TO app_user;
+GRANT USAGE ON SCHEMA public TO app_user;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO app_user;
+```
+
+### 4. Environment Security
+
+Never commit secrets:
+
+```bash
+# .gitignore
+.env
+.env.local
+.env.production
+```
+
+Use secure secret management:
+- Environment variables
+- Secrets manager (AWS Secrets Manager, HashiCorp Vault)
+- Docker Secrets (if using swarm/compose)
+
+### 5. Logging & Monitoring
+
+Enable audit logging:
+
+```typescript
+import winston from 'winston';
+
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.json(),
+  transports: [
+    new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
+    new winston.transports.File({ filename: 'logs/combined.log' })
+  ]
+});
+
+// Log scan requests
+logger.info('Scan initiated', { scanId, url, userId, timestamp });
+```
+
+---
+
+## Health Checks
+
+For monitoring and load balancers:
+
+```typescript
+// GET /api/health
+export async function GET() {
+  try {
+    // Check database
+    await prisma.scan.count();
+    
+    return Response.json({ status: 'healthy' }, { status: 200 });
+  } catch (error) {
+    return Response.json(
+      { status: 'unhealthy', error: error.message },
+      { status: 503 }
+    );
+  }
+}
+```
+
+Kubernetes example:
+
+```yaml
+livenessProbe:
+  httpGet:
+    path: /api/health
+    port: 3000
+  initialDelaySeconds: 10
+  periodSeconds: 10
+
+readinessProbe:
+  httpGet:
+    path: /api/health
+    port: 3000
+  initialDelaySeconds: 5
+  periodSeconds: 5
+```
+
+---
+
+## Backup & Recovery
+
+### Database Backups
+
+```bash
+# Backup PostgreSQL
+pg_dump websecscan > backup.sql
+
+# Restore
+psql websecscan < backup.sql
+
+# Or using Docker
+docker-compose exec db pg_dump -U postgres websecscan > backup.sql
+```
+
+Schedule automated backups:
+
+```bash
+# Daily backup cron
+0 2 * * * pg_dump websecscan > /backups/websecscan-$(date +\%Y\%m\%d).sql
+```
+
+### Data Retention
+
+Set retention policy:
+
+```sql
+-- Delete scans older than 90 days
+DELETE FROM "Scan" WHERE "createdAt" < NOW() - INTERVAL '90 days';
+```
+
+---
+
+## Troubleshooting
+
+### Port Already in Use
+
+```bash
+# Find process on port 3000
+lsof -i :3000
+
+# Kill process
+kill -9 <PID>
+
+# Or use different port
+PORT=3001 npm start
+```
+
+### Database Connection Fails
+
+```bash
+# Test connection
+psql postgresql://user:password@host:5432/database
+
+# Check Docker Postgres is running
+docker-compose logs db
+
+# Verify DATABASE_URL in .env
+echo $DATABASE_URL
+```
+
+### Prisma Migration Issues
+
+```bash
+# Reset database (⚠️ clears all data)
+npx prisma migrate reset --force
+
+# Redeploy migrations
+npx prisma migrate deploy
+```
+
+### Nginx Proxy Issues
+
+```bash
+# Test configuration
+sudo nginx -t
+
+# View logs
+sudo tail -f /var/log/nginx/error.log
+sudo tail -f /var/log/nginx/access.log
+
+# Reload Nginx
+sudo systemctl reload nginx
+```
+
+---
+
+## Monitoring Checklist
+
+- [ ] SSL/TLS enabled and valid
+- [ ] Reverse proxy configured
+- [ ] Database backups running
+- [ ] Audit logging enabled
+- [ ] Rate limiting configured
+- [ ] Health checks working
+- [ ] Error monitoring (Sentry, DataDog, etc.)
+- [ ] Performance monitoring
+- [ ] Uptime monitoring (StatusCake, Pingdom, etc.)
 
 ---
 
 ## Next Steps
 
-- **[Security & Ethics](security-ethics.md)**: Production security considerations
-- **[Development Guide](development.md)**: Local development setup
-- **[API Reference](api.md)**: API integration for custom deployments
+- **[Security & Ethics](../security/ethics-and-authorization.md)** — Audit logging and compliance
+- **[Development Setup](../development/setup.md)** — For contributors
+- **[FAQ](../faq.md)** — Common deployment questions
