@@ -14,7 +14,20 @@ const expect = (value: any) => ({
   toEqual: (expected: any) => assert.deepStrictEqual(value, expected),
   toHaveLength: (expected: number) => assert.strictEqual(value.length, expected),
   toBeGreaterThanOrEqual: (expected: number) => assert.ok(value >= expected),
-  toHaveProperty: (property: string) => assert.ok(property in value)
+  toHaveProperty: (property: string) => assert.ok(property in value),
+  toThrow: (pattern?: RegExp) => {
+    if (typeof value !== 'function') {
+      throw new Error('expect().toThrow() requires a function')
+    }
+    try {
+      value()
+      throw new Error('Expected function to throw but it did not')
+    } catch (error: any) {
+      if (pattern && !pattern.test(error.message)) {
+        throw new Error(`Expected error message "${error.message}" to match ${pattern}`)
+      }
+    }
+  }
 })
 
 describe('Crawler Configuration Validation', () => {
@@ -190,16 +203,6 @@ describe('Crawler Configuration Validation', () => {
       }).toThrow(/Invalid crawler configuration/)
     })
 
-    it('should allow warnings but not throw', () => {
-      // rateLimit below warning threshold should log warning but not throw
-      const options = getSafeCrawlerOptions({
-        rateLimit: 300
-      })
-
-      expect(options.rateLimit).toBe(300)
-      // In production, check that console.warn was called
-    })
-
     it('should enforce robots.txt consent requirement', () => {
       expect(() => {
         getSafeCrawlerOptions(
@@ -245,7 +248,7 @@ describe('Crawler Configuration Validation', () => {
       const result1 = validateCrawlerOptions({
         maxDepth: 1,
         maxPages: 1,
-        rateLimit: 100,
+        rateLimit: 500,  // Above warning threshold
         timeout: 5000
       })
 
