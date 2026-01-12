@@ -10,7 +10,7 @@ WebSecScan uses specialized, modular agents that each perform a focused set of d
 - ❌ **WRONG:** `owaspId: 'A05:2021'` or any 2021 categories
 
 **Before adding new rules:**
-1. Consult [docs/owasp-mapping.md](docs/owasp-mapping.md) for correct 2025 categories
+1. Consult [docs/security/owasp-mapping.md](docs/security/owasp-mapping.md) for correct 2025 categories
 2. Import mapping utilities from [src/lib/owaspMapping.ts](src/lib/owaspMapping.ts)
 3. Never guess category numbers — the order changed significantly from 2021 to 2025
 
@@ -21,7 +21,7 @@ WebSecScan uses specialized, modular agents that each perform a focused set of d
 - SSRF: A10:2021 → **A01:2025** (merged into Broken Access Control, use subtype)
 - Exception Handling: **A10:2025** (NEW category)
 
-See [docs/MIGRATION-SUMMARY.md](docs/MIGRATION-SUMMARY.md) for complete migration details.
+See [docs/security/owasp-mapping.md](docs/security/owasp-mapping.md) for complete OWASP 2025 mapping details.
 
 ---
 
