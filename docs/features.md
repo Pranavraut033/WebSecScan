@@ -43,7 +43,7 @@ Watch your scan progress in real-time with color-coded logs:
 - Logs kept in-memory (not persisted to database)
 - Automatic cleanup when scan completes or client disconnects
 
-See [Real-time Logging Documentation](real-time-logging.md) for implementation details.
+See [Real-time Logging Documentation](crawler/real-time-logging.md) for implementation details.
 
 ---
 
@@ -295,7 +295,7 @@ HIGH     = Score 40-59 (Significant issues)
 CRITICAL = Score < 40  (Severe vulnerabilities)
 ```
 
-**See [Scoring Methodology](scoring.md) for detailed rationale and calculation details.**
+**See [Scoring Methodology](security/scoring.md) for detailed rationale and calculation details.**
 
 #### Security Tests Performed
 
@@ -683,6 +683,6 @@ Future configuration options (planned):
 
 ## Next Steps
 
-- **[See What We Test](testing-coverage.md)**: Detailed coverage matrix
+- **[See What We Test](evaluation/testing-coverage.md)**: Detailed coverage matrix
 - **[Understand Architecture](architecture.md)**: How features are implemented
 - **[View API Reference](api.md)**: Integrate scanning into your tools

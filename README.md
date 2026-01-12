@@ -362,10 +362,9 @@ npm run compare -- --all --output results/juice-shop
 
 ### Documentation
 
-- **[Benchmarking Guide](docs/benchmarking.md)**: Methodology, setup, and comparative analysis
-- **[Real-World Testing](docs/real-world-testing.md)**: Ethical guidelines, consent framework, and safety practices
-- **[Evaluation Quick Start](EVALUATION-QUICKSTART.md)**: Step-by-step guide to run your first benchmark
-- **[Implementation Summary](docs/IMPLEMENTATION-SUMMARY.md)**: Complete Phase 3 implementation details
+- **[Benchmarking Guide](docs/evaluation/benchmarking.md)**: Methodology, setup, and comparative analysis
+- **[Real-World Testing](docs/evaluation/real-world-testing.md)**: Ethical guidelines, consent framework, and safety practices
+- **[Testing Coverage](docs/evaluation/testing-coverage.md)**: Vulnerability detection capabilities and test methodology
 
 ### Sample Benchmark Output
 
