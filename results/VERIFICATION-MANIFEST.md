@@ -1,6 +1,6 @@
 # Scan Results Verification Manifest
 
-**Generated**: 2026-01-11T15:28:08.195Z
+**Generated**: 2026-01-11T18:58:56.348Z
 **Target**: http://localhost:3001
 **Output Directory**: ./results
 
@@ -10,19 +10,19 @@ These files contain complete, unprocessed scan data for independent verification
 
 ### WebSecScan STATIC Scan
 - **File**: `static-raw.json`
-- **Scan ID**: cmk9w0emn00004mjtgh7ik0om
+- **Scan ID**: cmka3jar50000ibjtkaagu88v
 - **Content**: Complete benchmark metrics including all findings
 - **Verification**: Compare findings array against database records
 
 ### WebSecScan DYNAMIC Scan
 - **File**: `dynamic-raw.json`
-- **Scan ID**: cmk9w0etk00064mjth2lw0b68
+- **Scan ID**: cmka3jb030006ibjt1px26yqp
 - **Content**: Complete benchmark metrics including crawler results
 - **Verification**: Verify endpoints discovered match against crawl logs
 
 ### WebSecScan BOTH (Combined) Scan
 - **File**: `both-raw.json`
-- **Scan ID**: cmk9w0kva000j4mjtvutjiwtu
+- **Scan ID**: cmka3jh4r000jibjtciby2uks
 - **Content**: Combined static + dynamic results
 - **Verification**: Should be superset of STATIC and DYNAMIC findings
 

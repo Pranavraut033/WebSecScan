@@ -1,10 +1,10 @@
 {
-  "scanId": "cmk9w0emn00004mjtgh7ik0om",
+  "scanId": "cmka3jar50000ibjtkaagu88v",
   "target": "http://localhost:3001",
   "mode": "STATIC",
-  "startTime": "2026-01-11T15:26:59.028Z",
-  "endTime": "2026-01-11T15:26:59.325Z",
-  "duration": 297,
+  "startTime": "2026-01-11T18:57:37.782Z",
+  "endTime": "2026-01-11T18:57:38.142Z",
+  "duration": 360,
   "totalFindings": 5,
   "findingsBySeverity": {
     "critical": 1,
@@ -21,9 +21,9 @@
   "scriptsAnalyzed": 6,
   "dependenciesChecked": 0,
   "memoryUsage": {
-    "heapUsed": 8938400,
-    "heapTotal": 42303488,
-    "external": 15014105
+    "heapUsed": 8883016,
+    "heapTotal": 42565632,
+    "external": 15014121
   },
   "score": 20,
   "riskLevel": "CRITICAL",
@@ -46,7 +46,7 @@
     {
       "category": "A05:2025 - Injection",
       "severity": "CRITICAL",
-      "confidence": "HIGH"
+      "confidence": "MEDIUM"
     },
     {
       "category": "A05:2025 - Injection",

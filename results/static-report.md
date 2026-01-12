@@ -1,9 +1,9 @@
 # Benchmark Report
 
-**Scan ID**: cmk9w0emn00004mjtgh7ik0om
+**Scan ID**: cmka3jar50000ibjtkaagu88v
 **Target**: http://localhost:3001
 **Mode**: STATIC
-**Duration**: 0.23s
+**Duration**: 0.29s
 
 ## Findings Summary
 

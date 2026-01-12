@@ -2,9 +2,9 @@
   "tool": "OWASP ZAP",
   "scanType": "baseline",
   "target": "http://localhost:3001",
-  "startTime": "2026-01-11T15:27:15.027Z",
-  "endTime": "2026-01-11T15:28:08.186Z",
-  "duration": 53159,
+  "startTime": "2026-01-11T18:57:53.974Z",
+  "endTime": "2026-01-11T18:58:56.220Z",
+  "duration": 62246,
   "totalAlerts": 12,
   "alertsByRisk": {
     "informational": 5,
@@ -12,7 +12,7 @@
     "medium": 2,
     "high": 0
   },
-  "urlsScanned": 17,
+  "urlsScanned": 15,
   "alerts": [
     {
       "id": "10038",
@@ -28,7 +28,7 @@
       "risk": "Medium",
       "confidence": "2",
       "category": "Security Misconfiguration",
-      "instances": 5
+      "instances": 4
     },
     {
       "id": "10017",
@@ -92,7 +92,7 @@
       "risk": "Informational",
       "confidence": "2",
       "category": "Security Misconfiguration",
-      "instances": 3
+      "instances": 1
     },
     {
       "id": "10049",

@@ -8,13 +8,13 @@
 
 | Tool | Total Findings | Critical | High | Medium | Low | Duration | URLs Scanned |
 |------|---------------|----------|------|--------|-----|----------|--------------|
-| **WebSecScan** | 7 | 1 | 4 | 1 | 1 | 7.63s | 0 |
-| **OWASP ZAP** | 12 | 0 | 0 | 2 | 5 | 53.16s | 17 |
+| **WebSecScan** | 7 | 1 | 4 | 1 | 1 | 7.54s | 0 |
+| **OWASP ZAP** | 12 | 0 | 0 | 2 | 5 | 62.25s | 15 |
 
 ## Performance Comparison
 
-- **Speed**: WebSecScan is 7.0x faster
-- **Coverage**: ZAP discovered 17.0x more URLs
+- **Speed**: WebSecScan is 8.3x faster
+- **Coverage**: ZAP discovered 15.0x more URLs
 - **Critical Findings**: WebSecScan found 1, ZAP found 0 (baseline limitation)
 
 ## WebSecScan Findings
@@ -29,7 +29,7 @@
 | Risk | Alert | Category | Instances |
 |------|-------|----------|-----------|
 | Medium | Content Security Policy (CSP) Header Not Set | Security Misconfiguration | 5 |
-| Medium | Cross-Domain Misconfiguration | Security Misconfiguration | 5 |
+| Medium | Cross-Domain Misconfiguration | Security Misconfiguration | 4 |
 | Low | Cross-Domain JavaScript Source File Inclusion | Security Misconfiguration | 5 |
 | Low | Dangerous JS Functions | Security Misconfiguration | 2 |
 | Low | Deprecated Feature Policy Header Set | Security Misconfiguration | 5 |
@@ -37,7 +37,7 @@
 | Low | Timestamp Disclosure - Unix | Security Misconfiguration | 5 |
 | Informational | Information Disclosure - Suspicious Comments | Security Misconfiguration | 2 |
 | Informational | Modern Web Application | Security Misconfiguration | 5 |
-| Informational | Non-Storable Content | Security Misconfiguration | 3 |
+| Informational | Non-Storable Content | Security Misconfiguration | 1 |
 | Informational | Storable and Cacheable Content | Security Misconfiguration | 1 |
 | Informational | Storable but Non-Cacheable Content | Security Misconfiguration | 5 |
 

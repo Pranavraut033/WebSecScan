@@ -1,4 +1,4 @@
 Scan ID,Target,Mode,Duration (s),Total Findings,Critical,High,Medium,Low,Info,Score,Risk Level
-cmk9w0emn00004mjtgh7ik0om,http://localhost:3001,STATIC,0.23,5,1,4,0,0,0,20,Critical
-cmk9w0etk00064mjth2lw0b68,http://localhost:3001,DYNAMIC,7.80,2,0,0,1,1,0,65,Medium
-cmk9w0kva000j4mjtvutjiwtu,http://localhost:3001,BOTH,7.63,7,1,4,1,1,0,65,Medium
+cmka3jar50000ibjtkaagu88v,http://localhost:3001,STATIC,0.29,5,1,4,0,0,0,20,Critical
+cmka3jb030006ibjt1px26yqp,http://localhost:3001,DYNAMIC,7.92,2,0,0,1,1,0,65,Medium
+cmka3jh4r000jibjtciby2uks,http://localhost:3001,BOTH,7.54,7,1,4,1,1,0,65,Medium

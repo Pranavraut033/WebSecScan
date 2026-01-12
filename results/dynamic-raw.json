@@ -1,10 +1,10 @@
 {
-  "scanId": "cmk9w0etk00064mjth2lw0b68",
+  "scanId": "cmka3jb030006ibjt1px26yqp",
   "target": "http://localhost:3001",
   "mode": "DYNAMIC",
-  "startTime": "2026-01-11T15:26:59.335Z",
-  "endTime": "2026-01-11T15:27:07.135Z",
-  "duration": 7800,
+  "startTime": "2026-01-11T18:57:38.162Z",
+  "endTime": "2026-01-11T18:57:46.084Z",
+  "duration": 7922,
   "totalFindings": 2,
   "findingsBySeverity": {
     "critical": 0,
@@ -21,9 +21,9 @@
   "scriptsAnalyzed": 0,
   "dependenciesChecked": 0,
   "memoryUsage": {
-    "heapUsed": 24079912,
+    "heapUsed": 24114720,
     "heapTotal": 2211840,
-    "external": 2176062
+    "external": 2221850
   },
   "score": 65,
   "riskLevel": "MEDIUM",
