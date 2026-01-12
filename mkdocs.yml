@@ -4,7 +4,7 @@ site_author: WebSecScan Team
 site_url: https://pranavraut.github.io/WebSecScan/
 
 repo_name: WebSecScan
-repo_url: https://github.com/pranavraut/WebSecScan
+repo_url: https://github.com/pranavraut033/WebSecScan
 
 exclude_docs: |
   _temp/
@@ -105,7 +105,7 @@ plugins:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/pranavraut/WebSecScan
+      link: https://github.com/pranavraut033/WebSecScan
   analytics:
     provider: google
     property: !ENV GOOGLE_ANALYTICS_KEY

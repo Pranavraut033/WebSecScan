@@ -275,7 +275,7 @@ export async function crawl(
 ): Promise<CrawlResult> {
   const browser = await playwright.chromium.launch({ headless: true });
   const context = await browser.newContext({
-    userAgent: 'WebSecScan/1.0 (+https://github.com/pranavraut/WebSecScan)'
+    userAgent: 'WebSecScan/1.0 (+https://github.com/pranavraut033/WebSecScan)'
   });
   
   const visited = new Set<string>();
