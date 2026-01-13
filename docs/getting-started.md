@@ -2,6 +2,8 @@
 
 This guide will help you install and run WebSecScan on your local machine.
 
+> **Want to skip installation?** Try the [live demo](https://web-sec-scan.vercel.app) instead.
+
 ---
 
 ## Prerequisites

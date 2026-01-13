@@ -137,7 +137,18 @@ See [OWASP 2025 Mapping](security/owasp-2025.md) for complete reference.
 
 - **Issues**: [GitHub Issues](https://github.com/Pranavraut033/WebSecScan/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/Pranavraut033/WebSecScan/discussions)
+- **Live Demo**: [https://web-sec-scan.vercel.app](https://web-sec-scan.vercel.app)
 - **Documentation**: You're reading it!
+
+## Resources
+
+| Resource | URL |
+|----------|-----|
+| **GitHub Repository** | [https://github.com/Pranavraut033/WebSecScan](https://github.com/Pranavraut033/WebSecScan) |
+| **Live Demo** | [https://web-sec-scan.vercel.app](https://web-sec-scan.vercel.app) |
+| **Documentation Site** | [https://pranavraut033.github.io/WebSecScan/](https://pranavraut033.github.io/WebSecScan/) |
+| **Test Fixtures Repo** | [https://github.com/Pranavraut033/WebSecScan-TestFixtures](https://github.com/Pranavraut033/WebSecScan-TestFixtures) |
+| **Test Fixtures Docker** | [https://github.com/Pranavraut033/WebSecScan-TestFixtures/pkgs/container/websecscan-test-fixtures](https://github.com/Pranavraut033/WebSecScan-TestFixtures/pkgs/container/websecscan-test-fixtures) |
 
 ## Contributing
 

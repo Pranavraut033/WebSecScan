@@ -126,7 +126,7 @@ Documentation will be available at http://localhost:8000
 
 ## 🌐 Live Documentation
 
-Production documentation: **https://pranavraut.github.io/WebSecScan/**
+Production documentation: **[https://pranavraut033.github.io/WebSecScan/](https://pranavraut033.github.io/WebSecScan/)**
 
 ## 📝 Project Context
 
@@ -201,7 +201,18 @@ This will fail the build if there are any broken internal links.
 
 ## 📞 Need Help?
 
-- **Issues**: Open an issue on GitHub
-- **Discussions**: Use GitHub Discussions
+- **Issues**: Open an issue on [GitHub](https://github.com/Pranavraut033/WebSecScan/issues)
+- **Discussions**: Use [GitHub Discussions](https://github.com/Pranavraut033/WebSecScan/discussions)
+- **Live Demo**: [https://web-sec-scan.vercel.app](https://web-sec-scan.vercel.app)
 - **MkDocs Docs**: https://www.mkdocs.org/
 - **Material Theme**: https://squidfunk.github.io/mkdocs-material/
+
+## Resources
+
+| Resource | Link |
+|----------|------|
+| **GitHub Repository** | [https://github.com/Pranavraut033/WebSecScan](https://github.com/Pranavraut033/WebSecScan) |
+| **Live Demo** | [https://web-sec-scan.vercel.app](https://web-sec-scan.vercel.app) |
+| **Documentation Site** | [https://pranavraut033.github.io/WebSecScan/](https://pranavraut033.github.io/WebSecScan/) |
+| **Test Fixtures Repository** | [https://github.com/Pranavraut033/WebSecScan-TestFixtures](https://github.com/Pranavraut033/WebSecScan-TestFixtures) |
+| **Test Fixtures Docker Image** | [https://github.com/Pranavraut033/WebSecScan-TestFixtures/pkgs/container/websecscan-test-fixtures](https://github.com/Pranavraut033/WebSecScan-TestFixtures/pkgs/container/websecscan-test-fixtures) |

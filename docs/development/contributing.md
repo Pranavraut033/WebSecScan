@@ -152,7 +152,7 @@ Before submitting:
 
 1. **Fork the repository**
    ```bash
-   git clone https://github.com/YOUR_USERNAME/WebSecScan.git
+   git clone https://github.com/Pranavraut033/WebSecScan.git
    ```
 
 2. **Create a feature branch**

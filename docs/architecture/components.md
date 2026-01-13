@@ -323,3 +323,12 @@ Findings from all agents are:
 - **[Dynamic Testing](../scanning/dynamic-testing.md)** — Detailed dynamic tests
 - **[Crawler Design](../scanning/crawler.md)** — URL discovery configuration
 - **[OWASP 2025](../security/owasp-2025.md)** — Vulnerability categories
+
+## Resources
+
+| Resource | Link |
+|----------|------|
+| **GitHub Repository** | [https://github.com/Pranavraut033/WebSecScan](https://github.com/Pranavraut033/WebSecScan) |
+| **Live Demo** | [https://web-sec-scan.vercel.app](https://web-sec-scan.vercel.app) |
+| **Documentation** | [https://pranavraut033.github.io/WebSecScan/](https://pranavraut033.github.io/WebSecScan/) |
+| **Test Fixtures** | [https://github.com/Pranavraut033/WebSecScan-TestFixtures](https://github.com/Pranavraut033/WebSecScan-TestFixtures) |

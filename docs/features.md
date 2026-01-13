@@ -239,3 +239,12 @@ This helps track improvement and validate scanner accuracy.
 - **[Dynamic Testing Methodology](scanning/dynamic-testing.md)** — How runtime testing works
 - **[Security & Ethics](security/ethics-and-authorization.md)** — Authorization requirements
 - **[API Reference](api/overview.md)** — Programmatic scanning
+
+## Resources
+
+| Resource | Link |
+|----------|------|
+| **GitHub Repository** | [https://github.com/Pranavraut033/WebSecScan](https://github.com/Pranavraut033/WebSecScan) |
+| **Live Demo** | [https://web-sec-scan.vercel.app](https://web-sec-scan.vercel.app) |
+| **Documentation** | [https://pranavraut033.github.io/WebSecScan/](https://pranavraut033.github.io/WebSecScan/) |
+| **Test Fixtures** | [https://github.com/Pranavraut033/WebSecScan-TestFixtures](https://github.com/Pranavraut033/WebSecScan-TestFixtures) |

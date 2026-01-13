@@ -674,10 +674,21 @@ graph TB
 
 ---
 
-## 13. Next Steps
+## 13. Resources & Next Steps
 
+### Documentation
 - **[Scanning Agents](../architecture/components.md):** Detailed agent architecture
 - **[API Reference](../api/overview.md):** API endpoint specifications
 - **[Development Guide](../development/contributing.md):** Contributing to the architecture
+
+### External Resources
+
+| Resource | Link |
+|----------|------|
+| **GitHub Repository** | [https://github.com/Pranavraut033/WebSecScan](https://github.com/Pranavraut033/WebSecScan) |
+| **Live Demo** | [https://web-sec-scan.vercel.app](https://web-sec-scan.vercel.app) |
+| **Documentation** | [https://pranavraut033.github.io/WebSecScan/](https://pranavraut033.github.io/WebSecScan/) |
+| **Test Fixtures** | [https://github.com/Pranavraut033/WebSecScan-TestFixtures](https://github.com/Pranavraut033/WebSecScan-TestFixtures) |
+| **Test Fixtures Docker** | [https://github.com/Pranavraut033/WebSecScan-TestFixtures/pkgs/container/websecscan-test-fixtures](https://github.com/Pranavraut033/WebSecScan-TestFixtures/pkgs/container/websecscan-test-fixtures) |
 
 ---

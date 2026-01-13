@@ -301,3 +301,12 @@ Likely a timing issue. Check:
 - **[Testing Guide](./testing.md)** — Detailed testing documentation
 - **[Contributing](contributing.md)** — PR guidelines
 - **[Architecture](../architecture/overview.md)** — System design
+
+## Resources
+
+| Resource | Link |
+|----------|------|
+| **GitHub Repository** | [https://github.com/Pranavraut033/WebSecScan](https://github.com/Pranavraut033/WebSecScan) |
+| **Live Demo** | [https://web-sec-scan.vercel.app](https://web-sec-scan.vercel.app) |
+| **Documentation** | [https://pranavraut033.github.io/WebSecScan/](https://pranavraut033.github.io/WebSecScan/) |
+| **Test Fixtures** | [https://github.com/Pranavraut033/WebSecScan-TestFixtures](https://github.com/Pranavraut033/WebSecScan-TestFixtures) |

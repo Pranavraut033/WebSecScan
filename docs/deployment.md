@@ -2,6 +2,8 @@
 
 Production deployment guide for WebSecScan.
 
+> **Quick alternative:** Try the [live demo](https://web-sec-scan.vercel.app) for immediate access without deployment.
+
 ---
 
 ## Quick Start: Docker Compose
@@ -441,6 +443,18 @@ sudo systemctl reload nginx
 - [ ] Error monitoring (Sentry, DataDog, etc.)
 - [ ] Performance monitoring
 - [ ] Uptime monitoring (StatusCake, Pingdom, etc.)
+
+---
+
+## Resources
+
+| Resource | Link |
+|----------|------|
+| **GitHub Repository** | [https://github.com/Pranavraut033/WebSecScan](https://github.com/Pranavraut033/WebSecScan) |
+| **Live Demo** | [https://web-sec-scan.vercel.app](https://web-sec-scan.vercel.app) |
+| **Documentation** | [https://pranavraut033.github.io/WebSecScan/](https://pranavraut033.github.io/WebSecScan/) |
+| **Test Fixtures** | [https://github.com/Pranavraut033/WebSecScan-TestFixtures](https://github.com/Pranavraut033/WebSecScan-TestFixtures) |
+| **Test Fixtures Docker** | [https://github.com/Pranavraut033/WebSecScan-TestFixtures/pkgs/container/websecscan-test-fixtures](https://github.com/Pranavraut033/WebSecScan-TestFixtures/pkgs/container/websecscan-test-fixtures) |
 
 ---
 

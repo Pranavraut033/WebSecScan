@@ -2,6 +2,10 @@
 
 WebSecScan uses specialized, modular agents that each perform a focused set of deterministic security checks (no ML). Agents are configured centrally and run in isolated worker environments (processes, containers, or dedicated threads) to limit blast radius and allow safe resource management.
 
+**Repository**: [https://github.com/Pranavraut033/WebSecScan](https://github.com/Pranavraut033/WebSecScan)  
+**Documentation**: [https://pranavraut033.github.io/WebSecScan/](https://pranavraut033.github.io/WebSecScan/)  
+**Live Demo**: [https://web-sec-scan.vercel.app](https://web-sec-scan.vercel.app)
+
 ## 🚨 Critical Rule: OWASP 2025 Taxonomy Only
 
 **ALL vulnerability detections MUST use OWASP Top 10 2025 taxonomy.**
