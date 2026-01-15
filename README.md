@@ -58,8 +58,12 @@ git clone https://github.com/Pranavraut033/WebSecScan.git
 cd WebSecScan
 npm install
 
+# Configure environment
+cp example.env .env
+
 # Set up database
 npx prisma migrate dev
+npx prisma generate
 
 # Start
 npm run dev
